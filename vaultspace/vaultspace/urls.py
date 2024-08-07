@@ -17,7 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from users import views as users_view
+from warehouse import views as warehouse_view
 from django.contrib.auth import views as auth
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,8 +28,14 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('', include('users.urls')),
     path('login/', users_view.Login, name ='login'),
-    path('logout/', auth.LogoutView.as_view(template_name ='users/index.html'), name ='logout'),
+    # path('logout/', auth.LogoutView.as_view(template_name ='users/index.html'), name ='logout'),
     path('register_lessor/', users_view.register_lessor, name='register_lessor'),
     path('register_tenant/',users_view.register_tenant, name='register_tenant'),
+     path('lessor_index/', users_view.lessor_index, name='lessor_index'),
+    path('warehouse/', include('warehouse.urls')),
+    path('add_warehouse/',warehouse_view.add_warehouse,name='add_warehouse'),
+     path('edit_warehouse/<int:warehouse_id>/', warehouse_view.edit_warehouse, name='edit_warehouse'),
+
     
 ]
+urlpatterns=urlpatterns+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

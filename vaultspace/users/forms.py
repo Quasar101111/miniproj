@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django.contrib.auth.models import User
 from .models import Profile
-from .models import Lessor,models
+from .models import Lessor,models,Tenant
 
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -19,10 +19,10 @@ class LessorRegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['email', 'password1']
+        fields = ['email', 'password1','user_type']
 class TenantRegisterForm(UserCreationForm):
     email = forms.EmailField()
-    user_type = forms.CharField(widget=forms.HiddenInput(), initial='tenant')
+   
 
     class Meta:
         model = User
@@ -47,9 +47,16 @@ class CustomAuthenticationForm(AuthenticationForm):
 class LessorForm(forms.ModelForm):
         class Meta:
             model = Lessor
-            fields = ['lessor_name','email','contact_number', 'photo']
+            fields = ['lessor_name','email','identity_proof','contact_number', 'photo']
             widgets = {
             'email': forms.EmailInput(attrs={'readonly': 'readonly'}),
             }
- 
-    
+
+
+class TenantForm(forms.ModelForm):
+    class Meta:
+        model = Tenant
+        fields = ['tenant_name', 'email', 'identity_proof', 'contact_number', 'photo', 'state', 'city']
+        widgets = {
+            'email': forms.EmailInput(attrs={'readonly': 'readonly'}),
+        }
