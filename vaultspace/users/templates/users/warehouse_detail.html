@@ -1,0 +1,359 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ warehouse.name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #e3eaf1;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .badge {
+            font-size: 0.8em;
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+
+        .image-gallery {
+            position: relative;
+        }
+
+        .image-gallery .main-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .image-gallery .thumbnails {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 0;
+        }
+
+        .image-gallery .thumbnails img {
+            width: 100px;
+            height: 60px;
+            object-fit: cover;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .image-controls {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+        }
+
+        .image-controls button {
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            font-size: 2em;
+        }
+
+        .image-controls .prev {
+            float: left;
+        }
+
+        .image-controls .next {
+            float: right;
+        }
+
+        .overview-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .overview-details div {
+            text-align: center;
+        }
+
+        .tour-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .date-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .date-selector .date {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .date-selector .date.active {
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .thumbnail.active {
+            border: 2px solid #007bff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h1>{{ warehouse.name }} <span class="float-right">Rs. {{ warehouse.rental_price }}/mo</span></h1>
+                <p><i class="fas fa-map-marker-alt"></i> {{ warehouse.location.city}}, {{ warehouse.location.state }}</p>
+                {% if warehouse.status == 1 %}
+                <span class="badge badge-primary">FOR RENT</span>
+                {% else %}
+                <span class="badge badge-success">CURRENTLY RENTED</span>
+                {% endif %}
+
+                <div class="image-gallery mt-3">
+                    {% if warehouse.photos.first %}
+                    <img src="{{ warehouse.photos.first.image.url }}" alt="Main Image" class="main-image"
+                        id="mainImage">
+                    {% else %}
+                    <img src="{% static 'images/no-image.jpg' %}" alt="No Image Available" class="main-image"
+                        id="mainImage">
+                    {% endif %}
+                    <div class="image-controls">
+                        <button class="prev" onclick="changeImage(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <button class="next" onclick="changeImage(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="thumbnails mt-2">
+                        {% for photo in warehouse.photos.all %}
+                        <img src="{{ photo.image.url }}" alt="Thumbnail" onclick="setMainImage(this.src)"
+                            class="thumbnail">
+                        {% empty %}
+                        <p>No images available</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <h2 class="mt-3">Overview</h2>
+                <p>Property ID: {{ warehouse.warehouse_id }}</p>
+
+                <div class="overview-details">
+                    <div>
+                        <i class="fas fa-warehouse"></i>
+                        <p>{{ warehouse.area }} sq ft</p>
+                        <small>Total Area</small>
+                    </div>
+                   
+                    <div>
+                        <i class="fas fa-calendar-alt"></i>
+                        <p>{{ warehouse.year_built }}</p>
+                        <small>Year Built</small>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-md-4">
+                <div class="tour-form">
+                    <h3>Contact the Lessor</h3>
+                    <div class="lessor-details mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if warehouse.owner.photo %}
+                                <img src="{{ warehouse.owner.photo.url }}" alt="{{ warehouse.owner.lessor_name }}" class="rounded-circle mr-3" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle mr-3 bg-secondary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-0">{{ warehouse.owner.lessor_name }}</h5>
+                                <small class="text-muted">Lessor</small>
+                            </div>
+                        </div>
+                        <p><i class="fas fa-phone mr-2"></i>{{ warehouse.owner.contact_number }}</p>
+                        <p><i class="fas fa-envelope mr-2"></i>{{ warehouse.owner.email }}</p>
+                    </div>
+                    
+                   
+                        <button type="button" class="btn btn-success btn-block mt-3" data-toggle="modal" data-target="#inquiryModal">INQUIRE</button>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title">Address</h3>
+                        <table class="table table-borderless">
+                            <!-- <tr>
+                                <th>Address</th>
+                                <td>{{ warehouse.location.address }}</td>
+                                <th>Zip/Postal Code</th>
+                                <td>{{ warehouse.location.zip_code }}</td>
+                            </tr> -->
+                            <tr>
+                                <th>City</th>
+                                <td>{{ warehouse.location.city }}</td>
+                                <!-- <th>Area</th>
+                                <td>{{ warehouse.location.area }}</td> -->
+                            </tr>
+                            <tr>
+                                <th>State/county</th>
+                                <td>{{ warehouse.location.state }}</td>
+                                <th>Country</th>
+                                <td>India</td>
+                            </tr>
+                        </table>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ warehouse.location.address|urlencode }}"
+                            class="btn btn-primary btn-sm float-right" target="_blank">
+                            <i class="fas fa-map-marker-alt"></i> Open on Google Maps
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="card-title">Details</h3>
+                        <!-- <small class="text-muted float-right">Updated on {{ warehouse.updated_at|date:"F j, Y \a\t g:i a"
+                            }}</small> -->
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Property ID:</th>
+                                <td>{{ warehouse.warehouse_id }}</td>
+                                <th>Property Size:</th>
+                                <td>{{ warehouse.area }} Sq Ft</td>
+                            </tr>
+                            <tr>
+                                <th>Price:</th>
+                                <td>Rs. {{ warehouse.rental_price }}/mo</td>
+                                <th>Year Built:</th>
+                                <td>{{ warehouse.year_built }}</td>
+                            </tr>
+                            
+                           
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title">Facilities</h3>
+                        <div class="row">
+                            {% if warehouse_facilities %}
+                                {% for facility in warehouse_facilities %}
+                                    <div class="col-md-4 mb-2">
+                                        <i class="fas fa-check-circle text-success"></i> {{ facility }}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-12">
+                                    <p>No facilities listed for this warehouse.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inquiry Modal -->
+    <div class="modal fade" id="inquiryModal" tabindex="-1" role="dialog" aria-labelledby="inquiryModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="inquiryModalLabel">Send Inquiry</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="inquiryForm">
+              <div class="form-group">
+                <label for="inquiryMessage">Message</label>
+                <textarea class="form-control" id="inquiryMessage" rows="4" required></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="sendInquiryBtn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        let currentImageIndex = 0;
+        const images = [{% for photo in warehouse.photos.all %}"{{ photo.image.url }}"{% if not forloop.last %}, {% endif %} {% endfor %}];
+
+        function setMainImage(src) {
+            document.getElementById('mainImage').src = src;
+            currentImageIndex = images.indexOf(src);
+        }
+
+        function changeImage(direction) {
+            currentImageIndex += direction;
+            if (currentImageIndex >= images.length) {
+                currentImageIndex = 0;
+            } else if (currentImageIndex < 0) {
+                currentImageIndex = images.length - 1;
+            }
+            setMainImage(images[currentImageIndex]);
+        }
+
+        // Highlight the active thumbnail
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        thumbnails.forEach((thumb, index) => {
+            thumb.addEventListener('click', function () {
+                thumbnails.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+            if (index === 0) thumb.classList.add('active');
+        });
+
+        $(document).ready(function() {
+            $('#sendInquiryBtn').click(function() {
+                var message = $('#inquiryMessage').val();
+                if (message) {
+                    // Here you would typically send the message to your server
+                    // For now, we'll just log it to the console and close the modal
+                    console.log("Sending inquiry:", message);
+                    $('#inquiryModal').modal('hide');
+                    $('#inquiryMessage').val(''); // Clear the textarea
+                    alert("Your inquiry has been sent!"); // Provide user feedback
+                } else {
+                    alert("Please enter a message before sending.");
+                }
+            });
+
+            $('#inquiryModal').on('hidden.bs.modal', function () {
+                $('#inquiryMessage').val(''); // Clear the textarea when modal is closed
+            });
+        });
+    </script>
+</body>
+
+</html>

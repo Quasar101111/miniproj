@@ -19,8 +19,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
+#BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -44,7 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     'users',
+    'warehouse',
+    'moderator',
     'crispy_forms',
     'crispy_bootstrap4',
     'django.contrib.sites',  # Required for allauth
@@ -52,6 +55,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    
 ]
 
 
@@ -64,14 +68,18 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'users.middleware.NoCacheMiddleware', #custom middleware
 ]
 
 ROOT_URLCONF = 'vaultspace.urls'
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap4'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR,'templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'warehouse', 'templates'),
+            os.path.join(BASE_DIR, 'user', 'templates'),
+            os.path.join(BASE_DIR, 'moderator', 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,6 +88,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            
         },
     },
 ]
@@ -92,6 +101,11 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
+
+
+MEDIA_URL='media/'
 
 
 WSGI_APPLICATION = 'vaultspace.wsgi.application'
@@ -118,9 +132,10 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+LOGIN_URL = 'login'  # Use the name of your custom login path
 
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
+#LOGIN_REDIRECT_URL = "users/login"
+# LOGOUT_REDIRECT_URL = "index"
 SOCIALACCOUNT_LOGIN_ON_GET=True
 
 SITE_ID = 1
@@ -157,14 +172,14 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'vaultspace7@gmail.com'  # Replace with your Gmail address
-EMAIL_HOST_PASSWORD = 'vaultspace@01'  # Replace with your Gmail password or app-specific password
-DEFAULT_FROM_EMAIL = 'vaultspace7@gmail.com'
+EMAIL_HOST_USER = 'vaultspace07@gmail.com'  # Replace with your Gmail address
+EMAIL_HOST_PASSWORD = 'kpzdsyfysnvzvhiu '  # Replace with your Gmail password or app-specific password
+DEFAULT_FROM_EMAIL = 'vaultspace07@gmail.com'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -194,10 +209,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

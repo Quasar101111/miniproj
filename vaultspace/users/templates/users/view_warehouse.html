@@ -1,0 +1,396 @@
+<!-- index.html -->
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="title" content="project">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+ 
+    <title>{{ title }}</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <!-- Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+ <!-- Bootstrap CSS -->
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+ <!-- Bootstrap JS -->
+ 
+ <!-- Font Awesome -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.cs
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static "index.css" %}" />
+
+    <!-- Display Messages -->
+    {% if messages %}
+    {% for message in messages %}
+    <script>
+        alert("{{ message }}");
+    </script>
+    {% endfor %}
+    {% endif %}
+
+    <style>
+       .warehouse-detail {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+}
+
+.location {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+/* h */
+.image-gallery {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.main-image-container {
+    position: relative;
+    height: 400px; /* Adjust as needed */
+    overflow: hidden;
+}
+
+.main-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.main-image.active {
+    opacity: 1;
+}
+
+.thumbnail-container {
+    display: flex;
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
+.thumbnail {
+    width: 100px;
+    height: 75px;
+    object-fit: cover;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.thumbnail:hover {
+    opacity: 0.7;
+}
+
+.image-controls button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.prev-image { left: 10px; }
+.next-image { right: 10px; }
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.action-buttons button {
+    margin-left: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.warehouse-specs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.spec-item {
+    text-align: center;
+}
+
+.address-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.address-table th, .address-table td {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+}
+
+.features-list {
+    list-style-type: none;
+    padding: 0;
+    columns: 3;
+}
+
+.features-list li {
+    margin-bottom: 10px;
+}
+
+.btn-map, .btn-download {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+.btn-book-now {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+
+</head>
+
+<body class="container-fluid">
+
+    <header class="row">
+        <!-- Navbar -->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button class="navbar-toggle" data-toggle="collapse" data-target="#mainNavBar">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" class="styleheader" href="{% url "index" %}">project</a>
+                </div>
+                <div class="collapse navbar-collapse" id="mainNavBar">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="{% url "index" %}">Home</a></li>
+
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url "logout" %}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+                        <li><a href="{% url "tenant_details" %}"><span class="glyphicon glyphicon-log-out"></span> update profile</a></li>
+                        
+                        {% else %}
+                        <li><a href="{% url "register_lessor" %}"><span class="glyphicon glyphicon-user"></span> Sign up for lessor</a></li>
+                        <li><a href="{% url "register_tenant" %}"><span class="glyphicon glyphicon-user"></span> Sign up for tenant</a></li>
+                       
+
+                        <li><a href="{% url "login" %}"><span class="glyphicon glyphicon-log-in"></span> Log in
+                            </a></li>
+                        {% endif %}
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <br />
+    <br>
+    <br>
+    <div class="warehouse-detail">
+        <h1>{{ warehouse.name }}</h1>
+        <p class="status-badge">{% if warehouse.status == 1 %}FOR RENT
+            
+       
+           
+            {% else %}NOT AVAILABLE{% endif %}</p>
+            {% if warehouse.status == 1 %}
+            <a href=" class="btn-book-now" >Book Now</a> <!-- Book Now Button -->
+            {% endif %}
+        <p class="location"><i class="fas fa-map-marker-alt"></i> {{ warehouse.location.address }}, {{ warehouse.location.city }}, {{ warehouse.location.state }}</p>
+    
+        <div class="image-gallery">
+            <div class="main-image-container">
+                {% for photo in warehouse.photos.all %}
+                    <img src="{{ photo.image.url }}" alt="Warehouse Image {{ forloop.counter }}" class="main-image {% if forloop.first %}active{% endif %}">
+                {% endfor %}
+            </div>
+            <div class="thumbnail-container">
+                {% for photo in warehouse.photos.all %}
+                    <img src="{{ photo.image.url }}" alt="Warehouse Image {{ forloop.counter }}" class="thumbnail" data-index="{{ forloop.counter0 }}">
+                {% endfor %}
+            </div>
+            <div class="image-controls">
+                <button class="prev-image"><i class="fas fa-chevron-left"></i>prev</button>
+                <button class="next-image"><i class="fas fa-chevron-right"></i>next</button>
+            </div>
+        </div>
+        
+        <!-- <div class="action-buttons">
+            <button class="btn-gallery"><i class="fas fa-images"></i>next</button>
+            <button class="btn-floorplan"><i class="fas fa-vector-square"></i></button>
+            <button class="btn-download"><i class="fas fa-download"></i></button>
+        </div> -->
+    
+        <h2>Overview</h2>
+        <p>Property ID: {{ warehouse.warehouse_id }}</p>
+        <div class="warehouse-specs">
+            <div class="spec-item">
+                <i class="fas fa-warehouse"></i>
+                <span>Warehouse</span>
+                <span>Property Type</span>
+            </div>
+            <div class="spec-item">
+                <i class="fas fa-arrows-alt"></i>
+                <span>{{ warehouse.area }}</span>
+                <span>sqft</span>
+            </div>
+            <div class="spec-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>{{ warehouse.year_built|date:"Y" }}</span>
+                <span>Year Built</span>
+            </div>
+        </div>
+    
+        <h2>Description</h2>
+        <p>{{ warehouse.terms_cond }}</p>
+    
+        <h2>Property Documents</h2>
+        {% if warehouse.ownership_documents %}
+            <div class="document-item">
+                <i class="fas fa-file-pdf"></i>
+                <span>Ownership Documents</span>
+                <a href="{{ warehouse.ownership_documents.url }}" class="btn-download">DOWNLOAD</a>
+            </div>
+        {% else %}
+            <p>No documents available.</p>
+        {% endif %}
+    
+        <!-- <h2>Address</h2>
+        <a href="https://www.google.com/maps/search/?api=1&query={{ warehouse.location.address|urlencode }}" class="btn-map" target="_blank">
+            <i class="fas fa-map-marked-alt"></i> Open on Google Maps
+        </a> -->
+        <table class="address-table">
+           
+            <tr>
+                <th>State/County</th>
+                <td>{{ warehouse.location.state }}</td>
+            </tr>
+            <tr>
+                <th>City</th>
+                <td>{{ warehouse.location.city }}</td>
+            </tr>
+            
+        </table>
+    
+        <h2>Features</h2>
+        <ul class="features-list">
+            {% for facility in warehouse_facilities %}
+                <li> {{facility}}</li>
+            {% endfor %}
+        </ul>
+    </div>
+ 
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainImages = document.querySelectorAll('.main-image');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        const prevButton = document.querySelector('.prev-image');
+        const nextButton = document.querySelector('.next-image');
+        let currentIndex = 0;
+        let intervalId;
+    
+        function showImage(index) {
+            mainImages.forEach(img => img.classList.remove('active'));
+            mainImages[index].classList.add('active');
+            currentIndex = index;
+        }
+    
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % mainImages.length;
+            showImage(currentIndex);
+        }
+    
+        function prevImage() {
+            currentIndex = (currentIndex - 1 + mainImages.length) % mainImages.length;
+            showImage(currentIndex);
+        }
+    
+        function startSlideshow() {
+            intervalId = setInterval(nextImage, 5000);
+        }
+    
+        function stopSlideshow() {
+            clearInterval(intervalId);
+        }
+    
+        thumbnails.forEach((thumbnail, index) => {
+            thumbnail.addEventListener('click', () => {
+                showImage(index);
+                stopSlideshow();
+                startSlideshow();
+            });
+        });
+    
+        prevButton.addEventListener('click', () => {
+            prevImage();
+            stopSlideshow();
+            startSlideshow();
+        });
+    
+        nextButton.addEventListener('click', () => {
+            nextImage();
+            stopSlideshow();
+            startSlideshow();
+        });
+    
+        startSlideshow();
+    
+        // Optional: Pause slideshow on hover
+        const imageGallery = document.querySelector('.image-gallery');
+        imageGallery.addEventListener('mouseenter', stopSlideshow);
+        imageGallery.addEventListener('mouseleave', startSlideshow);
+    });
+    </script>
+
+</html>

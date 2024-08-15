@@ -1,0 +1,159 @@
+/*
+ Project author:     ModelTheme
+ File name:          Custom Popup CSS
+*/
+
+/* General styling */
+.modeltheme-modal.popup {
+    max-width: 800px;
+    position: fixed;
+}
+.modeltheme-modal .mt-popup-wrapper {
+    background: #fff;
+    padding: 0px;
+}
+.modeltheme-modal .mt-popup-image{
+	padding:0px;
+}
+.modeltheme-modal .mt-popup-content img {
+    width: 150px;
+}
+.modeltheme-modal .mt-popup-content {
+    padding: 0px 30px;
+}
+.modeltheme-modal .mc4wp-form {
+    margin-top: 50px;
+}
+.modeltheme-modal .mc4wp-form input.submit {
+    margin-left: -40px;
+    width: 20%;
+    padding: 13px 20px;
+}
+.modeltheme-modal .mc4wp-form input.email {
+    box-shadow: none;
+    width: 88%;
+}
+.modeltheme-modal .mt-popup-desc {
+    text-align: center;
+    color: #606060;
+    font-style: italic;
+    margin-top: 5px;
+}
+.modeltheme-modal h3.popup-title {
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 29px;
+    color: #151515;
+    margin: 30px 0px 20px;
+}
+.modeltheme-modal .mt-popup-form {
+    display: flex;
+}
+.modeltheme-modal .wpcf7-list-item-label {
+    font-style: italic;
+    font-weight: normal;
+    font-size: 13px;
+    line-height: 17px;
+    color: #606060;
+}
+.modeltheme-modal input.email {
+    background: #EEEEEE;
+    border-radius: 30px;
+    border: none;
+    padding: 12px 29px;
+    width: 100%;
+}
+.modeltheme-modal input.submit {
+    background: #2695FF;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 34px;
+    padding: 12px 20px;
+    margin-left: -35px;
+    border: none;
+    font-weight: 600;
+    color: #fff;
+}
+.modeltheme-modal .dismiss { 
+	float:right; 
+	width:7%; 
+	text-align:center; 
+	padding-top:1em; 
+} 
+.modeltheme-modal .dismiss a::before {
+    color: #606060;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 22px;
+    margin-right: 20px;
+    padding: 16px;
+    font-family: 'FontAwesome';
+    content: "\f00d";
+}
+.modeltheme-modal .wpcf7-checkbox .wpcf7-list-item {
+    margin-top: 15px;
+    text-align: left;
+}
+.modeltheme-modal .mt-additional {
+    position: absolute;
+    bottom: -25%;
+    text-align: center;
+    width: 90%;
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 500;
+}
+.modeltheme-modal .wpcf7 form .wpcf7-response-output {
+    position: absolute;
+    top: -65px;
+    width: 80%;
+}
+@media only screen and (max-width: 767px) {
+    .modeltheme-modal .mt-popup-image{
+        display: none;
+    }
+    .modeltheme-modal .mt-popup-content {
+        padding: 50px 30px !important;
+    }
+    .modeltheme-modal .dismiss {
+        width: 15% !important;
+    }
+    .modeltheme-modal .mt-additional {
+        position: relative !important;
+        margin: 35px 0px 0px !important;
+    }
+    .modeltheme-modal .wpcf7 form .wpcf7-response-output {
+        top: -28px !important;
+        width: 76% !important;
+    }
+    .modeltheme-modal .mc4wp-form input.email {
+        width: 75% !important;
+    }
+    .modeltheme-modal .mc4wp-form input.submit{
+        width: 35% !important;
+    }
+}
+@media only screen and (min-width: 768px) and (max-width: 1023px){
+    .modeltheme-modal .mt-popup-image{
+        display: none;
+    }
+    .modeltheme-modal .mt-popup-content {
+        padding: 60px 30px !important;
+    }
+    .modeltheme-modal .mt-additional {
+        position: relative !important;
+        margin: 35px 0px 0px !important;
+    }
+    .modeltheme-modal .dismiss {
+        width: 15% !important;
+    }
+    .modeltheme-modal .wpcf7 form .wpcf7-response-output {
+        top: -28px !important;
+        width: 76% !important;
+    }
+    .modeltheme-modal .mc4wp-form input.email {
+        width: 75% !important;
+    }
+    .modeltheme-modal .mc4wp-form input.submit{
+        width: 35% !important;
+    }
+}
