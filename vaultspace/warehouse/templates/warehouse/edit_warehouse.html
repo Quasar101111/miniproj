@@ -148,6 +148,20 @@
         ***********************************-->
         <div class="content-body">
             <div class="container-fluid">
+                {% if messages %}
+        <div class="row">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
                 <div class="row">
                     <div class="col-xl-8 col-lg-6">
                         <div class="card">
@@ -173,30 +187,57 @@
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="col-sm-3 col-form-label form-label">Area (Sqft)</label>
                                                 <input type="number" class="form-control" name="area" placeholder="area in square feet" value="{{ warehouse.area }}" required>
+                                                <div class="invalid-feedback">
+                                                    Please enter a valid numeric value for the area.
+                                                </div>
                                             </div>
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label for="formFileSm" class="form-label">Ownership Document</label>
-                                                <input class="form-control form-control-sm" id="formFileSm" type="file" name="ownership_document" accept=".pdf"><strong class="text-black">
-                                                    <li class="list-group-item d-flex justify-content-between"><span class="mb-0">ownership proof:
-                                                        </span> <strong class="text-black">{% if warehouse.ownership_documents %}
-                                                        <a href="{{ warehouse.ownership_documents.url }}" target="_blank" alt="not found">View
-                                                            File</a>
-                                                        {% else %}
-                                                        Not Available
-                                                        {% endif %} </strong></li></strong>
+                                                <input class="form-control form-control-sm" id="formFileSm" type="file" name="ownership_document" accept=".pdf" required>
+                                                <div class="invalid-feedback">
+                                                    Please upload a valid PDF file for the ownership document.
+                                                </div>
+                                                {% if warehouse.ownership_documents %}
+                                                <div class="mt-2">
+                                                    <a href="{{ warehouse.ownership_documents.url }}" target="_blank">View Current Document</a>
+                                                </div>
+                                                <input type="hidden" name="existing_ownership_document" value="{{ warehouse.ownership_documents.url }}">
+                                                {% else %}
+                                                <div class="mt-2 text-muted">
+                                                    No document uploaded.
+                                                </div>
+                                                {% endif %}
                                             </div>
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Landmark</label>
                                                 <input type="text" class="form-control" name="landmark" placeholder="landmark" value="{{ warehouse.landmarks }}" required>
+                                                <div class="invalid-feedback">
+                                                    Please enter a valid value for the landmark.
+                                                </div>
                                             </div>
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Pick Date for finished warehouse construction date</label>
-                                                <input name="date" class="datepicker-default form-control" id="datepicker" value="{{ warehouse.year_built|date:'d F, Y' }}">
+                                                <input name="date" class=" form-control" id="datepicker" type="date" value="{{ warehouse.year_built|date:'d F, Y' }}" required>
                                             </div>
-
+                                            <script>
+                                                // Function to format the date as yyyy-mm-dd
+                                                function formatDate(date) {
+                                                    const year = date.getFullYear();
+                                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                    const day = String(date.getDate()).padStart(2, '0');
+                                                    return `${year}-${month}-${day}`;
+                                                }
+                                        
+                                                // Set the max attribute for the date input to today's date
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    const today = new Date();
+                                                    const maxDate = formatDate(today);
+                                                    document.getElementById('datepicker').setAttribute('max', maxDate);
+                                                });
+                                            </script>
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Rental Price</label>
                                                 <input type="number" class="form-control" name="rental_price" placeholder="in rupees" value="{{ warehouse.rental_price }}" required>
@@ -204,7 +245,21 @@
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label for="id_image">Photos of warehouse</label>
-                                                <input type="file" class="form-control form-control-sm" id="id_image" name="images" multiple>
+                                                <input type="file" class="form-control form-control-sm" id="id_image" name="images" multiple accept=".jpeg,.jpg,.png" required>
+                                                {% if warehouse.photos.exists %}
+                                                <div class="mt-2">
+                                                    {% for photo in warehouse.photos.all %}
+                                                    <div>
+                                                        <a href="{{ photo.image.url }}" target="_blank">View Image</a>
+                                                        <input type="hidden" name="existing_images" value="{{ photo.image.url }}">
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                {% else %}
+                                                <div class="mt-2 text-muted">
+                                                    No images uploaded.
+                                                </div>
+                                                {% endif %}
                                             </div>
 
                                             <div class="mb-3 col-lg-8 col-md-6">

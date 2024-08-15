@@ -31,27 +31,27 @@ class UnverifiedUser(models.Model):
     last_resend_time = models.DateTimeField(blank=True, null=True)
     user_type = models.CharField(max_length=10)  # Add user type field
 
-    def generate_otp(self):
-        self.otp = secrets.token_hex(3)  # Generate a 6-digit OTP
-        self.otp_created_at = timezone.now()
-        self.save()
+    # def generate_otp(self):
+    #     self.otp = secrets.token_hex(3)  # Generate a 6-digit OTP
+    #     self.otp_created_at = timezone.now()
+    #     self.save()
 
-    def send_otp_email(self):
-        subject = 'Your OTP Verification Code'
-        message = f'Your OTP verification code is {self.otp}. It is valid for 15 minutes.'
-        email_from = 'vaultspace07@gmail.com'
-        recipient_list = self.email
-        send_mail(subject, message, email_from, recipient_list)
+    # def send_otp_email(self):
+    #     subject = 'Your OTP Verification Code'
+    #     message = f'Your OTP verification code is {self.otp}. It is valid for 15 minutes.'
+    #     email_from = 'vaultspace07@gmail.com'
+    #     recipient_list = self.email
+    #     send_mail(subject, message, email_from, recipient_list)
 
-    def verify_otp(self, entered_otp):
-        if self.otp == entered_otp and self.otp_created_at >= timezone.now() - timezone.timedelta(minutes=15):
-            return True
-        return False
+    # def verify_otp(self, entered_otp):
+    #     if self.otp == entered_otp and self.otp_created_at >= timezone.now() - timezone.timedelta(minutes=15):
+    #         return True
+    #     return False
     
-    def can_resend_otp(self):
-        if self.last_resend_time and self.last_resend_time >= timezone.now() - timezone.timedelta(minutes=1):
-            return False
-        return True
+    # def can_resend_otp(self):
+    #     if self.last_resend_time and self.last_resend_time >= timezone.now() - timezone.timedelta(minutes=1):
+    #         return False
+    #     return True
 class Lessor(models.Model):
       
         lessor_id = models.AutoField(primary_key=True)
@@ -64,7 +64,7 @@ class Lessor(models.Model):
             return f'Name: {self.lessor_name} '
         
 class Tenant(models.Model):
-      
+    
     tenant_id = models.AutoField(primary_key=True)
     tenant_name = models.CharField(max_length=50)
     email = models.EmailField(max_length=50)

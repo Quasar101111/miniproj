@@ -7,10 +7,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Lessor</title>
+    <title>Register Tenant</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'imagess/favicon.png' %}">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
-
 
     <style>
         .google-login {
@@ -23,23 +22,15 @@
             border-radius: 5px;
             font-size: 16px;
             font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: background-color 0.3s ease;
         }
 
         .google-login:hover {
             background-color: #357ae8;
         }
-        .alert-error {
-        background-color: rgb(241, 106, 106);
-        color: white; /* Optional: to make the text more readable */
-        padding: 10px; /* Optional: for better spacing */
-        border-radius: 5px; /* Optional: for rounded corners */
-        }
     </style>
-
 </head>
-
 <body>
     {% block start %}
     <div class="fix-wrapper">
@@ -54,11 +45,10 @@
                             <h4 class="text-center mb-4">Sign up for Tenant</h4>
                             {% if messages %}
                             {% for message in messages %}
-                            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-                                {{ message }}
-                            </div>
+                            <p>{{ message }}</p>
                             {% endfor %}
                             {% endif %}
+                            {% if not show_otp_form %}
                             <form method="POST">
                                 {% csrf_token %}
                                 <fieldset class="form-group">
@@ -71,10 +61,20 @@
                                     <a href="{% provider_login_url 'google' %}" class="google-login">Sign via Google</a>
                                 </h4>
                                 <br />
-                                <sub><a href="{% url 'login' %}"
-                                        style="text-decoration: none; color: blue; padding:3%; cursor:pointer;">Already
-                                        have an account?</a></sub>
+                                <sub><a href="{% url 'login' %}" style="text-decoration: none; color: blue; padding:3%; cursor:pointer;">Already have an account?</a></sub>
                             </form>
+                            {% else %}
+                            <form method="POST" action="{% url 'verify_otp' %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="otp">Enter OTP sent to your email:</label>
+                                    <input type="text" class="form-control" id="otp" name="otp" required>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary">Verify OTP</button>
+                                </div>
+                            </form>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -91,5 +91,4 @@
     <script src="{% static 'js/deznav-init.js' %}"></script>
     {% endblock %}
 </body>
-
 </html>

@@ -52,6 +52,7 @@
                             <p>{{ message }}</p>
                             {% endfor %}
                             {% endif %}
+                            {% if not show_otp_form %}
                             <form method="POST">
                                 {% csrf_token %}
                                 <fieldset class="form-group">
@@ -66,6 +67,19 @@
                                 <br />
                                 <sub><a href="{% url 'login' %}" style="text-decoration: none; color: blue; padding:3%; cursor:pointer;">Already have an account?</a></sub>
                             </form>
+                            {% else %}
+                            <form method="POST" action="{% url 'verify_otp' %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="otp">Enter OTP sent to your email:</label>
+                                    <input type="text" class="form-control" id="otp" name="otp" required>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary">Verify OTP</button>
+                                </div>
+                            </form>
+                            {% endif %}
+
                         </div>
                     </div>
                 </div>

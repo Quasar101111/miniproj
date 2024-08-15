@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path,include
 from users import views as users_view
 from warehouse import views as warehouse_view
+from moderator import views as moderator_view
 from django.contrib.auth import views as auth
 from django.conf.urls.static import static
 from django.conf import settings
@@ -29,12 +30,38 @@ urlpatterns = [
     path('', include('users.urls')),
     path('login/', users_view.Login, name ='login'),
     # path('logout/', auth.LogoutView.as_view(template_name ='users/index.html'), name ='logout'),
+    
     path('register_lessor/', users_view.register_lessor, name='register_lessor'),
     path('register_tenant/',users_view.register_tenant, name='register_tenant'),
      path('lessor_index/', users_view.lessor_index, name='lessor_index'),
+     path('tenant_details/', users_view.tenant_details, name='tenant_details'),
+
+
+
     path('warehouse/', include('warehouse.urls')),
+   
+   
+   path('view_warehouse/<int:warehouse_id>/', users_view.view_warehouse, name='view_warehouse'),
+   path('warehouse_detail/<int:warehouse_id>/', users_view.warehouse_detail, name='warehouse_detail'),
+   path('warehouse_list/', users_view.warehouse_list, name='warehouse_list'),
+
+   
+   
     path('add_warehouse/',warehouse_view.add_warehouse,name='add_warehouse'),
      path('edit_warehouse/<int:warehouse_id>/', warehouse_view.edit_warehouse, name='edit_warehouse'),
+
+     
+     
+     
+     
+     
+     path('manage_tenants/', moderator_view.manage_tenants,name='manage_tenants'),
+      path('manage_lessors/', moderator_view.manage_lessors,name='manage_lessors'),
+
+      path('admin_dashboard/', moderator_view.dashboard, name='admin_dashboard'),
+
+      path('manage_warehouse/', moderator_view.manage_warehouses, name='manage_warehouse'),
+
 
     
 ]

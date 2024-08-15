@@ -54,17 +54,78 @@
 
 	<style>
 		.warehouses-container {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    max-height: 100vh; /* Adjust this value as needed */
-    gap: 1rem; /* Space between warehouse items */
-}
+			display: flex;
+			flex-wrap: wrap;
+			gap: 1rem;
+			justify-content: flex-start;
+		}
 
-.warehouse-item {
-    width: 100%;
-    max-width: 400px; /* Adjust as needed */
-}
+		.warehouse-item {
+			width: calc(25% - 1rem);
+			min-width: 250px;
+			margin-bottom: 1rem;
+		}
+
+		.card {
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.card-body {
+			flex-grow: 1;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.new-arrival-product {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+		}
+
+		.new-arrivals-img-contnent {
+			height: 200px;
+			overflow: hidden;
+		}
+
+		.new-arrivals-img-contnent img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.carousel-item {
+			height: 100%;
+		}
+
+		.new-arrival-content {
+			flex-grow: 1;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.new-arrival-content > *:last-child {
+			margin-top: auto;
+		}
+
+		@media (max-width: 1200px) {
+			.warehouse-item {
+				width: calc(33.333% - 1rem);
+			}
+		}
+
+		@media (max-width: 992px) {
+			.warehouse-item {
+				width: calc(50% - 1rem);
+			}
+		}
+
+		@media (max-width: 576px) {
+			.warehouse-item {
+				width: 100%;
+			}
+		}
 	</style>
 </head>
 
@@ -216,7 +277,7 @@
                                 {% endif %}
                                 <p><strong>Rental Price:</strong> ${{ warehouse.rental_price }} per month</p>
                                 <p><strong>Status:</strong> {% if warehouse.status == 1 %}Available{% else %}Not Available{% endif %}</p>
-                                <a href="{% url 'edit_warehouse' warehouse.warehouse_id %}" class="btn btn-primary">Edit Details</a>       
+                                <a href="{% url 'edit_warehouse' warehouse.warehouse_id %}" class="btn btn-primary mt-auto">Edit Details</a>       
                             </div>
                         </div>
                     </div>

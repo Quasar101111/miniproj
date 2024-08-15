@@ -1,7 +1,7 @@
 # warehouse/views.py
 
 
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from datetime import datetime
 from django.shortcuts import render, redirect
 from django.forms import modelformset_factory
@@ -28,12 +28,10 @@ def add_warehouse(request):
         facilities = request.POST.getlist('facilities')
         images = request.FILES.getlist('images')
         date = request.POST.get('date')
-        date_obj = datetime.strptime(date, "%d %B, %Y")
-        formatted_date = date_obj.strftime("%Y-%m-%d")
+        
         
         if location_id and area and rental_price:
             location = Location.objects.get(pk=location_id)
-            # Retrieve lessor ID from session
             
             if lessor_id:
                 lessor = Lessor.objects.get(pk=lessor_id)
@@ -43,7 +41,7 @@ def add_warehouse(request):
                     area=area,
                     ownership_documents=ownership_document,
                     landmarks=landmark,
-                    year_built=date_obj,
+                    year_built=date,
                     rental_price=rental_price,
                     terms_cond=terms_cond,
                     facilities=','.join(facilities),
@@ -74,14 +72,15 @@ def temp1(request):
         'lessor': lessor,
         'warehouses': warehouses
     })
+@login_required
 def edit_warehouse(request, warehouse_id):
-    warehouse = Warehouse.objects.get(warehouse_id=warehouse_id)
+    warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
     locations = Location.objects.all()
     lessor_id = request.session.get('lessor_id')
     lessor = Lessor.objects.get(lessor_id=lessor_id)
-    # Split the string and pass it to the context
     features = "Loading Docks,Racking Systems,Lighting and Climate Control,Climate control,Surveillance cameras,Security personnel,Restrooms and break areas,Office spaces,First aid stations".split(",")
     warehouse_facilities = warehouse.facilities.split(',')
+
     if request.method == 'POST':
         location_id = request.POST.get('location')
         area = request.POST.get('area')
@@ -92,28 +91,45 @@ def edit_warehouse(request, warehouse_id):
         facilities = request.POST.getlist('facilities')
         images = request.FILES.getlist('images')
         date = request.POST.get('date')
-        date_obj = datetime.strptime(date, "%d %B, %Y")
-        formatted_date = date_obj.strftime("%Y-%m-%d")
+       
 
         if location_id and area and rental_price:
             location = Location.objects.get(pk=location_id)
             
             warehouse.location = location
             warehouse.area = area
-            warehouse.ownership_documents = ownership_document
             warehouse.landmarks = landmark
-            warehouse.year_built = date_obj
+            warehouse.year_built = date
             warehouse.rental_price = rental_price
             warehouse.terms_cond = terms_cond
             warehouse.facilities = ','.join(facilities)
+
+            # Handle ownership document
+            if ownership_document:
+                warehouse.ownership_documents = ownership_document
+            else:
+                warehouse.ownership_documents = request.POST.get('existing_ownership_document')
+
+            # Handle images
+            if images:
+                WarehousePhoto.objects.filter(warehouse=warehouse).delete()
+                for image in images:
+                    WarehousePhoto.objects.create(warehouse=warehouse, image=image)
+            else:
+                existing_images = request.POST.getlist('existing_images')
+                if existing_images:
+                    WarehousePhoto.objects.filter(warehouse=warehouse).delete()
+                    for image_url in existing_images:
+                        WarehousePhoto.objects.create(warehouse=warehouse, image=image_url)
+
             warehouse.save()
-
-            WarehousePhoto.objects.filter(warehouse=warehouse).delete()
-
-            for image in images:
-                WarehousePhoto.objects.create(warehouse=warehouse, image=image)
-
-          
             return redirect('lessor_index')
 
-    return render(request, 'warehouse/edit_warehouse.html', {'warehouse': warehouse, 'locations': locations, 'lessor_id': lessor_id, 'lessor': lessor, 'features': features, 'warehouse_facilities': warehouse_facilities})
+    return render(request, 'warehouse/edit_warehouse.html', {
+        'warehouse': warehouse,
+        'locations': locations,
+        'lessor_id': lessor_id,
+        'lessor': lessor,
+        'features': features,
+        'warehouse_facilities': warehouse_facilities
+    })

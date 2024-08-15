@@ -16,6 +16,9 @@
         padding: 10px; /* Optional: for better spacing */
         border-radius: 5px; /* Optional: for rounded corners */
         }
+		.fix-wrapper {
+  background-color: aliceblue;
+}
 </style>
 
 
@@ -50,6 +53,9 @@
 									</div>
 								</center>
 								<br />
+								<div class="text-center mt-3">
+									<a href="{% url 'password_reset' %}" style="text-decoration: none; color: blue;">Forgot Password?</a>
+								</div>
 								<sub style="text-align: left;"><a href="{% url 'register_tenant' %}"
 										style="text-decoration: none; color: blue; padding:2%; cursor:pointer; margin-right:2%;">don't
 										have account,sign up as tenant</a></sub>

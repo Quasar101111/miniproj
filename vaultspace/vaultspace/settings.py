@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     
     'users',
     'warehouse',
+    'moderator',
     'crispy_forms',
     'crispy_bootstrap4',
     'django.contrib.sites',  # Required for allauth
@@ -77,7 +78,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'warehouse', 'templates'),
-            os.path.join(BASE_DIR, 'user', 'templates'),],
+            os.path.join(BASE_DIR, 'user', 'templates'),
+            os.path.join(BASE_DIR, 'moderator', 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,9 +132,10 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+LOGIN_URL = 'login'  # Use the name of your custom login path
 
-LOGIN_REDIRECT_URL = "users/login"
-LOGOUT_REDIRECT_URL = "index"
+#LOGIN_REDIRECT_URL = "users/login"
+# LOGOUT_REDIRECT_URL = "index"
 SOCIALACCOUNT_LOGIN_ON_GET=True
 
 SITE_ID = 1
@@ -169,14 +172,14 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'vaultspace07@gmail.com'  # Replace with your Gmail address
 EMAIL_HOST_PASSWORD = 'kpzdsyfysnvzvhiu '  # Replace with your Gmail password or app-specific password
-DEFAULT_FROM_EMAIL = 'vaultspace7@gmail.com'
+DEFAULT_FROM_EMAIL = 'vaultspace07@gmail.com'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
