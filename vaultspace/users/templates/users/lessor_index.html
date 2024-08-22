@@ -15,7 +15,7 @@
 	<!-- Meta -->
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="author" content="DexignZone">
+	
 	<meta name="robots" content="index, follow">
 
 
@@ -212,6 +212,8 @@
 					<ul aria-expanded="false">
 						<li><a href="{% url 'lessor_index' %}">Home</a></li>
 						<li><a href="{% url 'add_warehouse' %}">Add Warehouse</a></li>
+						<li><a href="{% url 'lessor_messages' %}">Messages</a></li>
+						<li><a href="{% url 'lease_requests' %}">Lease Requests</a></li>
 					</ul>
 				</ul>
 			</div>
@@ -225,6 +227,22 @@
 ***********************************-->
 <div class="content-body">
     <div class="container-fluid">
+
+		 <!-- Messages section -->
+		
+		 {% if messages %}
+		 <div class="messages">
+			 {% for message in messages %}
+			 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+				 {{ message }}
+				 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			 </div>
+			 {% endfor %}
+		 </div>
+		 {% endif %}
+
+
+
         <div class="row page-titles mx-0">
             <div class="col-sm-6 p-md-0">
                 <div class="welcome-text">
@@ -277,6 +295,7 @@
                                 {% endif %}
                                 <p><strong>Rental Price:</strong> ${{ warehouse.rental_price }} per month</p>
                                 <p><strong>Status:</strong> {% if warehouse.status == 1 %}Available{% else %}Not Available{% endif %}</p>
+								<a href="{% url 'lease_warehouse' warehouse.warehouse_id %}" class="btn btn-success mt-auto">Rent It</a>
                                 <a href="{% url 'edit_warehouse' warehouse.warehouse_id %}" class="btn btn-primary mt-auto">Edit Details</a>       
                             </div>
                         </div>
@@ -335,7 +354,18 @@
 	<script src="{% static 'js/dashboard/cms.js' %}	"></script>
 
 
-
+	<script>
+		// Add this script to auto-dismiss alerts after 5 seconds
+		document.addEventListener('DOMContentLoaded', function() {
+			setTimeout(function() {
+				var alerts = document.querySelectorAll('.alert');
+				alerts.forEach(function(alert) {
+					var bsAlert = new bootstrap.Alert(alert);
+					bsAlert.close();
+				});
+			}, 5000);
+		});
+	</script>
 
 </body>
 

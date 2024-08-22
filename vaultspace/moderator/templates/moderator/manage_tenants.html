@@ -1,4 +1,3 @@
-<!-- moderator/templates/moderator/manage_lessors.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -37,10 +36,6 @@
         <div class="container">
             <a class="navbar-brand" href="#">Admin</a>
             <div class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <!-- <span class="navbar-text me-4">Welcome, </span> -->
-               
-            </div>
-            <div class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <a class="nav-link" href="{% url 'logout' %}">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                 </a>
@@ -55,12 +50,12 @@
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'manage_lessors' %}">
+                            <a class="nav-link" href="{% url 'manage_lessors' %}">
                                 <i class="fas fa-user-tie me-2"></i>Manage Lessors
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'manage_tenants' %}">
+                            <a class="nav-link active" href="{% url 'manage_tenants' %}">
                                 <i class="fas fa-users me-2"></i>Manage Tenants
                             </a>
                         </li>
@@ -73,53 +68,127 @@
                 </div>
             </nav>
 
-    <div class="container mt-4">
-        <h2>Manage Tenants</h2>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Identity Proof</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in tenants_with_users %}
-                <tr>
-                    <td>{{ item.tenant.email }}</td>
-                    <td>{{ item.tenant.tenant_name }}</td>
-                    <td>{{ item.tenant.contact_number }}</td>
-                    <td>
-                        {% if item.tenant.identity_proof %}
-                            <a href="{{ item.tenant.identity_proof.url }}" target="_blank">View</a>
-                        {% else %}
-                            No file
-                        {% endif %}
-                    </td>
-                    <td>{% if item.user.is_active %}Active{% else %}Disabled{% endif %}</td>
-                    <td>
-                        <form method="post" action="{% url 'manage_tenants' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ item.tenant.email }}">
-                            {% if item.user.is_active %}
-                                <button type="submit" name="action" value="disable" class="btn btn-danger btn-sm">Disable</button>
-                            {% else %}
-                                <button type="submit" name="action" value="enable" class="btn btn-success btn-sm">Enable</button>
-                            {% endif %}
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5">No tenants found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <div class="container mt-4">
+                    <!-- Messages section -->
+                    {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <h2>Manage Tenants</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Identity Proof</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in tenants_with_users %}
+                            <tr>
+                                <td>{{ item.tenant.email }}</td>
+                                <td>{{ item.tenant.tenant_name }}</td>
+                                <td>{{ item.tenant.contact_number }}</td>
+                                <td>
+                                    {% if item.tenant.identity_proof %}
+                                        <a href="{{ item.tenant.identity_proof.url }}" target="_blank">View</a>
+                                    {% else %}
+                                        No file
+                                    {% endif %}
+                                </td>
+                                <td>{% if item.user.is_active %}Active{% else %}Disabled{% endif %}</td>
+                                <td>
+                                    {% if item.user.is_active %}
+                                        <button type="button" class="btn btn-danger btn-sm disable-btn" 
+                                            data-bs-toggle="modal" data-bs-target="#disableModal" 
+                                            data-email="{{ item.tenant.email }}">Disable</button>
+                                    {% else %}
+                                        <form method="post" action="{% url 'manage_tenants' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="email" value="{{ item.tenant.email }}">
+                                            <button type="submit" name="action" value="enable" class="btn btn-success btn-sm">Enable</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">No tenants found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
     </div>
+    
+    <!-- Modal for disable action -->
+    <div class="modal fade" id="disableModal" tabindex="-1" aria-labelledby="disableModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'manage_tenants' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="email" id="disableEmail">
+                    <input type="hidden" name="action" value="disable">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="disableModalLabel">Disable Account</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="ban_reason" class="form-label">Account ban reason</label>
+                            <textarea class="form-control" id="ban_reason" name="ban_reason" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Disable Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var disableModal = document.getElementById('disableModal');
+        var disableButtons = document.querySelectorAll('.disable-btn');
+        
+        disableButtons.forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                var email = this.getAttribute('data-email');
+                var emailInput = disableModal.querySelector('#disableEmail');
+                emailInput.value = email;
+            });
+        });
+    });
+    </script>
+
+    <script>
+    // Add this script to auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    });
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

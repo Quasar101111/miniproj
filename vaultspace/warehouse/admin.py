@@ -1,6 +1,6 @@
 # warehouse/admin.py 
 from django.contrib import admin
-from .models import Location, Warehouse, WarehousePhoto
+from .models import Location, Warehouse, WarehousePhoto, Lease
 from django.db import models
 from django.forms import Textarea
 
@@ -28,3 +28,5 @@ class WarehouseAdmin(admin.ModelAdmin):
 class WarehousePhotoAdmin(admin.ModelAdmin):
     list_display = ('warehouse', 'image')
     search_fields = ('warehouse__owner__name',)
+
+admin.site.register(Lease)

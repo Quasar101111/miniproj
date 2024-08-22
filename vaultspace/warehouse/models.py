@@ -4,7 +4,8 @@ from django.db import models
 import secrets
 from django.utils import timezone
 
-from users.models import Lessor
+from users.models import Lessor, Tenant
+
 
 
 class Location(models.Model):
@@ -37,4 +38,28 @@ class WarehousePhoto(models.Model):
     
     def __str__(self):
          return f"Photo of Warehouse ID: {str(self.warehouse)}"
+
+
+
+class Lease(models.Model):
+    PAYMENT_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Paid', 'Paid'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    lease_id = models.AutoField(primary_key=True)
+    warehouse = models.ForeignKey('Warehouse', on_delete=models.CASCADE)
+    tenant = models.ForeignKey('users.Tenant', on_delete=models.CASCADE)
+    lease_start_date = models.DateField()
+    lease_end_date = models.DateField()
+    rental_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='Pending')
+    
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Lease {self.lease_id} - {self.warehouse} - {self.tenant}"
+
    

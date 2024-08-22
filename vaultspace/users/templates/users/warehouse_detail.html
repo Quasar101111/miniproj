@@ -185,8 +185,13 @@
                     </div>
                     
                    
-                        <button type="button" class="btn btn-success btn-block mt-3" data-toggle="modal" data-target="#inquiryModal">INQUIRE</button>
-                   
+                    
+                    <a href="{% url 'message_detail' warehouse.owner.email %}">
+                        <button type="button" class="btn btn-primary btn-block mt-3" >
+                        Start Chat
+                    </button>
+                    </a>
+                    
                 </div>
             </div>
         </div>

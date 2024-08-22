@@ -1,6 +1,6 @@
 # users/models.py
 
-from django.db import models
+from django.db import models,connection
 from django.contrib.auth.models import User
 import secrets
 from django.utils import timezone
@@ -31,27 +31,7 @@ class UnverifiedUser(models.Model):
     last_resend_time = models.DateTimeField(blank=True, null=True)
     user_type = models.CharField(max_length=10)  # Add user type field
 
-    # def generate_otp(self):
-    #     self.otp = secrets.token_hex(3)  # Generate a 6-digit OTP
-    #     self.otp_created_at = timezone.now()
-    #     self.save()
-
-    # def send_otp_email(self):
-    #     subject = 'Your OTP Verification Code'
-    #     message = f'Your OTP verification code is {self.otp}. It is valid for 15 minutes.'
-    #     email_from = 'vaultspace07@gmail.com'
-    #     recipient_list = self.email
-    #     send_mail(subject, message, email_from, recipient_list)
-
-    # def verify_otp(self, entered_otp):
-    #     if self.otp == entered_otp and self.otp_created_at >= timezone.now() - timezone.timedelta(minutes=15):
-    #         return True
-    #     return False
     
-    # def can_resend_otp(self):
-    #     if self.last_resend_time and self.last_resend_time >= timezone.now() - timezone.timedelta(minutes=1):
-    #         return False
-    #     return True
 class Lessor(models.Model):
       
         lessor_id = models.AutoField(primary_key=True)
@@ -76,5 +56,21 @@ class Tenant(models.Model):
                                         
     def __str__(self):
        return f'Tenant: {self.tenant_name} ({self.tenant_id})'        
-        
-        
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    message = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Message from {self.sender} to {self.receiver} at {self.timestamp}"
+
+
+def drop_message_table():
+        with connection.cursor() as cursor:
+            cursor.execute("DROP TABLE IF EXISTS users_message CASCADE;")
+
+# Call this function before running migrations           
+    

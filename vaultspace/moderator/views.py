@@ -1,11 +1,21 @@
 # moderator/views.py
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import user_passes_test
+
+
 from users.models import Lessor, Tenant,User
 from warehouse.models import Location, Warehouse
+
+
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+
+from django.conf import settings
+
+from django.core.mail import send_mail
+
+
 def is_admin(user):
     return user.is_authenticated and user.is_superuser
 
@@ -16,7 +26,6 @@ def manage_tenants(request):
     tenants = Tenant.objects.all()
     user_emails = {user.email: user for user in User.objects.all()}
 
-    # Create a dictionary of email to user for quick lookup
     tenants_with_users = []
     for tenant in tenants:
         user = user_emails.get(tenant.email)
@@ -33,11 +42,31 @@ def manage_tenants(request):
             user = User.objects.get(email=email)
             if action == 'enable':
                 user.is_active = True
+                user.save()
+
+                subject = 'Your account has been enabled'
+                message = "Your account has been enabled. You can continue to use our services."
+                from_email = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [email]
+                
+                send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+
+                messages.success(request, f"Account for {email} has been enabled.")
             elif action == 'disable':
                 user.is_active = False
-            user.save()
+                user.save()
+                ban_reason = request.POST.get('ban_reason')
+                
+                # Send email to the tenant
+                subject = 'Your account has been disabled'
+                message = f"Your account has been disabled for the following reason:\n\n{ban_reason}\n\n Please contact the administrator for more information."
+                from_email = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [email]
+                
+                send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+                messages.success(request, f"Account for {email} has been disabled and notified via email.")
         except User.DoesNotExist:
-            pass
+            messages.error(request, f"User with email {email} not found.")
 
         return redirect('manage_tenants')
 
@@ -46,16 +75,14 @@ def manage_tenants(request):
 @login_required
 def manage_lessors(request):
     lessors = Lessor.objects.all()
-    user_emails = {user.email: user for user in User.objects.all()}
-
-    # Create a dictionary of email to user for quick lookup
     lessors_with_users = []
     for lessor in lessors:
-        user = user_emails.get(lessor.email)
-        lessors_with_users.append({
-            'lessor': lessor,
-            'user': user
-        })
+        user = User.objects.filter(email=lessor.email).first()
+        if user:
+            lessors_with_users.append({
+                'lessor': lessor,
+                'user': user
+            })
 
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -65,17 +92,33 @@ def manage_lessors(request):
             user = User.objects.get(email=email)
             if action == 'enable':
                 user.is_active = True
+                user.save()
+                subject = 'Your account has been enabled'
+                message = "Your account has been enabled. You can continue to use our services."
+                from_email = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [email]
+                
+                send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+                messages.success(request, f"Account for {email} has been enabled.")
             elif action == 'disable':
                 user.is_active = False
-            user.save()
+                user.save()
+                ban_reason = request.POST.get('ban_reason')
+                
+                # Send email to the lessor
+                subject = 'Your account has been disabled'
+                message = f"Your account has been disabled for the following reason:\n\n{ban_reason} \n\n Please contact the administrator for more information."
+                from_email = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [email]
+                
+                send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+                messages.success(request, f"Account for {email} has been disabled and notified via email.")
         except User.DoesNotExist:
-            pass
+            messages.error(request, f"User with email {email} not found.")
 
         return redirect('manage_lessors')
 
     return render(request, 'moderator/manage_lessors.html', {'lessors_with_users': lessors_with_users})
-
-
 
 @login_required
 def dashboard(request):

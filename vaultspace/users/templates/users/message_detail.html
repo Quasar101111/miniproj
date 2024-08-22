@@ -1,0 +1,101 @@
+{% load static %}
+
+<head>
+    <title>Message Detail</title>
+    <style>
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-box {
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .chat-message.sent {
+            background-color: #dcf8c6;
+            text-align: right;
+        }
+        .chat-message.received {
+            background-color: #f1f0f0;
+        }
+        .small {
+            font-size: 0.8em;
+            color: #888;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        textarea {
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+        button {
+            align-self: flex-end;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <script>
+        function loadMessages() {
+            $.ajax({
+                url: "{% url 'get_messages' recipient.email %}",
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    $("#chat-box").html(data.html);
+                    $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+                }
+            });
+        }
+    
+        $(document).ready(function() {
+            loadMessages();
+            setInterval(loadMessages, 2000);  // Refresh every 5 seconds
+    
+            $("#message-form").on("submit", function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: $(this).attr("action"),
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function(data) {
+                        if (data.status === "success") {
+                            $("#message-form")[0].reset();
+                            loadMessages();
+                        } else {
+                            alert("Error sending message: " + data.message);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+
+<div class="chat-container">
+    <h2>Chat with {{ recipient.email }}</h2>
+
+    <div id="chat-box" class="chat-box">
+        <!-- Messages will be loaded here -->
+    </div>
+
+    <form id="message-form" method="post" action="{% url 'message_detail' recipient.email %}">
+        {% csrf_token %}
+        <textarea name="message" rows="3" placeholder="Type your message here..."></textarea>
+        <button type="submit">Send</button>
+    </form>
+</div>

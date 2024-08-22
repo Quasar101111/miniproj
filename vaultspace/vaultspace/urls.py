@@ -50,6 +50,9 @@ urlpatterns = [
     path('add_warehouse/',warehouse_view.add_warehouse,name='add_warehouse'),
      path('edit_warehouse/<int:warehouse_id>/', warehouse_view.edit_warehouse, name='edit_warehouse'),
 
+     path('lease-warehouse/<int:warehouse_id>/',warehouse_view.lease_warehouse, name='lease_warehouse'),
+     path('lease_requests/', warehouse_view.lease_requests, name='lease_requests'),
+     path('edit-lease/<int:lease_id>/', warehouse_view.edit_lease, name='edit_lease'),
      
      
      
@@ -63,6 +66,11 @@ urlpatterns = [
       path('manage_warehouse/', moderator_view.manage_warehouses, name='manage_warehouse'),
 
 
+ 
+
     
 ]
+
+
+
 urlpatterns=urlpatterns+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

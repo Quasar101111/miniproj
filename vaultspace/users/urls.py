@@ -39,4 +39,25 @@ urlpatterns = [
     ), name='password_reset_complete'),
     
     
+    path('chat/<str:room_name>/', views.chat_room, name='chat_room'),
+
+    path('lessor-messages/', views.lessor_messages, name='lessor_messages'),
+    path('tenant-messages/', views.tenant_messages, name='tenant_messages'),
+    
+
+
+     # Chat URLs for tenant and lessor
+    path('tenant/chat/<int:lessor_id>/', views.tenant_chat_view, name='tenant_chat'),
+    path('lessor/chat/<int:tenant_id>/', views.lessor_chat_view, name='lessor_chat'),
+
+    # AJAX endpoints
+    path('send-message/', views.send_message, name='send_message'),
+    path('fetch-messages/', views.fetch_messages, name='fetch_messages'),
+
+path('message_detail/<str:recipient_email>/', views.message_detail, name='message_detail'),
+path('message_detail/<str:recipient_email>/get/', views.get_messages, name='get_messages'),
+
+
+
+
     ]

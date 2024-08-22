@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'moderator',
     'crispy_forms',
     'crispy_bootstrap4',
+    
+
     'django.contrib.sites',  # Required for allauth
     'allauth',
     'allauth.account',
@@ -95,6 +97,18 @@ TEMPLATES = [
 
 # SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
 
+
+
+
+# Channel layers configuration (using in-memory layer for simplicity)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+# Update ASGI application
+ASGI_APPLICATION = 'users.asgi.application'  
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'

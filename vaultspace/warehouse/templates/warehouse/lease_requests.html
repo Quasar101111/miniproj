@@ -1,0 +1,128 @@
+{% block content %}
+{% load static %}
+
+<head>
+    <link href="{% static 'vendor/bootstrap-select/dist/css/bootstrap-select.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/bootstrap-select/dist/css/bootstrap-select.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'vendor/select2/css/select2.min.css' %}">
+
+</head>
+
+
+<body>
+    <div class="content-body">
+        <div class="container-fluid">
+            {% if messages %}
+		 <div class="messages">
+			 {% for message in messages %}
+			 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+				 {{ message }}
+				 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			 </div>
+			 {% endfor %}
+		 </div>
+		 {% endif %}
+            <div class="row">
+                
+                   
+                <div class="card">
+
+
+                    <div class="card-header">
+                        <h4 class="card-title">Lease Requests for {{ lessor.lessor_name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-responsive-md">
+                                <thead>
+                                    <tr>
+                                        <th class="width50">
+                                            <div class="form-check custom-checkbox checkbox-success check-lg me-3">
+                                                <input type="checkbox" class="form-check-input" id="checkAll"
+                                                    required="">
+                                                <label class="custom-control-label" for="checkAll"></label>
+                                            </div>
+                                        </th>
+                                        <th>REQUEST ID</th>
+                                        <th>WAREHOUSE</th>
+                                        <th>TENANT</th>
+                                        <th>START DATE</th>
+                                        <th>END DATE</th>
+                                        <th>MONTHLY RENT</th>
+                                        <th>TOTAL AMOUNT</th>
+                                        <th>STATUS</th>
+                                        <th>ACTION</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lease in leases %}
+                                    <tr>
+                                        <td>
+                                            <div class="form-check custom-checkbox checkbox-success check-lg me-3">
+                                                <input type="checkbox" class="form-check-input"
+                                                    id="customCheckBox{{ forloop.counter }}" required="">
+                                                <label class="custom-control-label"
+                                                    for="customCheckBox{{ forloop.counter }}"></label>
+                                            </div>
+                                        </td>
+                                        <td><strong class="text-black">{{ lease.lease_id }}</strong></td>
+                                        <td>{{ lease.warehouse }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ lease.tenant.photo.url }}" class="rounded-lg me-2"
+                                                    width="24" alt="/">
+                                                <span class="w-space-no">{{ lease.tenant.tenant_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ lease.lease_start_date }}</td>
+                                        <td>{{ lease.lease_end_date }}</td>
+                                        <td>₹{{ lease.rental_amount }}</td>
+                                        <td>₹{{ lease.total_amount }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if lease.payment_status == 'Pending' %}
+                                                <i class="fas fa-circle text-warning me-1"></i> Pending
+                                                {% elif lease.payment_status == 'Paid' %}
+                                                <i class="fas fa-circle text-success me-1"></i> Paid
+                                                {% else %}
+                                                <i class="fas fa-circle text-danger me-1"></i> {{ lease.payment_status
+                                                }}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex">
+                                                {% if lease.payment_status == 'Pending' %}
+                                                <a href="{% url 'edit_lease' lease.lease_id %}"
+                                                    class="btn btn-primary shadow btn-xs sharp me-1">
+                                                    <i class="fas fa-pencil-alt"></i></a>
+                                                <form method="post" action="{% url 'delete_lease' lease.lease_id %}"
+                                                    style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger shadow btn-xs sharp"
+                                                        onclick="return confirm('Are you sure you want to delete this lease?');">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    {% endblock %}
+</body>
+<script src="{% static 'vendor/global/global.min.js' %}"></script>
+<script src="{% static 'vendor/bootstrap-select/dist/js/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'js/custom.min.js' %}"></script>
+<script src="{% static 'js/deznav-init.js' %}"></script>
