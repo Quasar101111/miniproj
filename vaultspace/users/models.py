@@ -6,6 +6,9 @@ import secrets
 from django.utils import timezone
 from django.core.mail import send_mail
 
+
+
+
 class Profile(models.Model):
     USER_TYPES = (
         ('lessor', 'Lessor'),
@@ -73,4 +76,19 @@ def drop_message_table():
             cursor.execute("DROP TABLE IF EXISTS users_message CASCADE;")
 
 # Call this function before running migrations           
+
+
+class Payment(models.Model):
+    user = models.ForeignKey('Tenant', on_delete=models.CASCADE)
+    lease = models.ForeignKey('warehouse.Lease', on_delete=models.CASCADE)  # Changed to string reference
+    order_id = models.CharField(max_length=255)
+    payment_id = models.CharField(max_length=255, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default='INR')
+    status = models.CharField(max_length=50)  # e.g., 'Paid', 'Failed'
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment {self.id} for Lease {self.lease.lease_id}"
     
+  

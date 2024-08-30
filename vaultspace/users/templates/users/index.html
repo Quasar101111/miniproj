@@ -178,11 +178,21 @@
         <div class="navbar-nav ml-auto">
             <a class="nav-item nav-link" href="#">HOME</a>
             <a class="nav-item nav-link" href="{% url "warehouse_list" %}">WAREHOUSES</a>
-            
+        
             
             {% if user.is_authenticated %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    LEASES
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="">Rented Warehouses</a>
+                    <a class="dropdown-item" href="{% url "lease_offers" %}">Lease Offers</a>
+                </div>
+            </li>
             <a class="nav-item nav-link" href="tenant_details">UPDATE PROFILE</a>
             <a class="nav-item nav-link btn btn-primary text-white" href="{% url "logout" %}">LOGOUT</a>
+
             
             {% else %}
             <a class="nav-item nav-link " href="{% url "register_tenant" %}">Sign up for tenant</a>

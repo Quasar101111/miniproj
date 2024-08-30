@@ -1,6 +1,7 @@
 #users/views.py
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout,get_user_model
 from django.contrib.auth.decorators import login_required
@@ -12,8 +13,8 @@ from django.db.models import F
 from .forms import LessorRegisterForm,TenantRegisterForm,CustomAuthenticationForm
 from .forms import LessorForm,TenantForm
 
-from .models import Profile,Lessor,User,UnverifiedUser,Tenant,Message
-from warehouse.models import Location,Warehouse,WarehousePhoto
+from .models import Profile,Lessor,User,UnverifiedUser,Tenant,Message,Payment
+from warehouse.models import Location,Warehouse,WarehousePhoto,Lease
 
 from django.db.models import Q, Max
 
@@ -37,6 +38,8 @@ import string
 
 from django.contrib.auth.views import PasswordResetView
 from django.urls import reverse_lazy
+
+import razorpay
 
 #################### index####################################### 
 @login_required(login_url='login')
@@ -396,24 +399,6 @@ def warehouse_detail(request, warehouse_id):
     })
 
 
-@login_required
-def chat_room(request, room_name):
-    # Assuming room_name is the username of the receiver
-    other_user = get_object_or_404(User, username=room_name)
-    messages = Message.objects.filter(sender__in=[request.user, other_user], 
-                                      receiver__in=[request.user, other_user]).order_by('timestamp')
-
-    if request.method == 'POST':
-        message_text = request.POST.get('message')
-        if message_text:
-            Message.objects.create(sender=request.user, receiver=other_user, message=message_text)
-        return redirect('chat_room', room_name=room_name)
-
-    return render(request, 'users/chat_room.html', {
-        'other_user': other_user,
-        'messages': messages,
-    })
-
 
 
     ############################## messages ##############################
@@ -500,22 +485,6 @@ def tenant_messages(request):
 
 
 
-
-
-    def conversation(request, tenant_id):
-        tenant = get_object_or_404(Tenant, tenant_id=tenant_id)
-        messages = Message.objects.filter(
-            Q(sender=request.user, receiver=tenant.user) | 
-            Q(sender=tenant.user, receiver=request.user)
-        ).order_by('timestamp')
-
-        # Mark unread messages as read
-        Message.objects.filter(sender=tenant.user, receiver=request.user, is_read=False).update(is_read=True)
-
-        return render(request, 'users/conversation.html', {'tenant': tenant, 'messages': messages})
-
-
-
 @login_required
 def tenant_chat_view(request, lessor_id):
     lessor = get_object_or_404(Lessor,lessor_id=lessor_id)
@@ -533,54 +502,6 @@ def lessor_chat_view(request, tenant_id):
     }
     return render(request, 'users/lessor_chat.html', context)      
 
-@login_required
-def send_message(request):
-    if request.method == 'POST':
-        receiver_id = request.POST.get('receiver_id')
-        message_text = request.POST.get('message')
-        receiver = User.objects.get(pk=receiver_id)
-        message = Message.objects.create(
-            sender=request.user,
-            receiver=receiver,
-            message=message_text,
-            timestamp=timezone.now(),
-            is_read=False
-        )
-        return JsonResponse({'status': 'success', 'message': message_text, 'timestamp': message.timestamp})    
-
-@login_required
-def fetch_messages(request):
-    if request.method == 'GET':
-        receiver_id = request.GET.get('receiver_id')
-        receiver = User.objects.get(pk=receiver_id)
-        messages = Message.objects.filter(
-            (models.Q(sender=request.user) & models.Q(receiver=receiver)) |
-            (models.Q(sender=receiver) & models.Q(receiver=request.user))
-        ).order_by('timestamp')
-        
-        message_list = [{'sender': msg.sender.username, 'message': msg.message, 'timestamp': msg.timestamp, 'is_read': msg.is_read} for msg in messages]
-
-        # Mark all messages as read once they are fetched
-        messages.update(is_read=True)
-
-        return JsonResponse({'messages': message_list})
-
-
-# @login_required
-# def message_detail(request, recipient_email):
-#     recipient = get_object_or_404(User, email=recipient_email)
-#     messages = Message.objects.filter(
-#         (Q(sender=request.user) & Q(receiver=recipient)) |
-#         (Q(sender=recipient) & Q(receiver=request.user))
-#     ).order_by('timestamp')
-#     messages.update(is_read=True)
-    
-#     if request.method == 'POST':
-#         message_content = request.POST.get('message')
-#         Message.objects.create(sender=request.user, receiver=recipient, message=message_content)
-#         return redirect('message_detail', recipient_email=recipient.email)
-    
-#     return render(request, 'users/message_detail.html', {'messages': messages, 'recipient': recipient})
 
 @login_required
 def message_detail(request, recipient_email):
@@ -612,3 +533,111 @@ def get_messages(request, recipient_email):
     html = render_to_string('users/messages_list.html', {'messages': messages, 'request': request})
     return JsonResponse({"html": html})
 
+
+
+################################ leases  ############################################################
+
+@login_required
+def lease_offers(request):
+    try:
+        tenant = Tenant.objects.get(email=request.user.email)
+        leases = Lease.objects.filter(tenant=tenant).order_by('-lease_start_date')
+        print("the leases",leases)
+    except Tenant.DoesNotExist:
+        tenant = None
+        leases = []
+
+    context = {
+        'tenant': tenant,
+        'leases': leases,
+    }
+    return render(request, 'users/lease_offers.html', context)
+
+
+@login_required
+def rented_warehouses(request):
+    try:
+        # Get the tenant based on the logged-in user's email
+        tenant = Tenant.objects.get(email=request.user.email)
+        # Fetch leases associated with the tenant
+        leases = Lease.objects.filter(tenant=tenant, payment_status='Paid').order_by('-lease_start_date')
+        print("The leases:", leases)
+    except Tenant.DoesNotExist:
+        tenant = None
+        leases = []
+
+    context = {
+        'tenant': tenant,
+        'leases': leases,
+    }
+    return render(request, 'warehouse/rented_warehouses.html', context)
+
+
+###############################payments #################################################
+from decimal import Decimal 
+# Initialize Razorpay client
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+def payment(request, lease_id):
+   
+    if request.method == 'POST':
+        # Fetch lease details
+        lease = get_object_or_404(Lease, lease_id=lease_id)
+
+        # Define convenience fee (e.g., 2% of the total amount)
+        convenience_fee_percentage = Decimal('0.02')
+        convenience_fee = lease.total_amount * convenience_fee_percentage
+        total_amount = lease.total_amount + convenience_fee  # Total amount including convenience fee
+
+        # Create a Razorpay order
+        order_amount = float(total_amount * 100)  # Convert to float for JSON serialization
+        order_currency = 'INR'
+        order_receipt = str(lease.lease_id)
+
+        # Create order
+        order = razorpay_client.order.create(dict(amount=order_amount, currency=order_currency, receipt=order_receipt))
+        order_id = order['id']
+
+        # Render payment page with order details
+        context = {
+            'order_id': order_id,
+            'lease': lease,
+            'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+            'convenience_fee': convenience_fee,
+            'total_amount': total_amount,
+        }
+        return render(request, 'users/payment.html', context)
+    return redirect('lease_offers')
+
+
+def payment_result(request, lease_id):
+        if request.method == 'POST':
+            order_id = request.POST.get('order_id')
+            print(f"Received order_id: {order_id}") 
+            payment_id = request.POST.get('payment_id') 
+            lease = get_object_or_404(Lease, lease_id=lease_id)
+
+            # Verify payment
+            try:
+                payment = razorpay_client.payment.fetch(payment_id)
+                if payment['status'] == 'captured':
+                    # Save payment details
+                    Payment.objects.create(
+                        user=lease.tenant,
+                        lease=lease,
+                        order_id=order_id,
+                        payment_id=payment['id'],
+                        amount=lease.total_amount,  # Assuming this is the amount paid
+                        status='Paid'
+                    )
+                    lease.payment_status = 'Paid'  # Update lease status
+                    lease.save()
+                    messages.success(request, 'Payment processed successfully.')
+                    
+                else:
+                    messages.error(request, 'Payment failed. Please try again.')
+            except Exception as e:
+                messages.error(request, f'An error occurred: {str(e)}')
+
+            return redirect('lease_offers')
+        return redirect('lease_offers')

@@ -66,6 +66,9 @@ urlpatterns = [
       path('manage_warehouse/', moderator_view.manage_warehouses, name='manage_warehouse'),
 
 
+    path('payment/<int:lease_id>/', users_view.payment, name='payment'),
+
+
  
 
     
