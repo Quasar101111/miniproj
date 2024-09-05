@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'moderator',
     'crispy_forms',
     'crispy_bootstrap4',
+    'wkhtmltopdf',
     
     
 
@@ -165,6 +166,8 @@ ACCOUNT_USERNAME_REQUIRED = False
 RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
+
+WKHTMLTOPDF_CMD = r'C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe' 
 
 # Load Google OAuth2 credentials
 SOCIAL_AUTH_GOOGLE_CLIENT_ID = os.getenv('SOCIAL_AUTH_GOOGLE_CLIENT_ID')

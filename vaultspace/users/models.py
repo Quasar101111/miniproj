@@ -91,4 +91,10 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment {self.id} for Lease {self.lease.lease_id}"
     
-  
+class ServerShare(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Reference to the user who uploaded the share
+    image = models.ImageField(upload_to='server_shares/')  # Path where the image will be stored
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp of when the share was created
+
+    def __str__(self):
+        return f"Server Share for {self.user.username} at {self.created_at}"

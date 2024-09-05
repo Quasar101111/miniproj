@@ -69,6 +69,12 @@ urlpatterns = [
     path('payment/<int:lease_id>/', users_view.payment, name='payment'),
 
 
+
+    path('upload-image-share/', users_view.upload_image_share, name='upload_image_share'),
+    path('login-using-image/', users_view.login_using_image, name='login_using_image'),
+
+
+
  
 
     

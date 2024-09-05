@@ -172,11 +172,11 @@
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="{% url "index" %}">
             <img src="{% static 'images/logo.png' %}" alt="VaultSpace">VaultSpace
         </a>
         <div class="navbar-nav ml-auto">
-            <a class="nav-item nav-link" href="#">HOME</a>
+            <a class="nav-item nav-link" href="{% url "index" %}">HOME</a>
             <a class="nav-item nav-link" href="{% url "warehouse_list" %}">WAREHOUSES</a>
         
             
@@ -186,7 +186,7 @@
                     LEASES
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="">Rented Warehouses</a>
+                    <a class="dropdown-item" href="{% url 'rented_warehouses' %}">Rented Warehouses</a>
                     <a class="dropdown-item" href="{% url "lease_offers" %}">Lease Offers</a>
                 </div>
             </li>

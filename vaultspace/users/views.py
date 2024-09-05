@@ -17,6 +17,8 @@ from .models import Profile,Lessor,User,UnverifiedUser,Tenant,Message,Payment
 from warehouse.models import Location,Warehouse,WarehousePhoto,Lease
 
 from django.db.models import Q, Max
+from django.core.files.base import ContentFile
+
 
 
 from django.http import JsonResponse
@@ -35,11 +37,31 @@ from django.template.loader import get_template
 from django.contrib.auth.decorators import user_passes_test
 import random
 import string
+import io,os,uuid,tempfile 
+from django.core.files.storage import default_storage
+
 
 from django.contrib.auth.views import PasswordResetView
 from django.urls import reverse_lazy
 
 import razorpay
+
+from django.http import HttpResponse
+from django.template.loader import get_template
+from wkhtmltopdf.views import PDFTemplateView
+
+from django.utils.decorators import method_decorator
+
+from .utils.image_processing import generate_shares, save_image_with_hash,  calculate_hash,get_hash_from_image
+
+
+from django.core.files.base import ContentFile
+from .models import ServerShare
+
+from django.core.files.base import ContentFile
+from PIL import Image, PngImagePlugin 
+import numpy as np 
+import hashlib
 
 #################### index####################################### 
 @login_required(login_url='login')
@@ -201,6 +223,9 @@ def verify_otp2(request):
             return render(request, 'users/register_tenat.html', {'show_otp_form': True})
 
     return redirect('register_tenant')
+
+
+
    
 
 ################ user details################################################### 
@@ -535,7 +560,7 @@ def get_messages(request, recipient_email):
 
 
 
-################################ leases  ############################################################
+################################ leases & Rented ############################################################
 
 @login_required
 def lease_offers(request):
@@ -552,6 +577,15 @@ def lease_offers(request):
         'leases': leases,
     }
     return render(request, 'users/lease_offers.html', context)
+
+@login_required
+def reject_lease(request, lease_id):
+    if request.method == 'POST':
+        lease = get_object_or_404(Lease, lease_id=lease_id)
+        lease.payment_status = 'Rejected'  # Update lease status to 'Rejected'
+        lease.save()
+        messages.success(request, 'Lease offer rejected successfully.')
+    return redirect('lease_offers')
 
 
 @login_required
@@ -573,6 +607,64 @@ def rented_warehouses(request):
     return render(request, 'warehouse/rented_warehouses.html', context)
 
 
+
+
+@login_required
+def rented_warehouses(request):
+    user = request.user
+    try:
+        tenant = Tenant.objects.get(email=user.email)
+        # Fetch leases associated with the tenant that are paid
+        leases = Lease.objects.filter(tenant=tenant, payment_status='Paid').order_by('-lease_start_date')
+
+        # Fetch payments related to the leases
+        payments = Payment.objects.filter(lease__in=leases)
+
+        # Create a dictionary to map lease IDs to payment details
+        payment_dict = {payment.lease.lease_id: payment.amount for payment in payments}  # Ensure lease_id is accessed correctly
+
+    except Tenant.DoesNotExist:
+        tenant = None
+        leases = []
+        payment_dict = {}
+
+    context = {
+        'tenant': tenant,
+        'leases': leases,
+        'payment_dict': payment_dict,
+    }
+    return render(request, 'users/rented_warehouse.html', context)
+
+
+
+class LeaseReportPDFView(PDFTemplateView):
+       template_name = 'users/download_lease_report.html'
+
+       def get_context_data(self, **kwargs):
+           context = super().get_context_data(**kwargs)
+           lease_id = self.kwargs['lease_id']
+           
+           # Fetch the lease, tenant, and payment data
+           lease = get_object_or_404(Lease, lease_id=lease_id)
+           tenant = lease.tenant  # Access the tenant directly from the lease
+           payment = get_object_or_404(Payment, lease=lease, status='Paid')  # Assuming you want only paid payments
+           convenience_fee_percentage = Decimal('0.02')
+           convenience_fee = lease.total_amount * convenience_fee_percentage
+           total_amount = lease.total_amount + convenience_fee  # Total amount including convenience fee
+
+           # Add data to context
+           context['tenant'] = tenant
+           context['lease'] = lease
+           context['payment'] = payment
+           context['convenience_fee'] = convenience_fee
+           context['total_amount'] = total_amount
+           context['current_date'] = timezone.now().date() 
+           return context
+
+@login_required
+def download_lease_report(request, lease_id):
+    
+    return LeaseReportPDFView.as_view()(request, lease_id=lease_id)
 ###############################payments #################################################
 from decimal import Decimal 
 # Initialize Razorpay client
@@ -641,3 +733,124 @@ def payment_result(request, lease_id):
 
             return redirect('lease_offers')
         return redirect('lease_offers')
+
+
+#############################extended technologies##########################################
+
+
+def upload_image_share(request):
+    download_link = None
+    print("Upload image share function called.")  # Debugging: Function entry
+
+    if request.method == 'POST':
+        image_share = request.FILES.get('image_share')
+        print(f"Received image share: {image_share}")  # Debugging: Print the uploaded image share
+
+        if image_share:
+            # Generate shares from the uploaded image
+            server_share, user_share = generate_shares(image_share)
+            print("Shares generated successfully.")  # Debugging
+
+            user = request.user
+            email = user.email
+            print(f"User email: {email}")  # Debugging: Print the user's email
+
+            # Define the server share path
+            server_path = os.path.join(settings.MEDIA_ROOT, 'auth', f'server_share_{email}.png')
+            print(f"Server share path: {server_path}")  # Debugging: Print the server share path
+
+            # Calculate the hash for the server share
+            server_hash = calculate_hash(server_share)
+            print(f"Server hash calculated: {server_hash}")  # Debugging: Print the server hash
+
+            # Save the server share to the filesystem with the hash
+            save_image_with_hash(server_share, server_path, server_hash)
+            print("Server share saved to filesystem.")  # Debugging
+
+            # Save the server share to the database
+            server_share_instance = ServerShare(user=user)
+            with open(server_path, 'rb') as image_file:
+                server_share_instance.image.save(f'server_share_{email}.png', ContentFile(image_file.read()))
+            server_share_instance.save()
+            print("Server share instance saved to database.")  # Debugging
+
+            # Use the server share as the user share
+            unique_filename = f'user_share_{user.id}_{uuid.uuid4()}.png'
+            user_share_path = os.path.join(settings.MEDIA_ROOT, f'auth/{unique_filename}')
+            print(f"User share path: {user_share_path}")  # Debugging: Print the user share path
+            
+            # Save the user share (which is the same as the server share)
+            save_image_with_hash(server_share, user_share_path, server_hash)
+            print("User share saved to filesystem.")  # Debugging
+
+            # Calculate and print the hash of the saved user share from the saved file
+            saved_user_share_hash = get_hash_from_image(user_share_path)
+            print(f"Hash of the saved user share: {saved_user_share_hash}")  # Debugging: Print the hash of the saved user share
+
+            # Provide the download link for the user share
+            download_link = f'/media/auth/{unique_filename}'
+            messages.success(request, 'Image share uploaded and processed successfully!')
+            print("Download link provided to user.")  # Debugging
+
+    return render(request, 'users/upload_image_share.html', {'download_link': download_link})
+
+def login_using_image(request):
+    if request.method == 'POST':
+        image_share = request.FILES.get('image_share')
+        email = request.POST.get('email')
+        print(f"Received email: {email}")  # Debugging: Print the received email
+        print(f"Received image share: {image_share}")  # Debugging: Print the uploaded image share
+
+        if image_share:
+            user = get_object_or_404(User, email=email)
+            print(f"User found: {user}")  # Debugging: Print the found user
+
+            # Fetch the server share for the user
+            server_share_instance = ServerShare.objects.filter(user=user).order_by('-created_at').first()
+            if not server_share_instance:
+                messages.error(request, "No server share found for this user.")
+                print("No server share found for user.")  # Debugging
+                return redirect('login_using_image')
+
+            server_share_path = server_share_instance.image.path
+            print(f"Server share path: {server_share_path}")  # Debugging: Print the server share path
+
+            try:
+                # Load and process the uploaded image
+                uploaded_image = Image.open(image_share).convert('L')  # Convert to grayscale
+                uploaded_image_array = np.array(uploaded_image)  # Convert to NumPy array
+                print("Uploaded image processed successfully.")  # Debugging
+
+                # Calculate the hash for the uploaded image share
+                uploaded_hash = calculate_hash(uploaded_image_array)
+                print(f"Uploaded hash calculated: {uploaded_hash}")  # Debugging: Print the uploaded hash
+
+                # Retrieve the expected hash from the server share's metadata
+                expected_server_hash = get_hash_from_image(server_share_path)
+                print(f"Expected server hash: {expected_server_hash}")  # Debugging: Print the expected server hash
+
+                # Compare the uploaded hash with the expected server hash
+                if uploaded_hash != expected_server_hash:
+                    messages.error(request, "Uploaded image share does not match the server share.")
+                    print("Uploaded hash does not match the expected server hash.")  # Debugging
+                    return redirect('login_using_image')
+
+                # If hashes match, authenticate the user
+                # Log in the user
+                
+                print("User logged in successfully.")  # Debugging
+                return redirect('index')  # Redirect to the index page
+                
+
+            except ValueError as e:
+                messages.error(request, str(e))
+                print(f"ValueError: {str(e)}")  # Debugging: Print the error message
+            except Exception as e:
+                messages.error(request, "Authentication failed. Please try again.")
+                print(f"Exception: {str(e)}")  # Debugging: Print the error message
+            
+            except Profile.DoesNotExist:
+                    messages.error(request, 'User profile not found. Please contact support.')
+                    return render(request, 'users/login_using_image.html')
+
+    return render(request, 'users/login_using_image.html')

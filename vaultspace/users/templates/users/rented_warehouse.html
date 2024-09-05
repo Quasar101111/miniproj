@@ -1,0 +1,167 @@
+{% load static %}
+{% load custom_filters %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultSpace - Rented Warehouses</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <style>
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        .content {
+            flex: 1; /* This allows the content area to grow and fill the space */
+        }
+        .navbar-brand img {
+            height: 40px;
+        }
+        .card {
+            margin-bottom: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .fas {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'images/logo.png' %}" alt="VaultSpace">VaultSpace
+        </a>
+        <div class="navbar-nav ml-auto">
+            <a class="nav-item nav-link" href="{% url "index" %}">HOME</a>
+            <a class="nav-item nav-link" href="{% url 'warehouse_list' %}">WAREHOUSES</a>
+        
+            {% if user.is_authenticated %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    LEASES
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{% url 'rented_warehouses' %}">Rented Warehouses</a>
+                    <a class="dropdown-item" href="{% url 'lease_offers' %}">Lease Offers</a>
+                </div>
+            </li>
+            <a class="nav-item nav-link" href="{% url 'tenant_details' %}">UPDATE PROFILE</a>
+            <a class="nav-item nav-link btn btn-primary text-white" href="{% url 'logout' %}">LOGOUT</a>
+            {% else %}
+            <a class="nav-item nav-link" href="{% url 'register_tenant' %}">Sign up for tenant</a>
+            <a class="nav-item nav-link" href="{% url 'register_lessor' %}">Sign up for lessor</a>      
+            <a class="nav-item nav-link btn btn-primary text-white" href="{% url 'login' %}">LOGIN</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 content ">
+        {% if messages %}
+        <div class="container mt-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+       
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">My Rented Warehouses </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th>LEASE ID</th>
+                                <th>WAREHOUSE</th>
+                                <th>START DATE</th>
+                                <th>END DATE</th>
+                               
+                                <th>TOTAL AMOUNT</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            {% for lease in leases %}
+                            {% if lease.payment_status == 'Paid' %}
+                            <tr>
+                                <td><strong>{{ lease.lease_id }}</strong></td>
+                                <td><a href="{% url 'warehouse_detail' lease.warehouse.warehouse_id %}">View warehouse details</a></td>
+                                <td>{{ lease.lease_start_date }}</td>
+                                <td>{{ lease.lease_end_date }}</td>
+                               
+                                <td>Rs. {{ payment_dict|get_item:lease.lease_id|default:"N/A" }}</td> <!-- Display total amount -->
+                                <td>
+                                    <a href="{% url 'download_lease_report' lease.lease_id %}" class="btn btn-primary">Download Report</a>
+                                </td>
+                                
+                            </tr>
+                            
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No warehouse rented.</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About VaultSpace</h5>
+                    <p>Helps you to easily find required warehouse easily and quickly</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <address>
+                        Roadinthe nadukku<br>
+                        Kerala, State 12345<br>
+                        Phone: 891 456-7890<br>
+                        Email: vaultspace@gmail.com
+                    </address>
+                </div> 
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+</body>
+</html>

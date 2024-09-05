@@ -50,7 +50,7 @@
             <img src="{% static 'images/logo.png' %}" alt="VaultSpace">VaultSpace
         </a>
         <div class="navbar-nav ml-auto">
-            <a class="nav-item nav-link" href="#">HOME</a>
+            <a class="nav-item nav-link" href="{% url "index" %}">HOME</a>
             <a class="nav-item nav-link" href="{% url 'warehouse_list' %}">WAREHOUSES</a>
         
             {% if user.is_authenticated %}
@@ -59,7 +59,7 @@
                     LEASES
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="">Rented Warehouses</a>
+                    <a class="dropdown-item" href="{% url 'rented_warehouses' %}">Rented Warehouses</a>
                     <a class="dropdown-item" href="{% url 'lease_offers' %}">Lease Offers</a>
                 </div>
             </li>
@@ -87,7 +87,7 @@
             {% endfor %}
         </div>
     {% endif %}
-    
+
         <h2>My Lease Offers</h2>
         {% if tenant %}
             <p>Tenant: {{ tenant.tenant_name }}</p>
@@ -112,7 +112,9 @@
                             </tr>
                         </thead>
                         <tbody>
+                            
                             {% for lease in leases %}
+                            {% if lease.payment_status == 'Pending' %}
                             <tr>
                                 <td><strong>{{ lease.lease_id }}</strong></td>
                                 <td><a href="{% url 'warehouse_detail' lease.warehouse.warehouse_id %}">View warehouse details</a></td>
@@ -125,17 +127,19 @@
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-success btn-sm">Accept</button>
                                     </form>
-                                    <form method="post" action="" style="display: inline;">
+                                    <form method="post" action="{% url 'reject_lease' lease.lease_id %}" style="display: inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to reject this offer?');">Reject</button>
                                     </form>
                                 </td>
                                 
                             </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center">No lease leases found.</td>
-                            </tr>
+                            
+                            {% else %}
+                            {% comment %} <tr>
+                                <td colspan="7" class="text-center">No lease  found.</td>
+                            </tr> {% endcomment %}
+                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>

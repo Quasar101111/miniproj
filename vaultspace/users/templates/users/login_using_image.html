@@ -1,0 +1,114 @@
+
+<!-- users/templates/users/upload_image_share.html -->
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+{% load crispy_forms_tags %}
+{% block start %}
+
+<head>
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        .alert-error {
+            background-color: rgb(241, 106, 106);
+            color: white; /* Optional: to make the text more readable */
+            padding: 10px; /* Optional: for better spacing */
+            border-radius: 5px; /* Optional: for rounded corners */
+        }
+
+        .fix-wrapper {
+            background-color: aliceblue; /* Background color for the wrapper */
+            padding: 20px; /* Padding around the wrapper */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+
+        .logo-auth {
+            max-width: 100%; /* Responsive logo */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        .btn-primary {
+            background-color: #007bff; /* Primary button color */
+            border: none; /* Remove border */
+            border-radius: 5px; /* Rounded corners */
+            padding: 10px 20px; /* Padding for buttons */
+            color: white; /* Text color */
+            font-weight: bold; /* Bold text */
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3; /* Darker shade on hover */
+        }
+
+        .text-center {
+            text-align: center; /* Center text */
+        }
+
+        .mt-3 {
+            margin-top: 1rem; /* Margin top for spacing */
+        }
+
+        .mt-4 {
+            margin-top: 1.5rem; /* Margin top for spacing */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fix-wrapper">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-6 col-md-6">
+                    <div class="card mb-0 h-auto">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                               
+                            </div>
+                            <h4 class="text-center mb-4">Login Using Image</h4>
+                            <form method="POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                                            {{ message }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                <fieldset class="form-group">
+                                    <label for="email">Email:</label>
+                                    <input type="email" name="email" required class="form-control" placeholder="Enter your email">
+                                </fieldset>
+                                <fieldset class="form-group">
+                                    <label for="image_share">Select Image Share:</label>
+                                    <input type="file" name="image_share" required class="form-control">
+                                </fieldset>
+                                <div class="text-center mt-3">
+                                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                                </div>
+                                <br />
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'password_reset' %}" style="text-decoration: none; color: blue;">Forgot Password?</a>
+                                </div>
+                                <sub style="text-align: left;">
+                                    <a href="{% url 'register_tenant' %}" style="text-decoration: none; color: blue; padding:2%; cursor:pointer; margin-right:2%;">Don't have an account? Sign up as tenant</a>
+                                </sub>
+                                <sub style="text-align: left;">
+                                    <a href="{% url 'register_lessor' %}" style="text-decoration: none; color: blue; padding:2%; cursor:pointer; margin-right:2%;">Don't have an account? Sign up as lessor</a>
+                                </sub>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Required vendors -->
+    <script src="{% static 'vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap-select/dist/js/bootstrap-select.min.js' %}"></script>
+    <script src="{% static 'js/custom.min.js' %}"></script>
+    <script src="{% static 'js/deznav-init.js' %}"></script>
+</body>
+{% endblock %}

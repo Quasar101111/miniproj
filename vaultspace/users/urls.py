@@ -54,11 +54,24 @@ urlpatterns = [
     #lease 
 
         path('lease_offers/', views.lease_offers, name='lease_offers'),
+        path('reject_lease/<int:lease_id>/', views.reject_lease, name='reject_lease'),  
         path('rented_warehouses/',views.rented_warehouses, name='rented_warehouses'),
+        path('download_lease_report/<int:lease_id>/', views.download_lease_report, name='download_lease_report'),
+
 
         path('payment/<int:lease_id>/', views.payment, name='payment'),
         path('payment_result/<int:lease_id>/', views.payment_result, name='payment_result'),
+        
+        
+
+
+        path('upload-image-share/', views.upload_image_share, name='upload_image_share'),
+        path('login-using-image/', views.login_using_image, name='login_using_image'),
+
+
 
 
 
     ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
