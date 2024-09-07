@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <h2>Add Location</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="map-container" style="width: 100%; height: 400px;">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Location</button>
+    </form>
+</div>
+
+<script>
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 5,
+            center: { lat: -33.865143, lng: 151.209900 },  // Example default location
+        });
+
+        let marker;
+
+        // Add listener for clicks on the map to set marker and update coordinates
+        map.addListener("click", (event) => {
+            const clickedLocation = event.latLng;
+
+            if (marker) {
+                marker.setPosition(clickedLocation);
+            } else {
+                marker = new google.maps.Marker({
+                    position: clickedLocation,
+                    map: map,
+                });
+            }
+
+            // Set the latitude and longitude values in the form
+            document.getElementById("latitude").value = clickedLocation.lat();
+            document.getElementById("longitude").value = clickedLocation.lng();
+        });
+    }
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key }}&callback=initMap" async defer></script>
+
+{% endblock %}

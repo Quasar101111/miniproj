@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <h2>Location Details</h2>
+    <p><strong>Name:</strong> {{ location.name }}</p>
+    <p><strong>Description:</strong> {{ location.description }}</p>
+    <p><strong>Latitude:</strong> {{ location.latitude }}</p>
+    <p><strong>Longitude:</strong> {{ location.longitude }}</p>
+    <p><strong>Nearest Main Road:</strong> {{ location.nearest_main_road }}</p>
+    <p><strong>Nearest Seaport:</strong> {{ location.nearest_seaport }}</p>
+    <p><strong>Nearest Airport:</strong> {{ location.nearest_airport }}</p>
+</div>
+
+{% endblock %}
