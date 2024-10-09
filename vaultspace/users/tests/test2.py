@@ -53,12 +53,12 @@ try:
     leases_nav = driver.find_element(By.ID, "navbarDropdownMenuLink")
     leases_nav.click()
     logger.info("Clicked 'LEASES' in navbar.")
-
+    time.sleep(2)
     # Click on "Rented Warehouses"
     rented_warehouses = driver.find_element(By.LINK_TEXT, "Rented Warehouses")
     rented_warehouses.click()
     logger.info("Navigated to 'Rented Warehouses'.")
-
+    time.sleep(2)
     # Download a report
     download_report = driver.find_element(By.LINK_TEXT, "Download Report")
     download_report.click()

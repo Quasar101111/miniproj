@@ -24,7 +24,7 @@ try:
         logger.info("Opened login page.")
 
         # Set window size
-        driver.set_window_size(945, 913)
+        driver.set_window_size(1024, 720)
         logger.info("Set window size to 945x913")
 
         # Find and click the username field
@@ -74,19 +74,21 @@ try:
         # Open the home page
         driver.get("http://127.0.0.1:8000/")
         logger.info("Opened home page.")
-
+        time.sleep(2)
         # Set window size
-        driver.set_window_size(1936, 1048)
+        driver.set_window_size(1024, 720)
         logger.info("Set window size to 1936x1048")
 
         # Click on the first card (warehouse selection)
         first_card = driver.find_element(By.CSS_SELECTOR, ".col-md-4:nth-child(1) .card-body")
         first_card.click()
         logger.info("Clicked on the first card.")
+        time.sleep(2)
 
         # Click the 'Start Chat' button
         start_chat_button = driver.find_element(By.CSS_SELECTOR, ".btn-block")
         start_chat_button.click()
+        time.sleep(2)
         logger.info("Clicked 'Start Chat' button.")
         time.sleep(2)
 

@@ -9,7 +9,12 @@
     <title>{{ warehouse.name }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <style>
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    {% comment %} <style>
+        .navbar-brand img {
+            height: 40px;
+        }
+        
         body {
             background-color: #e3eaf1;
         }
@@ -82,7 +87,7 @@
         }
 
         .tour-form {
-            background-color: #f8f9fa;
+            background-color: #92b3d5;
             padding: 20px;
             border-radius: 10px;
         }
@@ -107,14 +112,123 @@
         .thumbnail.active {
             border: 2px solid #007bff;
         }
+    </style> {% endcomment %}
+    <style>
+        .navbar-brand img {
+            height: 40px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .main-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .thumbnail:hover {
+            opacity: 0.8;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+        .badge-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+        .badge-success {
+            background-color: #10b981;
+            color: #ffffff;
+        }
+        .overview-details {
+            display: flex;
+            justify-content: space-between;
+            background-color: #ffffff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .overview-details > div {
+            text-align: center;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tour-form {
+            background-color: #92b3d5;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .prev,.next {
+        border-radius: 9999px;
+        background-color: #3b82f6;
+        color: #ffffff;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url "index" %}">
+            <img src="{% static 'images/logo.png' %}" alt="VaultSpace">VaultSpace
+        </a>
+        <div class="navbar-nav ml-auto">
+            <a class="nav-item nav-link" href="{% url "index" %}">HOME</a>
+            <a class="nav-item nav-link" href="{% url "warehouse_list" %}">WAREHOUSES</a>
+        
+            
+            {% if user.is_authenticated %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    LEASES
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{% url 'rented_warehouses' %}">Rented Warehouses</a>
+                    <a class="dropdown-item" href="{% url "lease_offers" %}">Lease Offers</a>
+                </div>
+            </li>
+            <a class="nav-item nav-link" href="tenant_details">UPDATE PROFILE</a>
+            <a class="nav-item nav-link btn btn-primary text-white" href="{% url "logout" %}">LOGOUT</a>
+
+            
+            {% else %}
+            <a class="nav-item nav-link " href="{% url "register_tenant" %}">Sign up for tenant</a>
+            <a class="nav-item nav-link" href="{% url "register_lessor" %}">Sign up for lessor</a>      
+                  
+            <a class="nav-item nav-link btn btn-primary text-white" href="{% url "login" %}">LOGIN</a>
+            
+            {% endif %}
+        </div>
+    </nav>
+
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-8">
-                <h1>{{ warehouse.name }} <span class="float-right">Rs. {{ warehouse.rental_price }}/mo</span></h1>
+                <h1>{{ warehouse.name }} <span class="float-right">₹  {{ warehouse.rental_price }}/month</span></h1>
                 <p><i class="fas fa-map-marker-alt"></i> {{ warehouse.location.city}}, {{ warehouse.location.state }}</p>
                 {% if warehouse.status == 1 %}
                 <span class="badge badge-primary">FOR RENT</span>
@@ -131,8 +245,8 @@
                         id="mainImage">
                     {% endif %}
                     <div class="image-controls">
-                        <button class="prev" onclick="changeImage(-1)"><i class="fas fa-chevron-left"></i></button>
-                        <button class="next" onclick="changeImage(1)"><i class="fas fa-chevron-right"></i></button>
+                        <button class="prev" onclick="changeImage(-1)"><i class="fas fa-chevron-left"></i>Previous</button>
+                        <button class="next" onclick="changeImage(1)"><i class="fas fa-chevron-right"></i>Next</button>
                     </div>
                     <div class="thumbnails mt-2">
                         {% for photo in warehouse.photos.all %}
@@ -152,6 +266,12 @@
                         <i class="fas fa-warehouse"></i>
                         <p>{{ warehouse.area }} sq ft</p>
                         <small>Total Area</small>
+                    </div>
+
+                    <div>
+                        <i class=" fas fa-cube fa-fw"></i>
+                        <p>{{ warehouse.length }} x {{ warehouse.breadth }}  x {{ warehouse.height }} </p>
+                        <small>Dimension of warehouse</small>
                     </div>
                    
                     <div>

@@ -8,6 +8,7 @@
 
 
 
+
 <head>
 	<!-- Title -->
 
@@ -293,10 +294,31 @@
 								{% if warehouse.terms_cond %}
 								<p><strong>Terms and Conditions:</strong> {{ warehouse.terms_cond }}</p>
                                 {% endif %}
-                                <p><strong>Rental Price:</strong> ${{ warehouse.rental_price }} per month</p>
-                                <p><strong>Status:</strong> {% if warehouse.status == 1 %}Available{% else %}Not Available{% endif %}</p>
+                                <p><strong>Rental Price:</strong> ₹{{ warehouse.rental_price }} per month</p>
+                                <p><strong>Status:</strong> 
+									{% if warehouse.status == 1 %}
+										Available for Rent
+										
+										{% elif warehouse.status == 2 %}
+											In Rent
+											<br>
+											{% comment %} {% with lease_info=get_lease_info warehouse.warehouse_id %}
+												{% if lease_info %}
+													<strong>Rented Up To:</strong> {{ lease_info.lease_end_date|date:"Y-m-d" }}<br>
+													<strong>Rented To:</strong> {{ lease_info.tenant_name }}
+												{% else %}
+													<strong>No lease information available.</strong>
+												{% endif %}
+											{% endwith %}
+			 {% endcomment %}
+									{% else %}
+										Not Listed
+									{% endif %}
+								</p>
+								{% if warehouse.status == 1 %}
 								<a href="{% url 'lease_warehouse' warehouse.warehouse_id %}" class="btn btn-success mt-auto">Rent It</a>
-                                <a href="{% url 'edit_warehouse' warehouse.warehouse_id %}" class="btn btn-primary mt-auto">Edit Details</a>       
+								{% endif%}
+								<a href="{% url 'edit_warehouse' warehouse.warehouse_id %}" class="btn btn-primary mt-auto">Edit Details</a>       
                             </div>
                         </div>
                     </div>

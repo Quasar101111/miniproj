@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         body {
@@ -41,21 +41,52 @@
 </head>
 <body>
     <div class="container">
-        <h2>Payment for lease </h2>
+        <h2>Payment for lease</h2>
         <br><br>
         <p class="amount">Lease Amount: Rs. {{ lease.total_amount }}</p>
-     
         <p class="amount">Convenience Fee: Rs. {{ convenience_fee }}</p>
         <hr>
         <p class="amount">Total Amount: Rs. {{ total_amount }}</p>
-        <form action="{% url 'payment_result' lease.lease_id %}" method="POST">
+        
+        <form action="{% url 'payment_result' lease.lease_id %}" method="POST" id="payment-form">
             {% csrf_token %}
             <input type="hidden" name="order_id" value="{{ order_id }}">
             <input type="hidden" name="payment_id" id="payment_id" value="">
-            <button id="rzp-button1" class="btn btn-success btn-block">Pay Now</button>
+            <div class="form-group">
+                <label for="imageUpload">Upload Signature as proof of agreement (required):</label>
+                <input type="file" class="form-control" id="imageUpload" name="signature" required>
+            </div>
+            <button type="button" class="btn btn-info btn-block" data-toggle="modal" data-target="#termsModal">Accept Terms and Conditions</button>
+            <button id="rzp-button1" class="btn btn-success btn-block" disabled>Pay Now</button>
         </form>
         <br><br>
-        <a href="{% url 'lease_offers' %}" ><button  class="btn btn-primary btn-block" >Cancel</button></a>
+        <a href="{% url 'lease_offers' %}"><button class="btn btn-primary btn-block">Cancel</button></a>
+    </div>
+
+    <!-- Terms and Conditions Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Here are the terms and conditions...</p>
+                    <!-- Add your terms and conditions content here -->
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="termsCheckbox">
+                        <label class="form-check-label" for="termsCheckbox">I agree to the Terms and Conditions</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="acceptTerms">Accept</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -73,9 +104,8 @@
                 document.querySelector('form').submit();
             },
             "prefill": {
-                
-                "email": "{{lease.tenant.email}}",
-                "contact": "{{lease.tenant.contact_number}}"
+                "email": "{{ lease.tenant.email }}",
+                "contact": "{{ lease.tenant.contact_number }}"
             },
             "theme": {
                 "color": "#F37254"
@@ -87,6 +117,36 @@
             rzp1.open();
             e.preventDefault();
         }
+          // Function to check if both conditions are met
+          function checkConditions() {
+            const termsAccepted = document.getElementById('termsCheckbox').checked;
+            const imageUploaded = document.getElementById('imageUpload').files.length > 0;
+            document.getElementById('rzp-button1').disabled = !(termsAccepted && imageUploaded);
+        }
+        // Enable Pay Now button if terms are accepted and image is uploaded
+        document.getElementById('acceptTerms').onclick = function() {
+            if (document.getElementById('termsCheckbox').checked) {
+                $('#termsModal').modal('hide'); // Close the modal
+                //document.getElementById('rzp-button1').disabled = false;
+                 // Enable Pay Now button
+                // document.getElementById('imageUpload').onchange = function() {
+                 //cdn.jsdelivr.net/npm/   document.getElementById('rzp-button1').disabled = !this.files.length; // Enable if file is selected
+                //};
+                checkConditions();
+            } else {
+                alert("You must agree to the terms and conditions.");
+                document.getElementById('rzp-button1').disabled = true;
+            }
+        };
+
+       
+        document.getElementById('imageUpload').onchange = function() {
+            checkConditions(); // Check conditions to enable Pay Now button
+        };
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

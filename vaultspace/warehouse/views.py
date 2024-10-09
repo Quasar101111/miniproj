@@ -35,6 +35,9 @@ def add_warehouse(request):
         facilities = request.POST.getlist('facilities')
         images = request.FILES.getlist('images')
         date = request.POST.get('date')
+        length = request.POST.get('length')
+        breadth = request.POST.get('breadth')
+        height = request.POST.get('height')
         
         
         if location_id and area and rental_price:
@@ -52,7 +55,10 @@ def add_warehouse(request):
                     rental_price=rental_price,
                     terms_cond=terms_cond,
                     facilities=','.join(facilities),
-                    status=1  # Default status
+                    status=1,  # Default status
+                    length=length,  # Save length
+                    breadth=breadth,  # Save breadth
+                    height=height,  # Save height
                 )
 
                 for image in images:
@@ -90,6 +96,9 @@ def edit_warehouse(request, warehouse_id):
 
     if request.method == 'POST':
         location_id = request.POST.get('location')
+        length = request.POST.get('length')
+        breadth = request.POST.get('breadth')
+        height = request.POST.get('height')
         area = request.POST.get('area')
         ownership_document = request.FILES.get('ownership_document')
         landmark = request.POST.get('landmark')
@@ -148,7 +157,8 @@ def edit_warehouse(request, warehouse_id):
 def lease_warehouse(request, warehouse_id):
     warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id, status=1)
     tenants = Tenant.objects.all()
-
+    lessor_id = request.session.get('lessor_id')
+    lessor=Lessor.objects.get(lessor_id=lessor_id)
     if request.method == 'POST':
         print("POST data:", request.POST)
         
@@ -158,13 +168,9 @@ def lease_warehouse(request, warehouse_id):
         lease_end_date = request.POST.get('lease_end_date')
         new_monthly_rate = request.POST.get('new_monthly_rate')
         total_amount = request.POST.get('total_amount')
+        signature = request.POST.get('signature')
 
-        print("Tenant ID:", tenant_id)
-        print("Start Date:", lease_start_date)
-        print("Lease Months:", lease_months)
-        print("End Date:", lease_end_date)
-        print("Monthly Rate:", new_monthly_rate)
-        print("Total Amount:", total_amount)
+      
 
         try:
             tenant = Tenant.objects.get(tenant_id=tenant_id)
@@ -178,7 +184,8 @@ def lease_warehouse(request, warehouse_id):
                 lease_end_date=end_date,
                 rental_amount=Decimal(new_monthly_rate),
                 total_amount=Decimal(total_amount),
-                payment_status='Pending'
+                payment_status='Pending',
+                lessor_signature = signature
             )
             lease.save()
             print("Lease:", lease)
@@ -197,6 +204,8 @@ def lease_warehouse(request, warehouse_id):
     context = {
         'warehouse': warehouse,
         'tenants': tenants,
+        'lessor': lessor,
+
     }
     return render(request, 'warehouse/lease_warehouse.html', context)
 
@@ -280,3 +289,6 @@ def delete_lease(request, lease_id):
     else:
         messages.error(request, 'Invalid request method for lease deletion.')
     return redirect('lease_requests')
+
+def termsandcond(request):
+    return render(request,'termsandcond')

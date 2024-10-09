@@ -46,6 +46,8 @@ from django.urls import reverse_lazy
 
 import razorpay
 
+import pdfkit
+
 from django.http import HttpResponse
 from django.template.loader import get_template
 from wkhtmltopdf.views import PDFTemplateView
@@ -53,6 +55,7 @@ from wkhtmltopdf.views import PDFTemplateView
 from django.utils.decorators import method_decorator
 
 from .utils.image_processing import generate_shares, save_image_with_hash,  calculate_hash,get_hash_from_image
+from .utils.sort_warehosue import sort_warehouses
 
 
 from django.core.files.base import ContentFile
@@ -107,6 +110,7 @@ def register_tenant(request):
                 request.session['registration_data'] = form.cleaned_data
                 request.session['otp'] = otp
                 request.session['user_type'] = 'tenant'
+                request.session['email']= email
                 
                 send_mail(
                     'Verify your email',
@@ -144,6 +148,7 @@ def register_lessor(request):
                 request.session['registration_data'] = form.cleaned_data
                 request.session['otp'] = otp
                 request.session['user_type'] = 'lessor'
+                request.session['email']= email
                 
                 send_mail(
                     'Verify your email',
@@ -185,7 +190,8 @@ def verify_otp(request):
             del request.session['user_type']
 
             messages.success(request, 'Registration successful! You can now log in.')
-            return redirect('login')
+
+            return redirect('upload_image_share')
         else:
             messages.error(request, 'Invalid OTP. Please try again.')
             if user_type == 'tenant':
@@ -371,14 +377,18 @@ def lessor_index(request):
     lessor_id = request.session.get('lessor_id')
     lessor = Lessor.objects.get(lessor_id=lessor_id)
     warehouses = Warehouse.objects.filter(owner=lessor_id).order_by(F('warehouse_id').desc())
+     # Fetch leases for the warehouses
     
+   
+
    
     
     return render(request, 'users/lessor_index.html', {
         'locations': locations,
         'lessor_id': lessor_id,
         'lessor': lessor,
-        'warehouses': warehouses
+        'warehouses': warehouses,
+       
     })
 
 
@@ -392,28 +402,31 @@ def view_warehouse(request, warehouse_id):
     return render(request, 'users/view_warehouse.html', {'warehouse': warehouse, 'warehouse_facilities': warehouse_facilities})
 
 
+@login_required(login_url='login')
 def warehouse_list(request):
     warehouses = Warehouse.objects.prefetch_related('photos').all()
     
     sort = request.GET.get('sort', 'default')
     current_sort = 'Default Order'
 
+    # Use the sorting function from sorting.py
+    warehouses = sort_warehouses(warehouses, sort)
+
+    # Set current_sort based on the selected option
     if sort == 'price_asc':
-        warehouses = warehouses.order_by('rental_price')
         current_sort = 'Price (Low to High)'
     elif sort == 'price_desc':
-        warehouses = warehouses.order_by('-rental_price')
         current_sort = 'Price (High to Low)'
     elif sort == 'date_desc':
-        warehouses = warehouses.order_by('-year_built')
         current_sort = 'Date (Newest First)'
     elif sort == 'date_asc':
-        warehouses = warehouses.order_by('year_built')
         current_sort = 'Date (Oldest First)'
-    else:
-        # Default sorting
-        warehouses = warehouses.order_by('-warehouse_id')
-    return render(request, 'users/warehouse_list.html', {'warehouses': warehouses})
+    elif sort == 'available_places':
+        current_sort = 'Available Places'
+    elif sort == 'area':
+        current_sort = 'area'
+
+    return render(request, 'users/warehouse_list.html', {'warehouses': warehouses, 'current_sort': current_sort})
 
 def warehouse_detail(request, warehouse_id):
     warehouse = Warehouse.objects.select_related('owner', 'location').get(warehouse_id=warehouse_id)
@@ -637,34 +650,85 @@ def rented_warehouses(request):
 
 
 
-class LeaseReportPDFView(PDFTemplateView):
-       template_name = 'users/download_lease_report.html'
+# class LeaseReportPDFView(PDFTemplateView):
+#        template_name = 'users/download_lease_report.html'
 
-       def get_context_data(self, **kwargs):
-           context = super().get_context_data(**kwargs)
-           lease_id = self.kwargs['lease_id']
+#        def get_context_data(self, **kwargs):
+#            context = super().get_context_data(**kwargs)
+#            lease_id = self.kwargs['lease_id']
            
-           # Fetch the lease, tenant, and payment data
-           lease = get_object_or_404(Lease, lease_id=lease_id)
-           tenant = lease.tenant  # Access the tenant directly from the lease
-           payment = get_object_or_404(Payment, lease=lease, status='Paid')  # Assuming you want only paid payments
-           convenience_fee_percentage = Decimal('0.02')
-           convenience_fee = lease.total_amount * convenience_fee_percentage
-           total_amount = lease.total_amount + convenience_fee  # Total amount including convenience fee
+#            # Fetch the lease, tenant, and payment data
+#            lease = get_object_or_404(Lease, lease_id=lease_id)
+#            tenant = lease.tenant  # Access the tenant directly from the lease
+#            payment = get_object_or_404(Payment, lease=lease, status='Paid')  # Assuming you want only paid payments
+#            convenience_fee_percentage = Decimal('0.02')
+#            convenience_fee = lease.total_amount * convenience_fee_percentage
+#            total_amount = lease.total_amount + convenience_fee  # Total amount including convenience fee
 
-           # Add data to context
-           context['tenant'] = tenant
-           context['lease'] = lease
-           context['payment'] = payment
-           context['convenience_fee'] = convenience_fee
-           context['total_amount'] = total_amount
-           context['current_date'] = timezone.now().date() 
-           return context
+#            # Add data to context
+#            context['tenant'] = tenant
+#            context['lease'] = lease
+#            context['payment'] = payment
+#            context['convenience_fee'] = convenience_fee
+#            context['total_amount'] = total_amount
+#            context['current_date'] = timezone.now().date() 
+#            return context
+import subprocess
+import logging
+logger = logging.getLogger(__name__)
+# @login_required
+# def download_lease_report(request, lease_id):
+#     cmd_options = {'quiet': None, 'enable-local-file-access': True}
+#       # Capture the output and errors from wkhtmltopdf
+#     try:
+#         response = LeaseReportPDFView.as_view()(request, lease_id=lease_id, cmd_options=cmd_options)
+#     except subprocess.CalledProcessError as e:
+#         logger.error("wkhtmltopdf error: %s", e.output)  # Log the error output
+        
+#         print("wkhtmltopdf error:", e.output)  # Print the error output to the console
+#         return HttpResponse("An error occurred while generating the PDF.", status=500)
+
+#     # Print debugging information
+#     print("PDF generation command options:", cmd_options)
+#     print("Lease ID:", lease_id)
+    
+#     return response
 
 @login_required
 def download_lease_report(request, lease_id):
-    
-    return LeaseReportPDFView.as_view()(request, lease_id=lease_id)
+    # Fetch the lease, tenant, and payment data
+    lease = get_object_or_404(Lease, lease_id=lease_id)
+    tenant = lease.tenant  # Access the tenant directly from the lease
+    payment = Payment.objects.filter(lease=lease, status='Paid')  # Assuming you want only paid payments
+    convenience_fee_percentage = Decimal('0.02')
+    convenience_fee = lease.total_amount * convenience_fee_percentage
+    total_amount = lease.total_amount + convenience_fee  # Total amount including convenience fee
+    payment = payment.first()
+    # Prepare context for the PDF
+    context = {
+        'tenant': tenant,
+        'lease': lease,
+        'payment': payment,
+        'convenience_fee': convenience_fee,
+        'total_amount': total_amount,
+        'current_date': timezone.now().date(),
+    }
+    print("The paynemtne:",payment)
+    # Render the HTML template to a string
+    html_string = render_to_string('users/download_lease_report.html', context)
+
+    # Generate PDF using pdfkit
+    cmd_options = {'quiet': None, 'enable-local-file-access': None}
+    try:
+        pdf = pdfkit.from_string(html_string, False, options=cmd_options)
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="lease_report.pdf"'
+        return response
+    except Exception as e:
+        logger.error("pdfkit error: %s", str(e))  # Log the error output
+        print("pdfkit error:", str(e))  # Print the error output to the console
+        return HttpResponse("An error occurred while generating the PDF.", status=500)
+
 ###############################payments #################################################
 from decimal import Decimal 
 # Initialize Razorpay client
@@ -685,6 +749,9 @@ def payment(request, lease_id):
         order_amount = float(total_amount * 100)  # Convert to float for JSON serialization
         order_currency = 'INR'
         order_receipt = str(lease.lease_id)
+        signature = request.POST.get('signature')
+        lease.tenant_signature =signature
+        lease.save()
 
         # Create order
         order = razorpay_client.order.create(dict(amount=order_amount, currency=order_currency, receipt=order_receipt))
@@ -724,6 +791,11 @@ def payment_result(request, lease_id):
                     )
                     lease.payment_status = 'Paid'  # Update lease status
                     lease.save()
+
+                     # Update the warehouse status to 2
+                    warehouse = lease.warehouse
+                    warehouse.status = 2  # Set status to 2
+                    warehouse.save()
                     messages.success(request, 'Payment processed successfully.')
                     
                 else:
@@ -740,7 +812,9 @@ def payment_result(request, lease_id):
 
 def upload_image_share(request):
     download_link = None
-    print("Upload image share function called.")  # Debugging: Function entry
+    print("Upload image share function called.")
+    email = None
+    user= None  # Debugging: Function entry
 
     if request.method == 'POST':
         image_share = request.FILES.get('image_share')
@@ -751,9 +825,17 @@ def upload_image_share(request):
             server_share, user_share = generate_shares(image_share)
             print("Shares generated successfully.")  # Debugging
 
-            user = request.user
-            email = user.email
-            print(f"User email: {email}")  # Debugging: Print the user's email
+            session_email = request.session.get('email')
+            if(session_email):
+                user = get_object_or_404(User, email=session_email)
+                email = user.email
+                print(f"User email: {user}")  # Debugging: Print the user's email
+            else:
+                user = request.user
+                email = user.email
+                print(f"User email: {email}")  # Debugging: Print the user's email
+            
+            
 
             # Define the server share path
             server_path = os.path.join(settings.MEDIA_ROOT, 'auth', f'server_share_{email}.png')
@@ -837,20 +919,41 @@ def login_using_image(request):
 
                 # If hashes match, authenticate the user
                 # Log in the user
+                  # If hashes match, authenticate and login the user
+                # user = authenticate(request, username=email, password=None)  # Password is None for image-based auth
+                if user is not None:
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 
-                print("User logged in successfully.")  # Debugging
-                return redirect('index')  # Redirect to the index page
-                
-
-            except ValueError as e:
-                messages.error(request, str(e))
-                print(f"ValueError: {str(e)}")  # Debugging: Print the error message
+                    
+                    if user.is_superuser:
+                        return redirect('admin_dashboard')
+                    
+                    try:
+                        profile = Profile.objects.get(user=user)
+                        if profile.user_type == 'tenant':
+                            try:
+                                tenant = Tenant.objects.get(email=user.email)
+                                request.session['tenant_id'] = tenant.tenant_id
+                                request.session.save()
+                                return redirect('index')
+                            except Tenant.DoesNotExist:
+                                return redirect('tenant_details')
+                        elif profile.user_type == 'lessor':
+                            try:
+                                lessor = Lessor.objects.get(email=user.email)
+                                request.session['lessor_id'] = lessor.lessor_id
+                                request.session.save()
+                                return redirect('lessor_index')
+                            except Lessor.DoesNotExist:
+                                return redirect('lessor_details')
+                    except Profile.DoesNotExist:
+                        messages.error(request, 'User profile not found. Please contact support.')
+                        return render(request, 'users/login_using_image.html', {'title': 'log in'})
+                else:
+                    messages.error(request, 'Authentication failed. Please try again.')
             except Exception as e:
-                messages.error(request, "Authentication failed. Please try again.")
-                print(f"Exception: {str(e)}")  # Debugging: Print the error message
-            
-            except Profile.DoesNotExist:
-                    messages.error(request, 'User profile not found. Please contact support.')
-                    return render(request, 'users/login_using_image.html')
-
-    return render(request, 'users/login_using_image.html')
+                messages.error(request, f"Authentication failed: {str(e)}")
+        else:
+            messages.error(request, 'Please upload an image share.')
+    
+    return render(request, 'users/login_using_image.html', {'title': 'log in'})

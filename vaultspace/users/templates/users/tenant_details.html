@@ -78,14 +78,22 @@
                                         Not Available
                                         {% endif %}</strong>
                                 </li>
-                            </ul>
-                            <div class="card-footer border-0 mt-0 border-top">
-                                <ul class="property-social">
-                                    <li><a href="javascript:void(0);"><i class="lab la-instagram"></i></a></li>
-                                    <li><a href="javascript:void(0);"><i class="lab la-facebook-f"></i></a></li>
-                                    <li><a href="javascript:void(0);"><i class="lab la-twitter"></i></a></li>
+                               
+                                    <li class="list-group-item d-flex justify-content-between"><span
+                                        class="mb-0">change image for login:</span>
+                                    <strong class="text-black"><a href="{% url 'upload_image_share' %}"><button class="btn btn-danger">Change<button></a>
+                                    </strong>
+                                </li>
                                 </ul>
+                            <div class="card-footer border-0 mt-0 border-top">
+                               
+                                    {% comment %} <li><a href="javascript:void(0);"><i class="lab la-instagram"></i></a></li>
+                                    <li><a href="javascript:void(0);"><i class="lab la-facebook-f"></i></a></li>
+                                    <li><a href="javascript:void(0);"><i class="lab la-twitter"></i></a></li> {% endcomment %}
+                                    
                             </div>
+                            
+                                
                         </div>
                     </div>
                     <div class="col-xl-8 col-lg-8 col-sm-12">

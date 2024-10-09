@@ -35,6 +35,8 @@
                             <form method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <div class="form-group">
+                                    <p> This is used as an alternate method of login. Upload an image for creating a new image for authentication</p>
+                        
                                     <label for="image_share">Select Image Share:</label>
                                     <input type="file" name="image_share" required class="form-control">
                                 </div>
@@ -45,6 +47,7 @@
 
                             {% if download_link %}
                                 <h5 class="text-center mt-4">Your User Share is ready!</h5>
+                                <h3 class="text-danger">IMPORTANT: store this file in secure folder. You can use this a image for login.</h3>
                                 <div class="text-center">
                                     <button class="btn btn-success" onclick="triggerDownload('{{ download_link }}')">Download User Share</button>
                                 </div>

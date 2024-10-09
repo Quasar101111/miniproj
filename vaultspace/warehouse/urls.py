@@ -19,6 +19,7 @@ urlpatterns = [
        path('lease_requests/', views.lease_requests, name='lease_requests'),
        path('edit_lease/<int:lease_id>/', views.edit_lease, name='edit_lease'),
       path('delete-lease/<int:lease_id>/', views.delete_lease, name='delete_lease'),
+      path('termsandcond',views.termsandcond,name='termsandcond')
 
  
 ]

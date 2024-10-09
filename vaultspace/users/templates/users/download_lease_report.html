@@ -49,22 +49,34 @@
             font-weight: bold;
             font-size: 16px;
         }
+        .next_page{
+            margin-top: 1000px;
+        }
         .footer {
             text-align: center;
             margin-top: 20px;
         }
+        h5{
+            color: red;
+            font-style: italic;
+        }
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+          }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>VaultSpace</h1>
-        {% comment %} <img src="{% static 'images/logo.png' %}" alt="Logo" style="max-width: 200px; height: auto;"> {% endcomment %}
+        <img src="D:/S9/miniproject/edit 2/vaultspace/static/images/logo.png" alt="Logo" style="max-width: 50px; height: auto;">
        
        
 
         <p>{{ business_address }}</p>
      
-        {% comment %} add todays date {% endcomment %}
+        
         <p>Issue Date: {{ current_date }}</p> 
     </div>
 
@@ -91,14 +103,14 @@
                 <th>Warehouse</th>
                 <th>Lease start</th>
                 <th>Lease end</th>
-                
                 <th>Amount</th>
             </tr>
         </thead>
         <tbody>
            
             <tr>
-                <td>Id:{{ lease.warehouse.warehouse_id }} in {{ lease.warehouse.location.city }},{{ lease.warehouse.location.state}}</td>
+                {% comment %} <td>Id:{{ lease.warehouse.warehouse_id }} in {{ lease.warehouse.location.city }},{{ lease.warehouse.location.state}}</td> {% endcomment %}
+                <td>{{ lease.warehouse.warehouse_id }}</td>
                 <td>{{ lease.lease_start_date }}</td>
                 <td>{{ lease.lease_end_date }}</td>
                 <td>Rs. {{ lease.total_amount }}</td>
@@ -109,13 +121,104 @@
 <hr>
     <div class="total">
         <p>Subtotal: Rs. {{ lease.total_amount }}</p>
-        <p>Convenience Fee: Rs. {{ convenience_fee }}</p>
-        <p>Total Paid: Rs.<h3> {{ total_amount }}</h3></p>
+        <p>Convenience Fee: Rs. {{ convenience_fee|floatformat:2 }}</p>
+        <p>Total Paid: Rs.<h3> {{ total_amount|floatformat:2 }}</h3></p>
     </div>
 <hr>
     <div class="footer">
         <p>Any queires contact</p>
          <p> <i>vaultspace07@gmail.com</i></p>
+    </div>
+    <div class="next_page">
+        <div class="header">
+                <h2>Terms and Condtions</h2>
+                <h5>* Agreement to Terms and Conditions. It is agreed that the following Terms and Conditions shall govern all warehousing and storage services provided under this agreement. These terms apply to the relationship between the Lessor, VaultSpace (the mediator), and the Tenant for the lease of warehouse space. In case of conflict, the electronically published version shall control.
+                    *</h5>
+
+                
+                    <h3>Definitions</h3>
+    <ul>
+        <li><strong>a. Lessor:</strong> The individual or entity providing the warehouse for lease, including its officers, employees, and agents acting within the scope of their employment.</li>
+        <li><strong>b. Tenant:</strong> The person, company, or entity leasing the warehouse space through VaultSpace to store goods.</li>
+        <li><strong>c. Goods:</strong> The property that the Tenant intends to store in the leased warehouse.</li>
+        <li><strong>d. VaultSpace:</strong> The mediator responsible for facilitating the leasing process between the Lessor and the Tenant.</li>
+    </ul>
+
+    <h2>Ownership of Goods</h2>
+    <p>
+        The Tenant warrants that they are the legal owner of the Goods or have lawful possession of the Goods to be stored. The Tenant also agrees to notify any party acquiring interest in the Goods about these Terms and Conditions and to indemnify and hold VaultSpace and the Lessor harmless from any third-party claims relating to ownership, storage, or delivery of the Goods.
+    </p>
+
+    <h2>Payment and Lease Activation</h2>
+    <ul>
+        <li><strong>a. Payment Requirement:</strong> The warehouse space shall only be leased and made available to the Tenant for storing their Goods after full payment of the agreed-upon lease amount. VaultSpace, as the mediator, will confirm the payment and notify the Lessor to release access to the warehouse to the Tenant.</li>
+        <li><strong>b. Access to Warehouse:</strong> The Tenant will only be allowed to store Goods in the warehouse after payment is received and verified by VaultSpace. The Lessor will provide the Tenant with necessary access to the warehouse within 2 business days of payment confirmation.</li>
+    </ul>
+
+    <h2>Storage Location</h2>
+    <p>
+        The Lessor agrees to store the Tenant's Goods in the designated warehouse location as specified in the lease agreement. The specific storage area within the facility is at the Lessor’s discretion unless explicitly agreed upon.
+    </p>
+
+    <h2>Termination of Lease and Storage</h2>
+    <ul>
+        <li><strong>a. Lease Duration:</strong> The lease is valid only for the period specified in the lease agreement. Any extension must be agreed upon by both the Tenant and Lessor, with payments made in advance.</li>
+        <li><strong>b. Non-Payment:</strong> Failure to make timely payments for renewal or other charges (such as additional storage or services) may result in immediate termination of the Tenant’s access to the warehouse. VaultSpace will notify the Tenant in such cases, and the Lessor reserves the right to deny access to the Goods until payment is resolved.</li>
+    </ul>
+
+    <h2>Lessor’s Responsibilities</h2>
+    <ul>
+        <li><strong>a.</strong> The Lessor agrees to provide a warehouse space that is fit for the purpose of storage as agreed upon. This includes maintaining the warehouse in a clean and secure state.</li>
+        <li><strong>b.</strong> The Lessor will provide additional services as requested by the Tenant (such as handling or packaging) at additional charges.</li>
+    </ul>
+
+    <h2>Tenant’s Responsibilities</h2>
+    <ul>
+        <li><strong>a.</strong> The Tenant must ensure that the Goods are properly marked, packaged, labeled, and classified for handling and storage.</li>
+        <li><strong>b.</strong> The Tenant warrants that the Goods are safe for storage and will comply with all local and international regulations, including those related to hazardous materials.</li>
+        <li><strong>c.</strong> The Tenant shall provide all necessary documentation and instructions to the Lessor and VaultSpace for the proper handling and storage of the Goods.</li>
+    </ul>
+
+    <h2>VaultSpace’s Role as Mediator</h2>
+    <ul>
+        <li><strong>a.</strong> VaultSpace is not the owner or operator of the warehouse. It acts as the intermediary between the Tenant and the Lessor to facilitate the lease, payment, and management of the warehouse space.</li>
+        <li><strong>b.</strong> VaultSpace will collect and verify all payments from the Tenant before granting the Lessor authorization to provide the warehouse space.</li>
+        <li><strong>c.</strong> VaultSpace is not responsible for the condition of the warehouse or the Goods stored therein but will facilitate communication between the Tenant and Lessor in case of disputes.</li>
+    </ul>
+
+    <h2>Lien Rights</h2>
+    <p>
+        The Lessor shall have a lien on the Goods stored in the warehouse for all unpaid charges, including storage and handling fees. VaultSpace will notify the Tenant of any unpaid amounts and facilitate resolution. If payments remain outstanding for 30 days after notice, the Lessor has the right to sell the Goods to recover the costs.
+    </p>
+
+    <h2>Liability</h2>
+    <ul>
+        <li><strong>a. Lessor's Liability:</strong> The Lessor is not liable for any loss or damage to the Goods, except in cases of gross negligence. The Tenant assumes responsibility for insuring their Goods, as the Lessor does not provide insurance.</li>
+        <li><strong>b. VaultSpace Liability:</strong> VaultSpace is not liable for the condition, damage, or loss of Goods. VaultSpace’s role is solely to facilitate payment and lease agreements between the Tenant and the Lessor.</li>
+    </ul>
+
+    <h2>Insurance</h2>
+    <p>
+        The Lessor does not provide insurance coverage for the Goods. The Tenant is responsible for securing insurance to cover any potential loss, damage, or destruction of the stored Goods.
+    </p>
+
+    <h2>Dispute Resolution</h2>
+    <ul>
+        <li><strong>a.</strong> In the event of a dispute between the Tenant and Lessor regarding the lease or the condition of the warehouse, VaultSpace will mediate to resolve the issue.</li>
+        <li><strong>b.</strong> If mediation fails, the parties agree to submit the dispute to binding arbitration in the jurisdiction where the warehouse is located.</li>
+    </ul>
+
+    <h2>Governing Law</h2>
+    <p>
+        These Terms and Conditions shall be governed by and construed in accordance with the laws of the state where the warehouse is located.
+    </p>
+
+    <h2>Entire Agreement</h2>
+    <p>
+        This agreement constitutes the entire understanding between the Tenant, Lessor, and VaultSpace regarding the lease and use of the warehouse space. No modifications to this agreement shall be valid unless made in writing and signed by all parties.
+    </p>
+
+        </div>   
     </div>
 </body>
 </html>
