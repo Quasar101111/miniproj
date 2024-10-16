@@ -1,0 +1,552 @@
+INFO 2024-10-13 21:05:46,852 autoreload Watching for file changes with StatReloader
+INFO 2024-10-13 21:06:41,140 autoreload Watching for file changes with StatReloader
+INFO 2024-10-13 23:49:13,995 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 12210
+INFO 2024-10-13 23:49:14,208 basehttp "GET /warehouse/warehouse-status-chart-data/ HTTP/1.1" 200 53
+INFO 2024-10-13 23:49:14,217 basehttp "GET /warehouse/revenue-chart-data/ HTTP/1.1" 200 83
+INFO 2024-10-13 23:50:49,662 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-13 23:50:51,665 autoreload Watching for file changes with StatReloader
+INFO 2024-10-13 23:50:55,954 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 12210
+INFO 2024-10-13 23:50:56,350 basehttp "GET /warehouse/revenue-chart-data/ HTTP/1.1" 200 83
+INFO 2024-10-13 23:50:56,376 basehttp "GET /warehouse/warehouse-status-chart-data/ HTTP/1.1" 200 53
+INFO 2024-10-13 23:52:39,374 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 12182
+INFO 2024-10-13 23:52:39,658 basehttp "GET /warehouse/warehouse-status-chart-data/ HTTP/1.1" 200 53
+INFO 2024-10-13 23:52:39,673 basehttp "GET /warehouse/revenue-chart-data/ HTTP/1.1" 200 83
+INFO 2024-10-13 23:54:08,305 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 8760
+INFO 2024-10-13 23:55:57,370 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-13 23:56:14,191 autoreload Watching for file changes with StatReloader
+INFO 2024-10-13 23:56:45,943 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 14479
+INFO 2024-10-13 23:56:46,636 basehttp "GET /static/icons/font-awesome/webfonts/fa-brands-400.woff2 HTTP/1.1" 200 109808
+INFO 2024-10-13 23:59:01,356 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 14501
+INFO 2024-10-14 00:05:05,277 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:05:06,823 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:06:19,299 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:06:20,606 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:08:03,782 autoreload Watching for file changes with StatReloader
+ERROR 2024-10-14 00:08:06,122 log Internal Server Error: /warehouse/dashboard/
+Traceback (most recent call last):
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py", line 342, in lessor_dashboard
+    'warehouse_name': warehouse.name,
+                      ^^^^^^^^^^^^^^
+AttributeError: 'Warehouse' object has no attribute 'name'
+ERROR 2024-10-14 00:08:06,124 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 500 82270
+INFO 2024-10-14 00:09:23,781 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-14 00:09:25,047 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:09:27,242 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-14 00:09:28,097 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:09:33,405 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-14 00:09:34,475 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:09:37,352 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-14 00:09:38,079 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:09:41,355 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-14 00:09:42,184 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:11:05,393 autoreload Watching for file changes with StatReloader
+ERROR 2024-10-14 00:11:10,420 log Internal Server Error: /warehouse/dashboard/
+Traceback (most recent call last):
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py", line 354, in lessor_dashboard
+    'revenue_trend': json.dumps(revenue_trend),  # Convert to JSON for JavaScript
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\Lib\json\__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\Lib\json\encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\python\Lib\json\encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "D:\python\Lib\json\encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type date is not JSON serializable
+ERROR 2024-10-14 00:11:10,424 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 500 105981
+INFO 2024-10-14 00:12:50,968 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:12:52,239 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:12:54,817 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:12:55,805 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:13:29,056 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 16421
+INFO 2024-10-14 00:39:04,754 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:39:06,703 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:39:28,847 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:39:29,991 autoreload Watching for file changes with StatReloader
+ERROR 2024-10-14 00:41:07,548 log Internal Server Error: /warehouse/dashboard/
+Traceback (most recent call last):
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\proj\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapper_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py", line 341, in lessor_dashboard
+    warehouse_data = [
+                     ^
+  File "D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py", line 342, in <listcomp>
+    [int(item['month'].timestamp() * 1000), float(item['revenue'])]
+         ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'datetime.date' object has no attribute 'timestamp'
+ERROR 2024-10-14 00:41:07,551 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 500 86269
+INFO 2024-10-14 00:42:32,393 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:42:34,035 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:42:36,179 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15644
+INFO 2024-10-14 00:42:41,212 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15644
+INFO 2024-10-14 00:42:45,045 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15644
+INFO 2024-10-14 00:44:28,433 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:44:29,749 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:44:39,684 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15644
+INFO 2024-10-14 00:46:28,951 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15368
+INFO 2024-10-14 00:47:30,125 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:47:31,996 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 00:47:35,183 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15815
+INFO 2024-10-14 00:49:50,552 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15911
+INFO 2024-10-14 00:50:35,889 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 00:50:37,102 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 06:51:54,226 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 06:52:32,931 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 06:52:37,818 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 06:52:48,249 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 06:52:50,753 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 06:54:54,429 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 06:54:58,094 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 06:55:01,221 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\views.py changed, reloading.
+INFO 2024-10-14 06:55:03,767 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 06:55:05,400 basehttp "GET /warehouse/dashboard/ HTTP/1.1" 200 15911
+INFO 2024-10-14 06:55:05,638 basehttp "GET /static/css/style.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,715 basehttp "GET /static/icons/material-design-iconic-font/css/materialdesignicons.min.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,719 basehttp "GET /static/icons/simple-line-icons/css/simple-line-icons.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,723 basehttp "GET /static/icons/font-awesome/css/all.min.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,726 basehttp "GET /static/icons/line-awesome/css/line-awesome.min.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,732 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,734 basehttp "GET /static/icons/avasta/css/style.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,735 basehttp "GET /static/icons/flaticon-1/font/flaticon-1.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,735 basehttp "GET /static/icons/themify-icons/css/themify-icons.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,739 basehttp "GET /static/icons/flaticon/flaticon.css HTTP/1.1" 304 0
+INFO 2024-10-14 06:55:05,739 basehttp "GET /static/vendor/perfect-scrollbar/css/perfect-scrollbar.css HTTP/1.1" 304 0
+INFO 2024-10-14 20:27:38,851 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 20:27:40,112 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 6951
+WARNING 2024-10-14 20:27:40,197 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 20:33:53,706 basehttp "GET / HTTP/1.1" 200 11577
+WARNING 2024-10-14 20:33:53,848 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 20:33:53,976 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-14 20:33:53,985 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-14 20:33:53,987 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-14 23:54:38,688 autoreload Watching for file changes with StatReloader
+INFO 2024-10-14 23:56:15,575 basehttp "GET /rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-14 23:56:15,776 basehttp "GET /login/?next=/rented_warehouses/ HTTP/1.1" 200 3351
+INFO 2024-10-14 23:56:15,837 basehttp "GET /static/css/style.css%20 HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,843 basehttp "GET /static/vendor/global/global.min.js HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,848 basehttp "GET /static/vendor/bootstrap-select/dist/js/bootstrap-select.min.js HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,848 basehttp "GET /static/js/deznav-init.js HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,850 basehttp "GET /static/js/custom.min.js HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,884 basehttp "GET /static/icons/material-design-iconic-font/css/materialdesignicons.min.css HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,891 basehttp "GET /static/icons/themify-icons/css/themify-icons.css HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,892 basehttp "GET /static/icons/line-awesome/css/line-awesome.min.css HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:15,900 basehttp "GET /static/icons/avasta/css/style.css HTTP/1.1" 304 0
+WARNING 2024-10-14 23:56:16,094 log Not Found: /login/imagbes/logo-full.png
+WARNING 2024-10-14 23:56:16,096 basehttp "GET /login/imagbes/logo-full.png HTTP/1.1" 404 11100
+INFO 2024-10-14 23:56:16,100 basehttp "GET /static/vendor/perfect-scrollbar/css/perfect-scrollbar.css HTTP/1.1" 200 2714
+INFO 2024-10-14 23:56:16,102 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css HTTP/1.1" 200 2191
+INFO 2024-10-14 23:56:16,102 basehttp "GET /static/icons/flaticon/flaticon.css HTTP/1.1" 304 0
+INFO 2024-10-14 23:56:16,104 basehttp "GET /static/icons/simple-line-icons/css/simple-line-icons.css HTTP/1.1" 200 10645
+INFO 2024-10-14 23:56:16,104 basehttp "GET /static/icons/flaticon-1/font/flaticon-1.css HTTP/1.1" 200 6377
+INFO 2024-10-14 23:56:16,104 basehttp "GET /static/icons/font-awesome/css/all.min.css HTTP/1.1" 200 102225
+WARNING 2024-10-14 23:56:16,190 log Not Found: /login/images/favicon.png
+WARNING 2024-10-14 23:56:16,191 basehttp "GET /login/images/favicon.png HTTP/1.1" 404 11091
+INFO 2024-10-14 23:56:31,534 basehttp "POST /login/?next=/rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-14 23:56:31,653 basehttp "GET / HTTP/1.1" 200 11577
+WARNING 2024-10-14 23:56:31,751 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:56:31,754 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-14 23:56:31,761 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-14 23:56:31,776 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-14 23:56:34,065 basehttp "GET /tenant_details HTTP/1.1" 301 0
+INFO 2024-10-14 23:56:34,272 basehttp "GET /tenant_details/ HTTP/1.1" 200 9170
+INFO 2024-10-14 23:56:34,360 basehttp "GET /media/tenant_photos/index_Zo0RzgC.jpg HTTP/1.1" 200 4887
+WARNING 2024-10-14 23:56:34,370 log Not Found: /tenant_details/images/big/img1.jpg
+WARNING 2024-10-14 23:56:34,370 basehttp "GET /tenant_details/images/big/img1.jpg HTTP/1.1" 404 11121
+WARNING 2024-10-14 23:56:34,416 log Not Found: /tenant_details/images/favicon.png
+WARNING 2024-10-14 23:56:34,417 basehttp "GET /tenant_details/images/favicon.png HTTP/1.1" 404 11118
+INFO 2024-10-14 23:56:35,721 basehttp "GET / HTTP/1.1" 200 11577
+INFO 2024-10-14 23:56:35,825 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-14 23:56:35,828 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-14 23:56:35,831 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-14 23:56:37,992 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8507
+WARNING 2024-10-14 23:56:38,034 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:56:43,792 basehttp "GET /rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-14 23:58:33,572 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-14 23:58:33,603 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:58:34,568 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-14 23:58:34,602 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:58:56,828 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-14 23:58:56,881 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:58:59,883 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-14 23:58:59,934 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:59:08,565 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-14 23:59:08,611 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-14 23:59:15,254 basehttp "GET /rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-14 23:59:15,337 basehttp "GET /login/?next=/rented_warehouses/ HTTP/1.1" 200 3351
+INFO 2024-10-14 23:59:53,747 basehttp "GET /login/?next=/rented_warehouses/ HTTP/1.1" 200 3351
+INFO 2024-10-14 23:59:54,391 basehttp "GET /login/?next=/rented_warehouses/ HTTP/1.1" 200 3351
+INFO 2024-10-14 23:59:59,384 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-14 23:59:59,432 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:00:02,023 basehttp "GET /rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:00:02,218 basehttp "GET /login/?next=/rented_warehouses/ HTTP/1.1" 200 3351
+INFO 2024-10-15 00:00:10,303 basehttp "GET /warehouse_list/ HTTP/1.1" 200 7205
+INFO 2024-10-15 00:00:10,347 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:00:12,268 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-15 00:00:12,310 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:00:22,341 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-15 00:00:22,407 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+WARNING 2024-10-15 00:00:22,460 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:00:34,420 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-15 00:00:34,493 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:00:47,744 basehttp "GET /rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:00:47,760 basehttp "GET /login/?next=/rented_warehouses/ HTTP/1.1" 200 3351
+INFO 2024-10-15 00:00:47,817 basehttp "GET /static/js/deznav-init.js HTTP/1.1" 200 980
+WARNING 2024-10-15 00:00:47,824 log Not Found: /login/imagbes/logo-full.png
+WARNING 2024-10-15 00:00:47,826 basehttp "GET /login/imagbes/logo-full.png HTTP/1.1" 404 11100
+INFO 2024-10-15 00:00:47,827 basehttp "GET /static/js/custom.min.js HTTP/1.1" 200 12477
+INFO 2024-10-15 00:00:47,833 basehttp "GET /static/css/style.css%20 HTTP/1.1" 200 1154922
+INFO 2024-10-15 00:00:47,833 basehttp "GET /static/vendor/global/global.min.js HTTP/1.1" 200 218975
+INFO 2024-10-15 00:00:47,850 basehttp "GET /static/icons/font-awesome/css/all.min.css HTTP/1.1" 200 102225
+WARNING 2024-10-15 00:00:48,167 log Not Found: /login/images/favicon.png
+WARNING 2024-10-15 00:00:48,169 basehttp "GET /login/images/favicon.png HTTP/1.1" 404 11091
+INFO 2024-10-15 00:01:26,778 basehttp "POST /login/?next=/rented_warehouses/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:01:26,875 basehttp "GET / HTTP/1.1" 200 11577
+INFO 2024-10-15 00:01:26,912 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+WARNING 2024-10-15 00:01:26,912 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:01:26,915 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:01:26,917 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-15 00:01:26,926 basehttp "GET /static/images/logo.png HTTP/1.1" 200 225315
+INFO 2024-10-15 00:01:27,009 basehttp "GET /static/images/warehouse_main.jpg HTTP/1.1" 200 243486
+WARNING 2024-10-15 00:01:27,314 log Not Found: /favicon.ico
+WARNING 2024-10-15 00:01:27,315 basehttp "GET /favicon.ico HTTP/1.1" 404 11052
+INFO 2024-10-15 00:01:30,754 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8555
+WARNING 2024-10-15 00:01:30,772 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+WARNING 2024-10-15 00:01:34,172 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:02:19,310 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8744
+WARNING 2024-10-15 00:02:19,334 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:06:18,452 basehttp "GET /admin/BCPPSapp/smart_reg/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:06:18,809 basehttp "GET /admin/login/?next=/admin/BCPPSapp/smart_reg/ HTTP/1.1" 200 4200
+INFO 2024-10-15 00:06:24,981 basehttp "POST /admin/login/?next=/admin/BCPPSapp/smart_reg/ HTTP/1.1" 302 0
+WARNING 2024-10-15 00:06:25,073 log Not Found: /admin/BCPPSapp/smart_reg/
+WARNING 2024-10-15 00:06:25,073 basehttp "GET /admin/BCPPSapp/smart_reg/ HTTP/1.1" 404 6971
+INFO 2024-10-15 00:06:31,219 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2024-10-15 00:06:31,363 basehttp "GET /admin/ HTTP/1.1" 200 17215
+INFO 2024-10-15 00:07:11,069 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\apps.py changed, reloading.
+INFO 2024-10-15 00:07:13,290 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:07:14,729 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\apps.py changed, reloading.
+INFO 2024-10-15 00:07:16,227 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:10:58,329 basehttp "GET /admin/users/tenant/ HTTP/1.1" 200 14819
+INFO 2024-10-15 00:10:58,464 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:11:00,431 basehttp "GET /admin/users/tenant/5/change/ HTTP/1.1" 200 17953
+INFO 2024-10-15 00:11:00,510 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:11:20,995 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:11:22,496 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:11:24,342 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:11:25,385 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:11:50,914 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:11:52,078 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:11:55,015 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:11:56,079 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:12:06,568 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:12:38,342 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:12:39,673 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:12:41,432 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:12:42,431 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:12:44,245 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:12:45,071 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:13:02,751 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:13:03,785 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:14:05,290 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:14:52,703 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-15 00:14:53,863 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:15:08,785 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-15 00:15:10,154 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:15:13,191 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\models.py changed, reloading.
+INFO 2024-10-15 00:15:14,262 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:15:53,159 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:05,453 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:16:05,499 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:16:09,438 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\admin.py changed, reloading.
+INFO 2024-10-15 00:16:10,809 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:15,893 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\admin.py changed, reloading.
+INFO 2024-10-15 00:16:17,151 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:20,053 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\admin.py changed, reloading.
+INFO 2024-10-15 00:16:20,970 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:23,230 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\admin.py changed, reloading.
+INFO 2024-10-15 00:16:24,018 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:29,365 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\admin.py changed, reloading.
+INFO 2024-10-15 00:16:30,134 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:33,426 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\admin.py changed, reloading.
+INFO 2024-10-15 00:16:34,405 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:16:44,508 basehttp "GET /admin/users/tenant/ HTTP/1.1" 200 15152
+INFO 2024-10-15 00:16:44,662 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:16:45,909 basehttp "GET /admin/ HTTP/1.1" 200 17690
+INFO 2024-10-15 00:16:49,056 basehttp "GET /admin/warehouse/warehousereview/ HTTP/1.1" 200 13090
+INFO 2024-10-15 00:16:49,142 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:16:50,972 basehttp "GET /admin/warehouse/warehousereview/add/ HTTP/1.1" 200 18426
+INFO 2024-10-15 00:16:51,048 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:18:05,167 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:18:06,176 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:20:05,303 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:20:05,481 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:20:09,528 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:20:10,599 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:20:15,925 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:20:16,912 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:20:18,754 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:20:19,820 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:22:05,211 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:22:05,414 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:23:49,295 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:23:50,369 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:23:56,727 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:23:57,567 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:23:58,850 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:23:59,922 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:24:06,134 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:24:06,202 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:24:09,344 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:24:10,495 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:24:29,497 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:24:30,476 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:24:34,806 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:24:35,797 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:24:45,620 basehttp "GET /admin/warehouse/warehousereview/ HTTP/1.1" 200 13090
+INFO 2024-10-15 00:24:45,700 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:24:48,443 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:24:48,518 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:24:51,568 basehttp "GET /admin/warehouse/lease/12/change/ HTTP/1.1" 200 22226
+INFO 2024-10-15 00:24:51,758 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:00,494 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:26:00,578 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:02,714 basehttp "GET /admin/warehouse/warehouse/11/change/ HTTP/1.1" 200 30558
+INFO 2024-10-15 00:26:02,942 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:03,134 basehttp "GET /static/admin/js/inlines.js HTTP/1.1" 200 15526
+INFO 2024-10-15 00:26:03,253 basehttp "GET /static/admin/img/inline-delete.svg HTTP/1.1" 200 560
+INFO 2024-10-15 00:26:05,246 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:26:05,537 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:26:05,641 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:26:05,828 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:07,450 basehttp "GET /admin/warehouse/warehouse/10/change/ HTTP/1.1" 200 28589
+INFO 2024-10-15 00:26:07,536 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:09,511 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:26:09,708 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:12,888 basehttp "GET /admin/warehouse/warehouse/9/change/ HTTP/1.1" 200 30682
+INFO 2024-10-15 00:26:12,966 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:14,791 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:26:14,995 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:16,839 basehttp "GET /admin/warehouse/warehouse/7/change/ HTTP/1.1" 200 29567
+INFO 2024-10-15 00:26:16,920 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:19,158 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:26:19,242 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:23,039 basehttp "GET /admin/warehouse/warehouse/6/change/ HTTP/1.1" 200 30592
+INFO 2024-10-15 00:26:23,127 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:26:25,186 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:26:25,367 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:27:19,387 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:27:20,543 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:27:28,719 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:27:29,601 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:27:33,907 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:27:34,754 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:28:05,163 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:28:58,607 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:28:59,492 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:29:02,768 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:29:03,543 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:29:16,067 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:29:16,896 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:29:48,001 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:29:49,094 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:30:05,047 basehttp "GET / HTTP/1.1" 200 11577
+INFO 2024-10-15 00:30:05,193 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:30:05,336 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-15 00:30:05,347 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:30:05,371 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-15 00:30:06,272 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Total Amount: 890.00
+INFO 2024-10-15 00:30:07,954 basehttp "GET /logout/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:30:08,026 basehttp "GET /login/ HTTP/1.1" 200 3351
+WARNING 2024-10-15 00:30:08,269 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css.map HTTP/1.1" 404 1885
+WARNING 2024-10-15 00:30:08,273 basehttp "GET /static/css/style.css.map HTTP/1.1" 404 1810
+WARNING 2024-10-15 00:30:08,280 log Not Found: /login/imagbes/logo-full.png
+WARNING 2024-10-15 00:30:08,282 basehttp "GET /static/vendor/global/metisMenu.min.js.map HTTP/1.1" 404 1861
+WARNING 2024-10-15 00:30:08,282 basehttp "GET /login/imagbes/logo-full.png HTTP/1.1" 404 11100
+INFO 2024-10-15 00:30:35,655 basehttp "POST /login/ HTTP/1.1" 200 3558
+WARNING 2024-10-15 00:30:35,688 log Not Found: /login/imagbes/logo-full.png
+WARNING 2024-10-15 00:30:35,688 basehttp "GET /login/imagbes/logo-full.png HTTP/1.1" 404 11100
+WARNING 2024-10-15 00:30:35,806 basehttp "GET /static/css/style.css.map HTTP/1.1" 404 1810
+WARNING 2024-10-15 00:30:35,810 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css.map HTTP/1.1" 404 1885
+WARNING 2024-10-15 00:30:35,833 basehttp "GET /static/vendor/global/metisMenu.min.js.map HTTP/1.1" 404 1861
+INFO 2024-10-15 00:30:44,154 basehttp "POST /login/ HTTP/1.1" 200 3558
+WARNING 2024-10-15 00:30:44,181 log Not Found: /login/imagbes/logo-full.png
+WARNING 2024-10-15 00:30:44,181 basehttp "GET /login/imagbes/logo-full.png HTTP/1.1" 404 11100
+WARNING 2024-10-15 00:30:44,294 basehttp "GET /static/css/style.css.map HTTP/1.1" 404 1810
+WARNING 2024-10-15 00:30:44,295 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css.map HTTP/1.1" 404 1885
+WARNING 2024-10-15 00:30:44,315 basehttp "GET /static/vendor/global/metisMenu.min.js.map HTTP/1.1" 404 1861
+INFO 2024-10-15 00:30:56,805 basehttp "POST /login/ HTTP/1.1" 200 3558
+WARNING 2024-10-15 00:30:56,832 log Not Found: /login/imagbes/logo-full.png
+WARNING 2024-10-15 00:30:56,833 basehttp "GET /login/imagbes/logo-full.png HTTP/1.1" 404 11100
+WARNING 2024-10-15 00:30:56,939 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css.map HTTP/1.1" 404 1885
+WARNING 2024-10-15 00:30:56,941 basehttp "GET /static/css/style.css.map HTTP/1.1" 404 1810
+WARNING 2024-10-15 00:30:56,967 basehttp "GET /static/vendor/global/metisMenu.min.js.map HTTP/1.1" 404 1861
+INFO 2024-10-15 00:31:14,098 basehttp "POST /login/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:31:14,181 basehttp "GET / HTTP/1.1" 200 11577
+WARNING 2024-10-15 00:31:14,209 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:31:14,215 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:31:14,216 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-15 00:31:14,219 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-15 00:31:21,354 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 6667
+WARNING 2024-10-15 00:31:21,377 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:31:34,605 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:31:34,701 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:31:35,826 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:31:35,908 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:31:46,930 basehttp "GET /admin/auth/user/ HTTP/1.1" 200 21146
+INFO 2024-10-15 00:31:47,116 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:31:51,399 basehttp "GET /admin/users/tenant/ HTTP/1.1" 200 15152
+INFO 2024-10-15 00:31:51,496 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:31:53,660 basehttp "GET /admin/users/tenant/5/change/ HTTP/1.1" 200 18286
+INFO 2024-10-15 00:31:53,846 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:31:57,756 basehttp "GET /admin/users/tenant/ HTTP/1.1" 200 15152
+INFO 2024-10-15 00:31:57,857 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:32:05,324 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:32:05,549 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-15, Total Amount: 890.00
+INFO 2024-10-15 00:32:11,046 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:32:11,136 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:32:12,944 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:32:13,036 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:32:25,460 basehttp "POST /admin/warehouse/lease/19/change/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:32:25,565 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16676
+INFO 2024-10-15 00:32:25,644 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:32:28,713 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 7706
+WARNING 2024-10-15 00:32:28,738 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:33:05,129 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:33:06,386 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:33:09,885 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:33:09,954 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:33:23,547 basehttp "POST /admin/warehouse/lease/19/change/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:33:23,706 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16676
+INFO 2024-10-15 00:33:23,794 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:33:27,752 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:33:27,834 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:34:00,193 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Total Amount: 890.00
+INFO 2024-10-15 00:34:05,610 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:36:00,017 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Total Amount: 890.00
+INFO 2024-10-15 00:36:05,288 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:38:00,348 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Total Amount: 890.00
+INFO 2024-10-15 00:38:05,305 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:38:30,753 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:38:30,864 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:38:33,139 basehttp "GET /admin/warehouse/lease/12/change/ HTTP/1.1" 200 22226
+INFO 2024-10-15 00:38:33,226 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:38:35,916 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:38:36,054 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:38:37,039 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:38:37,164 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:40:00,060 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Total Amount: 890.00
+INFO 2024-10-15 00:40:06,278 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:42:00,045 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Total Amount: 890.00
+INFO 2024-10-15 00:42:06,169 jobs Notification sent to tenant Tenant: Rohan (5) for lease 19. Details: Warehouse: Warehouse 7, Tenant: Tenant: Rohan (5), Lease Start: 2024-10-02, Lease End: 2024-10-14, Rental Amount: 890.00, Total Amount: 890.00
+INFO 2024-10-15 00:42:07,721 basehttp "POST /admin/warehouse/lease/19/change/ HTTP/1.1" 302 0
+INFO 2024-10-15 00:42:07,852 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16676
+INFO 2024-10-15 00:42:07,959 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:43:00,043 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:43:01,938 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:43:05,348 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:43:06,420 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:43:08,308 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:43:09,398 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:43:11,196 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:43:12,130 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:43:26,661 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:43:27,691 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:43:29,472 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:43:30,966 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:45:12,566 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:45:12,649 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:45:29,129 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 8744
+WARNING 2024-10-15 00:45:29,191 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+WARNING 2024-10-15 00:45:29,568 log Not Found: /favicon.ico
+INFO 2024-10-15 00:45:29,569 basehttp - Broken pipe from ('127.0.0.1', 59812)
+INFO 2024-10-15 00:45:32,481 basehttp "GET / HTTP/1.1" 200 11577
+WARNING 2024-10-15 00:45:32,528 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:45:32,623 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-15 00:45:32,624 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:45:32,627 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-15 00:45:35,786 basehttp "GET /warehouse_detail/6/ HTTP/1.1" 200 14745
+WARNING 2024-10-15 00:45:35,833 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 00:45:35,842 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:45:35,843 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-15 00:45:35,843 basehttp "GET /media/lessor_photos/4c29322bf5ac3f2f7af12c2b4bc888e8.jpg HTTP/1.1" 200 49517
+INFO 2024-10-15 00:45:35,845 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-15 00:45:41,841 basehttp "GET / HTTP/1.1" 200 11577
+INFO 2024-10-15 00:45:41,876 basehttp "GET /media/warehouse_photos/images_1BL2dWv.jpg HTTP/1.1" 200 7984
+INFO 2024-10-15 00:45:41,879 basehttp "GET /media/warehouse_photos/1000_F_130009832_7h02UmjNmxBuXD7aACpuRhktXDvHXDjV.jpg HTTP/1.1" 200 258757
+INFO 2024-10-15 00:45:41,880 basehttp "GET /media/warehouse_photos/prefabricated-warehouse-shed_HxJNtaq.jpg HTTP/1.1" 200 297363
+INFO 2024-10-15 00:45:52,897 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:45:52,980 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:46:04,453 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:46:04,549 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:46:10,834 basehttp "GET /admin/warehouse/lease/19/change/ HTTP/1.1" 200 22916
+INFO 2024-10-15 00:46:10,916 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:46:15,394 basehttp "GET /admin/warehouse/lease/ HTTP/1.1" 200 16438
+INFO 2024-10-15 00:46:15,474 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:46:18,349 basehttp "GET /admin/warehouse/warehouse/ HTTP/1.1" 200 18418
+INFO 2024-10-15 00:46:18,450 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:46:22,708 basehttp "GET /admin/warehouse/warehouse/7/change/ HTTP/1.1" 200 29567
+INFO 2024-10-15 00:46:22,805 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2024-10-15 00:46:47,273 basehttp "GET /login/ HTTP/1.1" 200 3351
+INFO 2024-10-15 00:48:20,358 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:48:21,853 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:48:24,784 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:48:25,923 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:48:27,700 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:48:28,777 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:48:31,670 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:48:32,808 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:48:34,631 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:48:35,719 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:48:48,333 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:48:49,431 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:51:10,896 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:51:12,066 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:51:13,952 autoreload D:\S9\miniproject\edit 2\vaultspace\warehouse\jobs.py changed, reloading.
+INFO 2024-10-15 00:51:15,027 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:57:54,846 autoreload D:\S9\miniproject\edit 2\vaultspace\vaultspace\settings.py changed, reloading.
+INFO 2024-10-15 00:57:57,005 autoreload Watching for file changes with StatReloader
+INFO 2024-10-15 00:58:02,257 autoreload D:\S9\miniproject\edit 2\vaultspace\vaultspace\settings.py changed, reloading.
+INFO 2024-10-15 01:00:14,602 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 6667
+WARNING 2024-10-15 01:00:14,812 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+ERROR 2024-10-15 01:04:35,534 basehttp "GET /rented_warehouses/ HTTP/1.1" 500 200691
+ERROR 2024-10-15 01:04:39,617 basehttp "GET /rented_warehouses/ HTTP/1.1" 500 200457
+INFO 2024-10-15 01:05:01,944 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 6113
+WARNING 2024-10-15 01:05:01,969 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801
+INFO 2024-10-15 01:05:13,358 basehttp "GET /tenant_details/ HTTP/1.1" 200 8970
+WARNING 2024-10-15 01:05:13,414 basehttp "GET /tenant_details/images/big/img1.jpg HTTP/1.1" 404 11121
+INFO 2024-10-15 01:05:13,513 basehttp "GET /media/tenant_photos/8.jpg HTTP/1.1" 200 8994
+WARNING 2024-10-15 01:05:13,593 basehttp "GET /static/vendor/metismenu/css/metisMenu.min.css.map HTTP/1.1" 404 1885
+WARNING 2024-10-15 01:05:13,597 basehttp "GET /static/css/style.css.map HTTP/1.1" 404 1810
+WARNING 2024-10-15 01:05:13,607 basehttp "GET /static/vendor/global/metisMenu.min.js.map HTTP/1.1" 404 1861
+WARNING 2024-10-15 01:05:13,951 basehttp "GET /tenant_details/images/favicon.png HTTP/1.1" 404 11118
+INFO 2024-10-15 01:05:16,009 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 6113
+INFO 2024-10-15 01:06:30,738 basehttp "GET /rented_warehouses/ HTTP/1.1" 200 6113
+WARNING 2024-10-15 01:06:30,772 basehttp "GET /static/css/custom.css HTTP/1.1" 404 1801

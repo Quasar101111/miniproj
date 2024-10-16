@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'wkhtmltopdf',
     'map',
-    
+     
     
 
     'django.contrib.sites',  # Required for allauth
@@ -228,7 +228,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
@@ -238,6 +238,57 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'CRITICAL',
+            'propagate': True,
+        },
+    'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',  # Ignore GET, POST, and other requests unless they cause an error
+            'propagate': False,
+        },
+    'django.utils.autoreload': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',  # Effectively silences autoreload logging
+            'propagate': False,
+        },
+        'warehouse.jobs': {  # Specific logger for your job
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 
 

@@ -41,6 +41,15 @@
         .fas {
             margin-right: 5px;
         }
+        
+        .radio-inline {
+                display: flex;
+                gap: 10px;
+            }
+        .radio-inline label {
+                margin-right: 10px;
+            }
+    
     </style>
 </head>
 <body>
@@ -138,6 +147,95 @@
         </div>
     </div>
 
+    <div class="container mt-4 content ">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">My Expired Warehouses </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th>LEASE ID</th>
+                                <th>WAREHOUSE</th>
+                                <th>START DATE</th>
+                                <th>END DATE</th>
+                               
+                                <th>TOTAL AMOUNT</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            {% for lease in lease_expired %}
+                            {% if lease.payment_status == 'Expired' %}
+                            <tr>
+                                <td><strong>{{ lease.lease_id }}</strong></td>
+                                <td><a href="{% url 'warehouse_detail' lease.warehouse.warehouse_id %}">View warehouse details</a></td>
+                                <td>{{ lease.lease_start_date }}</td>
+                                <td>{{ lease.lease_end_date }}</td>
+                               
+                                <td>Rs. {{ payment_dict2|get_item:lease.lease_id|default:"N/A" }}</td> <!-- Display total amount -->
+                                <td>
+                                    <a href="{% url 'download_lease_report' lease.lease_id %}" class="btn btn-primary">Download Report</a>
+                                    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#reviewModal" 
+                                data-warehouse-id="{{ lease.warehouse.warehouse_id }}">Submit Review</button>
+                                </td>
+                                
+                            </tr>
+                            
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No warehouse rented.</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+   
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Submit Your Review</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post" action="{% url 'rented_warehouses' %}">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                       
+                        <div class="form-group">
+                            <label for="id_rating">Rating:</label>
+                            <div class="radio-inline">
+                                {% for radio in form.rating %}
+                                    <label class="radio-inline">{{ radio.tag }} {{ radio.choice_label }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                         Your opinion(optional):{{ form.opinion }}
+                        <input type="hidden" name="warehouse_id" id="warehouseIdInput">
+                        <div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </div>
+                        
+                    </div>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <!-- Footer -->
     <footer class="bg-dark text-white py-4 mt-4">
         <div class="container">
@@ -163,5 +261,19 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+    
+<script>
+    // JavaScript to handle the modal and pass the warehouse ID
+    $('#reviewModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var warehouseId = button.data('warehouse-id'); // Extract info from data-* attributes
+        var modal = $(this);
+        modal.find('#warehouseIdInput').val(warehouseId);
+    });
+     // Optional: Log form submission
+     $('form').on('submit', function() {
+        console.log('Form submitted with data:', $(this).serialize());
+    });
+</script>
 </body>
 </html>

@@ -11,10 +11,10 @@ from django.core.exceptions import ValidationError
 
 from django.db.models import F
 from .forms import LessorRegisterForm,TenantRegisterForm,CustomAuthenticationForm
-from .forms import LessorForm,TenantForm
+from .forms import LessorForm,TenantForm,WarehouseReviewForm
 
 from .models import Profile,Lessor,User,UnverifiedUser,Tenant,Message,Payment
-from warehouse.models import Location,Warehouse,WarehousePhoto,Lease
+from warehouse.models import Location,Warehouse,WarehousePhoto,Lease,WarehouseReview
 
 from django.db.models import Q, Max
 from django.core.files.base import ContentFile
@@ -431,9 +431,12 @@ def warehouse_list(request):
 def warehouse_detail(request, warehouse_id):
     warehouse = Warehouse.objects.select_related('owner', 'location').get(warehouse_id=warehouse_id)
     warehouse_facilities = warehouse.facilities.split(',')
+    reviews = WarehouseReview.objects.filter(warehouse=warehouse).select_related('tenant')  # Fetch reviews for the warehouse
+
     return render(request, 'users/warehouse_detail.html', {
         'warehouse': warehouse,
         'warehouse_facilities': warehouse_facilities,
+        'reviews': reviews,
     })
 
 
@@ -601,23 +604,23 @@ def reject_lease(request, lease_id):
     return redirect('lease_offers')
 
 
-@login_required
-def rented_warehouses(request):
-    try:
-        # Get the tenant based on the logged-in user's email
-        tenant = Tenant.objects.get(email=request.user.email)
-        # Fetch leases associated with the tenant
-        leases = Lease.objects.filter(tenant=tenant, payment_status='Paid').order_by('-lease_start_date')
-        print("The leases:", leases)
-    except Tenant.DoesNotExist:
-        tenant = None
-        leases = []
+# @login_required
+# def rented_warehouses(request):
+#     try:
+#         # Get the tenant based on the logged-in user's email
+#         tenant = Tenant.objects.get(email=request.user.email)
+#         # Fetch leases associated with the tenant
+#         leases = Lease.objects.filter(tenant=tenant, payment_status='Paid').order_by('-lease_start_date')
+#         print("The leases:", leases)
+#     except Tenant.DoesNotExist:
+#         tenant = None
+#         leases = []
 
-    context = {
-        'tenant': tenant,
-        'leases': leases,
-    }
-    return render(request, 'warehouse/rented_warehouses.html', context)
+#     context = {
+#         'tenant': tenant,
+#         'leases': leases,
+#     }
+#     return render(request, 'warehouse/rented_warehouses.html', context)
 
 
 
@@ -629,70 +632,62 @@ def rented_warehouses(request):
         tenant = Tenant.objects.get(email=user.email)
         # Fetch leases associated with the tenant that are paid
         leases = Lease.objects.filter(tenant=tenant, payment_status='Paid').order_by('-lease_start_date')
-
+        lease_expired = Lease.objects.filter(tenant=tenant, payment_status='Expired').order_by('-lease_start_date')
         # Fetch payments related to the leases
         payments = Payment.objects.filter(lease__in=leases)
+        expired_payments = Payment.objects.filter(lease__in=lease_expired)
 
         # Create a dictionary to map lease IDs to payment details
         payment_dict = {payment.lease.lease_id: payment.amount for payment in payments}  # Ensure lease_id is accessed correctly
+        expired_payment_dict = {payment.lease.lease_id: payment.amount for payment in expired_payments}
+        
+        print(tenant)
 
+        if request.method == 'POST':
+            form = WarehouseReviewForm(request.POST)
+            if form.is_valid():
+                warehouse_id = request.POST.get('warehouse_id')
+                warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+
+                # Check if a review already exists for this tenant and warehouse
+                existing_review = WarehouseReview.objects.filter(tenant=tenant, warehouse=warehouse).first()
+                if existing_review:
+                    messages.error(request, 'You have already submitted a review for this warehouse.')
+                else:
+                    review = form.save(commit=False)  # Create a review instance but don't save it yet
+                    review.tenant = tenant  # Set the tenant from the logged-in user
+                    review.warehouse = warehouse  # Set the warehouse
+                    review.save() 
+                    form.save() # Save the review to the database
+                    messages.success(request, 'Your review has been submitted successfully.')
+                    print("saved review")
+                    return redirect('rented_warehouses')  # Redirect to the same page after saving
+            else:
+                # Debugging: Print form errors
+                print(form.errors)  # Print errors to the console for debugging
+                messages.error(request, 'There was an error submitting your review. Please check the form.')
+        else:
+            form = WarehouseReviewForm()
+        
     except Tenant.DoesNotExist:
         tenant = None
         leases = []
         payment_dict = {}
+        expired_payment_dict = {}
+        form = WarehouseReviewForm()
 
     context = {
         'tenant': tenant,
         'leases': leases,
         'payment_dict': payment_dict,
+        'lease_expired': lease_expired,
+        'payment_dict2': expired_payment_dict,
+        'form': form,
     }
     return render(request, 'users/rented_warehouse.html', context)
 
 
 
-# class LeaseReportPDFView(PDFTemplateView):
-#        template_name = 'users/download_lease_report.html'
-
-#        def get_context_data(self, **kwargs):
-#            context = super().get_context_data(**kwargs)
-#            lease_id = self.kwargs['lease_id']
-           
-#            # Fetch the lease, tenant, and payment data
-#            lease = get_object_or_404(Lease, lease_id=lease_id)
-#            tenant = lease.tenant  # Access the tenant directly from the lease
-#            payment = get_object_or_404(Payment, lease=lease, status='Paid')  # Assuming you want only paid payments
-#            convenience_fee_percentage = Decimal('0.02')
-#            convenience_fee = lease.total_amount * convenience_fee_percentage
-#            total_amount = lease.total_amount + convenience_fee  # Total amount including convenience fee
-
-#            # Add data to context
-#            context['tenant'] = tenant
-#            context['lease'] = lease
-#            context['payment'] = payment
-#            context['convenience_fee'] = convenience_fee
-#            context['total_amount'] = total_amount
-#            context['current_date'] = timezone.now().date() 
-#            return context
-import subprocess
-import logging
-logger = logging.getLogger(__name__)
-# @login_required
-# def download_lease_report(request, lease_id):
-#     cmd_options = {'quiet': None, 'enable-local-file-access': True}
-#       # Capture the output and errors from wkhtmltopdf
-#     try:
-#         response = LeaseReportPDFView.as_view()(request, lease_id=lease_id, cmd_options=cmd_options)
-#     except subprocess.CalledProcessError as e:
-#         logger.error("wkhtmltopdf error: %s", e.output)  # Log the error output
-        
-#         print("wkhtmltopdf error:", e.output)  # Print the error output to the console
-#         return HttpResponse("An error occurred while generating the PDF.", status=500)
-
-#     # Print debugging information
-#     print("PDF generation command options:", cmd_options)
-#     print("Lease ID:", lease_id)
-    
-#     return response
 
 @login_required
 def download_lease_report(request, lease_id):
@@ -725,7 +720,7 @@ def download_lease_report(request, lease_id):
         response['Content-Disposition'] = 'attachment; filename="lease_report.pdf"'
         return response
     except Exception as e:
-        logger.error("pdfkit error: %s", str(e))  # Log the error output
+        # logger.error("pdfkit error: %s", str(e))  # Log the error output
         print("pdfkit error:", str(e))  # Print the error output to the console
         return HttpResponse("An error occurred while generating the PDF.", status=500)
 
@@ -749,10 +744,7 @@ def payment(request, lease_id):
         order_amount = float(total_amount * 100)  # Convert to float for JSON serialization
         order_currency = 'INR'
         order_receipt = str(lease.lease_id)
-        signature = request.POST.get('signature')
-        lease.tenant_signature =signature
-        lease.save()
-
+        
         # Create order
         order = razorpay_client.order.create(dict(amount=order_amount, currency=order_currency, receipt=order_receipt))
         order_id = order['id']
@@ -775,7 +767,9 @@ def payment_result(request, lease_id):
             print(f"Received order_id: {order_id}") 
             payment_id = request.POST.get('payment_id') 
             lease = get_object_or_404(Lease, lease_id=lease_id)
-
+            signature = request.FILES.get('signature')
+            lease.tenant_signature =signature
+            lease.save()
             # Verify payment
             try:
                 payment = razorpay_client.payment.fetch(payment_id)

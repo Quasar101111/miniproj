@@ -6,8 +6,8 @@ from datetime import datetime
 from django.shortcuts import render, redirect
 from django.forms import modelformset_factory
 from .forms import WarehouseForm, WarehousePhotoForm
-from .models import Warehouse, WarehousePhoto,Location,Lease
-from users.models import Lessor, Profile,User,Tenant
+from .models import Warehouse, WarehousePhoto,Location,Lease,upload_signature_path  
+from users.models import Lessor, Profile,User,Tenant,Payment
 from users.views import lessor_index
 
 from django.contrib.auth.decorators import login_required
@@ -15,8 +15,18 @@ from django.contrib import messages
 
 from django.utils.timezone import now
 from django.utils import timezone
+from datetime import timedelta
 
 
+from django.db.models import Count,Sum,F
+from django.db.models.functions import TruncMonth
+
+
+
+from django.http import JsonResponse
+
+
+import json
 from decimal import Decimal
 
 @login_required
@@ -157,8 +167,9 @@ def edit_warehouse(request, warehouse_id):
 def lease_warehouse(request, warehouse_id):
     warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id, status=1)
     tenants = Tenant.objects.all()
-    lessor_id = request.session.get('lessor_id')
-    lessor=Lessor.objects.get(lessor_id=lessor_id)
+    lessor = warehouse.owner  # Access the owner (lessor) directly from the warehouse
+    lessor_id = lessor.lessor_id
+    
     if request.method == 'POST':
         print("POST data:", request.POST)
         
@@ -168,7 +179,7 @@ def lease_warehouse(request, warehouse_id):
         lease_end_date = request.POST.get('lease_end_date')
         new_monthly_rate = request.POST.get('new_monthly_rate')
         total_amount = request.POST.get('total_amount')
-        signature = request.POST.get('signature')
+        signature = request.FILES.get('signature')
 
       
 
@@ -187,11 +198,10 @@ def lease_warehouse(request, warehouse_id):
                 payment_status='Pending',
                 lessor_signature = signature
             )
+            
             lease.save()
             print("Lease:", lease)
-            # warehouse.status = 2  
-            # # Set warehouse as not available
-            # warehouse.save()
+         
 
             messages.success(request,'Lease request submitted successfully!')
             return redirect('lessor_index')  # Adjust this to your actual URL name
@@ -292,3 +302,127 @@ def delete_lease(request, lease_id):
 
 def termsandcond(request):
     return render(request,'termsandcond')
+
+
+
+@login_required
+def lessor_dashboard(request):
+    lessor = Lessor.objects.get(email=request.user.email)
+    warehouses = Warehouse.objects.filter(owner=lessor)
+    
+    # Calculate key metrics
+    total_warehouses = warehouses.count()
+    occupied_warehouses = warehouses.filter(status=2).count()  # Assuming status 2 means occupied
+    available_warehouses = total_warehouses - occupied_warehouses
+    
+    # Get active leases
+    active_leases = Lease.objects.filter(warehouse__in=warehouses, lease_end_date__gte=timezone.now())
+    print(active_leases)
+    # Calculate total revenue
+    total_revenue = active_leases.aggregate(Sum('rental_amount'))['rental_amount__sum'] or 0
+    
+    # Get revenue by location
+    revenue_by_location = Location.objects.filter(warehouse__in=warehouses).annotate(
+        revenue=Sum('warehouse__lease__rental_amount')
+    ).values('city', 'state', 'revenue').order_by('-revenue')
+    
+    # Get recent leases
+    recent_leases = active_leases.order_by('-lease_start_date')
+    
+    revenue_data = []
+    for warehouse in warehouses:
+        warehouse_leases = active_leases.filter(warehouse=warehouse)
+        monthly_revenue = warehouse_leases.annotate(
+            month=TruncMonth('lease_start_date')
+        ).values('month').annotate(
+            revenue=Sum('rental_amount')
+        ).order_by('month')
+        
+        warehouse_data = [
+            [int(datetime(item['month'].year, item['month'].month, 1).timestamp() * 1000), float(item['revenue'])]
+            for item in monthly_revenue
+        ]
+        
+        revenue_data.append({
+            'name': warehouse.name,
+            'data': warehouse_data
+        })
+         # Prepare data for chart
+    revenue_by_warehouse = []
+
+    for warehouse in warehouses:
+        leases = Lease.objects.filter(warehouse=warehouse)
+
+        # Create a list of data points (date and revenue) for each lease
+        warehouse_revenue_data = []
+        for lease in leases:
+            start_date = lease.lease_start_date
+            end_date = lease.lease_end_date
+            revenue = lease.rental_amount
+
+            # Add start and end date with revenue to the data
+            warehouse_revenue_data.append({
+                'start_date': start_date,
+                'end_date': end_date,
+                'revenue': revenue
+            })
+
+        revenue_by_warehouse.append({
+            'name': warehouse.name,
+            'data': warehouse_revenue_data
+        })
+ 
+
+    context = {
+        'total_warehouses': total_warehouses,
+        'occupied_warehouses': occupied_warehouses,
+        'available_warehouses': available_warehouses,
+        'total_revenue': total_revenue,
+        'revenue_by_location': revenue_by_location,
+        'recent_leases': recent_leases,
+        'warehouses': warehouses,
+        'revenue_data': json.dumps(revenue_data),  # Convert to JSON for JavaScript
+        'revenue_by_warehouse': revenue_by_warehouse,
+    }
+    return render(request, 'warehouse/dashboard.html', context)
+
+@login_required
+def revenue_chart_data(request):
+    lessor = Lessor.objects.get(email=request.user.email)
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=365)  # Last 12 months
+
+    revenue_data = Lease.objects.filter(
+        warehouse__owner=lessor,
+        lease_start_date__gte=start_date,
+        lease_start_date__lte=end_date
+    ).annotate(
+        month=TruncMonth('lease_start_date')
+    ).values('month').annotate(
+        revenue=Sum('rental_amount')
+    ).order_by('month')
+
+    labels = []
+    data = []
+
+    for entry in revenue_data:
+        labels.append(entry['month'].strftime('%b %Y'))
+        data.append(float(entry['revenue']))
+
+    return JsonResponse({
+        'labels': labels,
+        'data': data
+    })
+
+@login_required
+def warehouse_status_chart_data(request):
+    lessor = Lessor.objects.get(email=request.user.email)
+    warehouses = Warehouse.objects.filter(owner=lessor)
+    
+    occupied = warehouses.filter(status=2).count()  # Assuming status 2 means occupied
+    available = warehouses.count() - occupied
+
+    return JsonResponse({
+        'labels': ['Occupied', 'Available'],
+        'data': [occupied, available]
+    })

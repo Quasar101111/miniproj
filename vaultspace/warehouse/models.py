@@ -19,6 +19,7 @@ class Location(models.Model):
 
 class Warehouse(models.Model):
     warehouse_id = models.AutoField(primary_key=True)
+    name=models.CharField(max_length=255,blank=True)
     owner = models.ForeignKey('users.Lessor', on_delete=models.CASCADE)
     location = models.ForeignKey('Location', on_delete=models.CASCADE)
     area = models.DecimalField(max_digits=10,decimal_places=2)
@@ -50,8 +51,10 @@ def upload_signature_path(instance, filename):
     # Get the file extension
     ext = filename.split('.')[-1]
     
+    
     # Create a unique filename using the lease_id, role, and current timestamp
-    new_filename = f"{instance.lease_id}_{instance.role}_{now().strftime('%Y%m%d%H%M%S')}.{ext}"
+    random_string = secrets.token_hex(8)  # Generate a random string
+    new_filename = f"{random_string}_{now().strftime('%Y%m%d%H%M%S')}.{ext}"
     
     # Return the path where the file will be saved
     return os.path.join('lease_signatures/', new_filename)
@@ -62,6 +65,7 @@ class Lease(models.Model):
         ('Pending', 'Pending'),
         ('Paid', 'Paid'),
         ('Rejected', 'Rejected'),
+        ('Expired', 'Expired'),
     ]
 
     lease_id = models.AutoField(primary_key=True)
@@ -80,5 +84,17 @@ class Lease(models.Model):
 
     def __str__(self):
         return f"Lease {self.lease_id} - {self.warehouse} - {self.tenant}"
+    
+class WarehouseReview(models.Model):
+    
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='reviews')
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    rating = models.IntegerField(choices=[(i, str(i)) for i in range(0, 6)])  # Rating from 1 to 5
+    opinion = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review by {self.tenant} for {self.warehouse} - Rating: {self.rating}"
+
 
    

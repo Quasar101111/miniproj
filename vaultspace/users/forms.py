@@ -8,6 +8,7 @@ from .models import Lessor, models, Tenant
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
+
 import re
 
 
@@ -204,3 +205,14 @@ class TenantForm(forms.ModelForm):
         if re.search(r'\d', city):
             raise forms.ValidationError("City name cannot contain numbers.")
         return city    
+    
+from warehouse.models import WarehouseReview
+
+class WarehouseReviewForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseReview
+        fields = ['rating', 'opinion']
+        widgets = {
+            'rating': forms.RadioSelect(),
+            'opinion': forms.Textarea(attrs={'rows': 4}),
+        }

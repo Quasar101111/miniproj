@@ -48,7 +48,7 @@
         <hr>
         <p class="amount">Total Amount: Rs. {{ total_amount }}</p>
         
-        <form action="{% url 'payment_result' lease.lease_id %}" method="POST" id="payment-form">
+        <form action="{% url 'payment_result' lease.lease_id %}" method="POST" id="payment-form" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="order_id" value="{{ order_id }}">
             <input type="hidden" name="payment_id" id="payment_id" value="">
