@@ -191,7 +191,7 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
-ALLOWED_HOSTS = ["127.0.0.1", "localhost",".onrender.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "miniproj-p8xq.onrender.com"]
 
 
 
