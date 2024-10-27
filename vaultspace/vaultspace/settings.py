@@ -142,6 +142,7 @@ DATABASES = {
 'PORT': '5432', # default PostgreSQL port
 }
 }
+import dj_database_url
 # Replace the SQLite DATABASES configuration with PostgreSQL:
 DATABASES = {
     'default': dj_database_url.config( default='postgresql://vaultspace_user:Dto5mHtFX19MuvV45KpQGL6qp7L9G2vR@dpg-csecacdsvqrc73f0fnrg-a/vaultspace',conn_max_age=600)}
