@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-e@h$#_w%ql2s_%m58@gf-h3a#q#mul(sfr#edcfl+cl^m@rb8c
 # SECURITY WARNING: don't run with debug turned on in production!
 
 
-DEBUG=True
+DEBUG=False
 
 
 # Application definition
