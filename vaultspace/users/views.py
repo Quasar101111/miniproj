@@ -67,11 +67,10 @@ import numpy as np
 import hashlib
 
 #################### index####################################### 
-@login_required(login_url='login')
+
 def index(request):
   
-    if request.session.get('tenant_id') == None:
-        redirect('tenant_details')
+   
     locations = Location.objects.all()
     
     warehouses = Warehouse.objects.prefetch_related('photos').all().order_by('-warehouse_id')
