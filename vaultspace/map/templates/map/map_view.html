@@ -1,0 +1,256 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Features Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+            position: relative;
+            z-index: 0;
+        }
+        .modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none; /* Initially hidden */
+        }
+        .modal-header {
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .modal-body {
+            padding: 10px;
+        }
+        .modal-footer {
+            padding: 10px;
+            text-align: right;
+        }
+        .close-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nearby Features Map</h1>
+    <div id="map"></div>
+
+    <!-- Modal to display nearby features -->
+    <div class="modal" id="feature-modal">
+        <div class="modal-header">
+            Nearby Features
+            <button class="close-btn" id="close-modal">Close</button>
+        </div>
+        <div class="modal-body" id="modal-content">
+            {% for feature in modal_data %}
+            <div style="margin-bottom: 10px;">
+                <b>{{ feature.name }}</b><br>
+                Type: {{ feature.display_type|default:feature.type }}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="modal-footer">
+            <button class="close-btn" id="close-footer">Close</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([{{ lat }}, {{ lon }}], 14); // Default zoom set to 14
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add current location marker with default icon
+        L.marker([{{ lat }}, {{ lon }}])
+            .addTo(map)
+            .bindPopup('Current Location')
+            .openPopup();
+
+            function createIcon(iconClass, color) {
+                return L.divIcon({
+                    html: `<i class="${iconClass}" style="color: ${color}; font-size: 24px; text-shadow: 2px 2px 2px rgba(0,0,0,0.2);"></i>`,
+                    className: 'custom-div-icon',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15],
+                    popupAnchor: [0, -15]
+                });
+            }
+        
+            // Define icons using Font Awesome with specific icons for each feature
+            const icons = {
+                'Rail': createIcon('fa-solid fa-train-subway', '#3867d6'),         // Blue train icon
+                'Platform': createIcon('fa-solid fa-train', '#20bf6b'),            // Green platform icon
+                'Secondary': createIcon('fa-solid fa-road', '#363738'),            // Red road icon
+                'Harbour': createIcon('fa-solid fa-ship', '#f7b731'),             // Yellow harbor icon
+                'Road/Railway': createIcon('fa-solid fa-route', '#8854d0')        // Purple route icon
+            };
+        
+            // Rest of your map initialization code...
+        
+            // Add markers for each feature with custom icons
+            const features = {{ map_data|safe }};
+            features.forEach(feature => {
+                const icon = icons[feature.type];
+                if (icon) {
+                    L.marker([feature.lat, feature.lon], {
+                        icon: icon
+                    })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div class="popup-content">
+                            <h4>${feature.name}</h4>
+                            <p><i class="${getIconClass(feature.type)}"></i> ${feature.display_type || feature.type}</p>
+                        </div>
+                    `);
+                }
+            });
+        
+            // Helper function to get icon class for popup
+            function getIconClass(type) {
+                const iconClasses = {
+                    'Rail': 'fa-solid fa-train-subway',
+                    'Platform': 'fa-solid fa-train',
+                    'Secondary': 'fa-solid fa-road',
+                    'Harbour': 'fa-solid fa-ship',
+                    'Road/Railway': 'fa-solid fa-route'
+                };
+                return iconClasses[type] || 'fa-solid fa-map-marker-alt';
+            }
+        </script>
+        
+        <style>
+            /* ... existing styles ... */
+            
+            .custom-div-icon {
+                background: none;
+                border: none;
+            }
+        
+            .legend {
+                background: rgba(255, 255, 255, 0.9);
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+        
+            .legend-item {
+                display: flex;
+                align-items: center;
+                margin: 8px 0;
+                font-size: 14px;
+            }
+        
+            .legend-icon {
+                width: 30px;
+                text-align: center;
+                margin-right: 10px;
+            }
+        
+            .popup-content {
+                text-align: center;
+                padding: 8px;
+            }
+        
+            .popup-content h4 {
+                margin: 0 0 8px 0;
+                color: #2d3436;
+            }
+        
+            .popup-content p {
+                margin: 0;
+                color: #636e72;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+            }
+        </style>
+        
+        <!-- Update the legend with new icons -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-icon"><i class="fa-solid fa-train-subway" style="color: #3867d6;"></i></div>
+                <span>Railway</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon"><i class="fa-solid fa-train" style="color: #20bf6b;"></i></div>
+                <span>Platform</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon"><i class="fa-solid fa-road" style="color: #363738;"></i></div>
+                <span>Road</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon"><i class="fa-solid fa-ship" style="color: #f7b731;"></i></div>
+                <span>Harbour</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon"><i class="fa-solid fa-location-dot" style="color: #2c3e50;"></i></div>
+                <span>Current Location</span>
+            </div>
+        </div>
+
+
+    </script>
+
+        <script>
+
+        // Add markers for each feature and populate modal content
+        const modalContent = document.getElementById('modal-content');
+        features.forEach(feature => {
+            // Add markers to the map
+            L.marker([feature.lat, feature.lon], {
+                icon: icons[feature.type] || icons["Road/Railway"] // Default to road/railway icon
+            }).addTo(map)
+            .bindPopup(`<b>${feature.name}</b><br>Type: ${feature.display_type || feature.type}`);
+
+            // Add feature details to the modal
+            const featureItem = document.createElement('div');
+            featureItem.innerHTML = `<b>${feature.name}</b><br>Type: ${feature.display_type || feature.type}`;
+            featureItem.style.marginBottom = '10px';
+            modalContent.appendChild(featureItem);
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('feature-modal');
+        const closeModalButtons = document.querySelectorAll('.close-btn');
+
+        // Show modal on page load
+        modal.style.display = 'block';
+
+        // Close modal on button click
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

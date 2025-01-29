@@ -16,6 +16,7 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'wkhtmltopdf',
     'map',
+    'inventory',
      
     
 
