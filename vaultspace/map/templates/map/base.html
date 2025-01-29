@@ -3,28 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location App</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <title>Nearby Features Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">Location App</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'add_location' %}">Add Location</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <h1>Nearby Features Map</h1>
+    <div id="map"></div>
 
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([11.810711, 75.613307], 17); // Centered at your coordinates
 
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Overpass API URL (Private Instance)
+        const overpassUrl = "https://overpass.private.coffee/api/interpreter";
+
+        // Overpass Query
+        const query = `
+        [out:json];
+        (
+          way["highway"](around:1000, 11.810711, 75.613307);     // Roads within 1km
+          way["railway"](around:1000, 11.810711, 75.613307);     // Railways within 1km
+          node["harbour"](around:5000, 11.810711, 75.613307);    // Seaports within 5km
+        );
+        out center;
+        `;
+
+        // Fetch data from Overpass API
+        fetch(overpassUrl, {
+            method: "POST",
+            body: query
+        })
+        .then(response => response.json())
+        .then(data => {
+            const features = data.elements;
+
+            // Loop through features and add markers to the map
+            features.forEach(feature => {
+                let lat, lon, name;
+
+                if (feature.type === "node") {
+                    // For nodes (e.g., seaports)
+                    lat = feature.lat;
+                    lon = feature.lon;
+                } else if (feature.type === "way" && feature.center) {
+                    // For ways (e.g., roads, railways)
+                    lat = feature.center.lat;
+                    lon = feature.center.lon;
+                }
+
+                // Get the name of the feature, if available
+                name = feature.tags && feature.tags.name ? feature.tags.name : "Unnamed Feature";
+
+                if (lat && lon) {
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup(`<b>${name}</b><br>Type: ${feature.tags.highway || feature.tags.railway || "Harbour"}`);
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching data from Overpass API:", error);
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Insert</title>
+    {% load static %}
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Data Insert</h1>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                    {{ message.message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% if error %}
+        <p style="color: red;">{{ error }}</p>
+        {% endif %}
+    
+        <!-- Navigation Buttons -->
+        <ul class="nav nav-tabs" id="formTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="zone-tab" data-bs-toggle="tab" data-bs-target="#zone-form" type="button" role="tab" aria-controls="zone-form" aria-selected="true">
+                    Create Zone
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="item-tab" data-bs-toggle="tab" data-bs-target="#item-form" type="button" role="tab" aria-controls="item-form" aria-selected="false">
+                    Create Inventory Item
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location-form" type="button" role="tab" aria-controls="location-form" aria-selected="false">
+                    Create Inventory Location
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content mt-4" id="formTabsContent">
+            <!-- Zone Form -->
+            <div class="tab-pane fade show active" id="zone-form" role="tabpanel" aria-labelledby="zone-tab">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="zone">
+                            <input type="hidden" name="warehouse_id" value="10">
+                            <div class="mb-3">
+                                <label for="zone_name" class="form-label">Name:</label>
+                                <input type="text" id="zone_name" name="zone_name" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="zone_type" class="form-label">Zone Type:</label>
+                                <select id="zone_type" name="zone_type" class="form-select">
+                                    <option value="RECEIVING">Receiving Area</option>
+                                    <option value="STORAGE">Storage Area</option>
+                                    <option value="PICKING">Picking Area</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="zone_length" class="form-label">Length (meters):</label>
+                                <input type="number" id="zone_length" name="zone_length" class="form-control" step="0.10" required>
+                                <small class="text-muted">
+                                    Available length: {{ available_length|floatformat:2 }} meters
+                                </small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="zone_breadth" class="form-label">Breadth (meters):</label>
+                                <input type="number" id="zone_breadth" name="zone_breadth" class="form-control" step="0.10" required>
+                                <small class="text-muted">
+                                    Available breadth: {{ available_breadth|floatformat:2 }} meters
+                                </small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="zone_height" class="form-label">Height (meters):</label>
+                                <input type="number" id="zone_height" name="zone_height" class="form-control" step="0.10" required>
+                                <small class="text-muted">
+                                    Available height: {{ available_height|floatformat:2 }} meters
+                                </small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Zone</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Item Form -->
+            <div class="tab-pane fade" id="item-form" role="tabpanel" aria-labelledby="item-tab">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="item">
+                            <div class="mb-3">
+                                <label for="item_name" class="form-label">Name:</label>
+                                <input type="text" id="item_name" name="item_name" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="item_length" class="form-label">Length (m):</label>
+                                <input type="number" id="item_length" name="item_length" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="item_width" class="form-label">Width (m):</label>
+                                <input type="number" id="item_width" name="item_width" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="item_height" class="form-label">Height (m):</label>
+                                <input type="number" id="item_height" name="item_height" class="form-control" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Save Item</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Location Form -->
+            <div class="tab-pane fade" id="location-form" role="tabpanel" aria-labelledby="location-tab">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="location">
+                            <div class="mb-3">
+                                <label for="location_zone" class="form-label">Zone:</label>
+                                <select id="location_zone" name="location_zone" class="form-select" required>
+                                    <option value="RECEIVING">Receiving Area</option>
+                                    <option value="STORAGE">Storage Area</option>
+                                    <option value="PICKING">Picking Area</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="location_item" class="form-label">Item:</label>
+                                <select id="location_item" name="location_item" class="form-select">
+                                    <!-- Populate with Item options dynamically -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="location_length" class="form-label">Length (m):</label>
+                                <input type="number" id="location_length" name="location_length" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="location_width" class="form-label">Width (m):</label>
+                                <input type="number" id="location_width" name="location_width" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="location_height" class="form-label">Height (m):</label>
+                                <input type="number" id="location_height" name="location_height" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="stackable" class="form-label">Stackable:</label>
+                                <select id="stackable" name="stackable" class="form-select" required>
+                                    <option value="True">Yes</option>
+                                    <option value="False">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="max_stacking_height" class="form-label">Max Stacking Height (m):</label>
+                                <input type="number" id="max_stacking_height" name="max_stacking_height" class="form-control" step="0.01">
+                            </div>
+                            <div class="mb-3">
+                                <label for="aisle_width" class="form-label">Aisle Width (m):</label>
+                                <input type="number" id="aisle_width" name="aisle_width" class="form-control" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-warning">Save Location</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

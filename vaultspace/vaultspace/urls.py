@@ -19,6 +19,8 @@ from django.urls import path,include
 from users import views as users_view
 from warehouse import views as warehouse_view
 from moderator import views as moderator_view
+from inventory import views as inventory_view
+from map import views as map_view
 from django.contrib.auth import views as auth
 from django.conf.urls.static import static
 from django.conf import settings
@@ -73,10 +75,10 @@ urlpatterns = [
     path('upload-image-share/', users_view.upload_image_share, name='upload_image_share'),
     path('login-using-image/', users_view.login_using_image, name='login_using_image'),
 
-
+    path('inventory/', include('inventory.urls')),
 
  
-
+    path('map/', include('map.urls')),
     
 ]
 
