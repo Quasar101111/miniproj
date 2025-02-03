@@ -1,2 +1,2 @@
-brach created for miniproj
-contains 3 user  modules
+Conatins main modules for 3 users - Lessors, Tenants and Admin
+
