@@ -241,12 +241,14 @@
                                             <div class="card-body">
                                                 <div class="mb-4 col-lg-6">
                                                     <label class="form-label">Location of warehouse</label>
-                                                    <select id="single-select" name="location" style="width:100%;" required>
-                                                        <option value="" disabled selected>Select location</option>
-                                                        {% for location in locations %}
-                                                        <option value="{{ location.location_id }}">{{ location.state }}, {{location.city }}</option>
-                                                        {% endfor %}
-                                                    </select>
+                                                    <div class="d-flex">
+                                                        <input type="text" class="form-control" id="selectedLocation" readonly placeholder="Select location on map">
+                                                        <input type="hidden" id="latitude" name="latitude">
+                                                        <input type="hidden" id="longitude" name="longitude">
+                                                        <button type="button" class="btn btn-primary ms-2" onclick="openLocationSelector()">
+                                                            <i class="fas fa-map-marker-alt"></i> Select on Map
+                                                        </button>
+                                                    </div>
                                                 </div>
 
 
@@ -432,12 +434,28 @@
 	<script src="{% static 'vendor/bootstrap-select/dist/js/bootstrap-select.min.js' %}"></script>
 	<script src="{% static 'js/custom.min.js' %}"></script>
 	<script src="{% static 'js/deznav-init.js' %}"></script>
-	
+	<script>
+        function openLocationSelector() {
+            // Open the location selector in a new window
+            const locationWindow = window.open("{% url 'select_location' %}", "Select Location", 
+                "width=800,height=600,scrollbars=yes");
+        
+            // Listen for messages from the location selector window
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'location_selected') {
+                    document.getElementById('selectedLocation').value = event.data.address;
+                    document.getElementById('latitude').value = event.data.latitude;
+                    document.getElementById('longitude').value = event.data.longitude;
+                    locationWindow.close();
+                }
+            }, false);
+        }
+        </script>
 
     <script src="{% static 'vendor/jquery-validation/jquery.validate.min.js' %}"></script>
     <script>
         $(document).ready(function() {
-            $('#single-select').select2({
+            $('#selectedLocation').select2({
                 placeholder: "Select location",
                 allowClear: true
             });
@@ -452,7 +470,7 @@
             var validator = $("#addWarehouseForm").validate({
                 ignore: [],
                 rules: {
-                    location: {
+                    selectedLocation: {
                         required: true
                     },
                     area: {
@@ -491,7 +509,7 @@
                     }
                 },
                 messages: {
-                    location: "Please select a location",
+                    selectedLocation: "Please select a location",
                     area: {
                         required: "Please enter the area",
                         number: "Please enter a valid number",
@@ -558,7 +576,7 @@
             });
         
             // Special handling for Select2
-            $('#single-select').on('select2:select select2:unselect', function (e) {
+            $('#selectedLocation').on('select2:select select2:unselect', function (e) {
                 $(this).valid();
             });
         

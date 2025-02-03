@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select Location</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         #map {
             height: 600px;
@@ -71,9 +72,58 @@
             border-radius: 5px;
             cursor: pointer;
             z-index: 1000;
+            width: auto;  /* Added to ensure proper sizing */
+            min-width: 150px;  /* Added to ensure minimum width */
+            text-align: center;  /* Added to center text */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);  /* Added for better visibility */
+        
         }
         .select-button:hover {
             background-color: #45a049;
+        }
+        .location-button {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .location-button:hover {
+            background-color: #1976D2;
+        }
+        .location-button i {
+            font-size: 16px;
+        }
+        .loading {
+            position: relative;
+            opacity: 0.7;
+            cursor: wait;
+        }
+        .loading::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-right-color: transparent;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -83,10 +133,15 @@
         <input type="text" id="searchInput" class="search-box" placeholder="Search for a location...">
         <div id="searchResults" class="search-results"></div>
     </div>
+    <button id="getLocationBtn" class="location-button">
+        <i class="fas fa-location-arrow"></i> Get My Location
+    </button>
     <div id="map"></div>
     <div class="coordinates-display" id="coordinates">
         Click on the map to select a location
     </div>
+    <input type="hidden" id="warehouseId" value=10 >
+    <br>
     <button class="select-button" id="selectLocation" style="display: none;">
         Use This Location
     </button>
@@ -204,9 +259,111 @@
         });
 
         // Handle select button click
-        document.getElementById('selectLocation').addEventListener('click', function() {
+        document.getElementById('selectLocation').addEventListener('click', async function() {
             if (selectedLat && selectedLon) {
-                window.location.href = `/map/view/?lat=${selectedLat}&lon=${selectedLon}`;
+                const warehouseId = document.getElementById('warehouseId').value;
+                
+                try {
+                    const response = await fetch('/map/select/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: `warehouse_id=${warehouseId}&latitude=${selectedLat}&longitude=${selectedLon}`
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        alert('Location saved successfully!');
+                        window.location.href = `/map/view/?lat=${selectedLat}&lon=${selectedLon}`;
+                    } else {
+                        alert('Error saving location: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('Error saving location: ' + error);
+                }
+            }
+        });
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Get My Location functionality
+        const locationButton = document.getElementById('getLocationBtn');
+
+        locationButton.addEventListener('click', function() {
+            if ("geolocation" in navigator) {
+                // Add loading state
+                locationButton.classList.add('loading');
+                locationButton.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        // Update map and marker
+                        map.setView([lat, lon], 16);
+                        if (marker) {
+                            map.removeLayer(marker);
+                        }
+                        marker = L.marker([lat, lon]).addTo(map);
+                        selectedLat = lat.toFixed(6);
+                        selectedLon = lon.toFixed(6);
+
+                        // Update location display
+                        updateLocationDisplay(lat.toFixed(6), lon.toFixed(6));
+                        document.getElementById('selectLocation').style.display = 'block';
+
+                        // Remove loading state
+                        locationButton.classList.remove('loading');
+                        locationButton.disabled = false;
+                    },
+                    function(error) {
+                        // Remove loading state
+                        locationButton.classList.remove('loading');
+                        locationButton.disabled = false;
+
+                        // Handle errors
+                        let errorMessage;
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location permission denied. Please enable location access.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Location request timed out.";
+                                break;
+                            default:
+                                errorMessage = "An unknown error occurred.";
+                        }
+                        alert(errorMessage);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
             }
         });
 
@@ -238,6 +395,29 @@
 
         // Add the styles to the existing style tag
         document.querySelector('style').textContent += additionalStyles;
+
+        document.getElementById('selectLocation').addEventListener('click', async function() {
+            if (selectedLat && selectedLon) {
+                const locationName = document.getElementById('coordinates').innerText;
+                
+                // Send the selected location back to the parent window
+                window.opener.postMessage({
+                    type: 'location_selected',
+                    address: locationName,
+                    latitude: selectedLat,
+                    longitude: selectedLon
+                }, '*');
+            }
+        });
+
+
     </script>
+
+
+
+
+
+    <!-- Add CSRF token -->
+    {% csrf_token %}
 </body>
 </html>

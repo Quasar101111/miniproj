@@ -1,11 +1,13 @@
 #vaultspace/map/views.py
 
 import requests
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.http import JsonResponse
 from django.http import HttpResponseBadRequest
-
-
+from .models import Map
+from warehouse.models import Warehouse
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 def get_nearby_features(lat, lon):
     """Fetch nearby roads, railways, and seaports from the Overpass API."""
     overpass_url = "https://overpass.private.coffee/api/interpreter"
@@ -105,6 +107,105 @@ def map_view(request):
     })
 
 
+# def select_location(request):
+#     warehouse_id = 10
+#     if not warehouse_id:
+#         messages.error(request, 'Warehouse ID is required')
+#         # return redirect('warehouse_list')  # Redirect to warehouse list if no ID provided
+    
+#     try:
+#         warehouse = Warehouse.objects.get(warehouse_id=warehouse_id)
+#         # Get existing map location if any
+#         map_location = Map.objects.filter(warehouse_id=warehouse_id).first()
+#         initial_lat = float(map_location.latitude) if map_location else 11.810711
+#         initial_lon = float(map_location.longitude) if map_location else 75.613307
+#     except Warehouse.DoesNotExist:
+#         messages.error(request, 'Warehouse not found')
+#         return redirect('warehouse_list')
+
+#     context = {
+#         'warehouse': warehouse,
+#         'initial_lat': initial_lat,
+#         'initial_lon': initial_lon,
+#     }
+#     return render(request, 'map/select_location.html', context)
+
+# def save_location(request):
+#     if request.method == 'POST':
+#         try:
+#             warehouse_id = request.POST.get('warehouse_id')
+#             latitude = request.POST.get('latitude')
+#             longitude = request.POST.get('longitude')
+            
+#             # Update or create map location
+#             map_obj, created = Map.objects.update_or_create(
+#                 warehouse_id=warehouse_id,
+#                 defaults={
+#                     'latitude': latitude,
+#                     'longitude': longitude
+#                 }
+#             )
+            
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'message': 'Location saved successfully'
+#             })
+#         except Exception as e:
+#             return JsonResponse({
+#                 'status': 'error',
+#                 'message': str(e)
+#             }, status=400)
+    
+#     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
 def select_location(request):
-    """Render the location selection map."""
+    """Handle location selection and saving."""
+    if request.method == 'POST':
+        try:
+            warehouse_id = request.POST.get('warehouse_id')
+            latitude = request.POST.get('latitude')
+            longitude = request.POST.get('longitude')
+            
+            # Validate inputs
+            if not all([warehouse_id, latitude, longitude]):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Missing required fields'
+                }, status=400)
+
+            # Get or create warehouse
+            try:
+                warehouse = Warehouse.objects.get(warehouse_id=warehouse_id)
+            except Warehouse.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Warehouse not found'
+                }, status=404)
+
+            # Update or create map location
+            map_obj, created = Map.objects.update_or_create(
+                warehouse=warehouse,
+                defaults={
+                    'latitude': latitude,
+                    'longitude': longitude
+                }
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Location saved successfully',
+                'data': {
+                    'latitude': str(map_obj.latitude),
+                    'longitude': str(map_obj.longitude)
+                }
+            })
+            
+        except Exception as e:
+            print(f"Error saving location: {str(e)}")  # For debugging
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error saving location: {str(e)}'
+            }, status=400)
+    
+    # For GET requests, render the template
     return render(request, 'map/select_location.html')
