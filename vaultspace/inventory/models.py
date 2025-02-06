@@ -2,23 +2,12 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from warehouse.models import Warehouse
+from decimal import Decimal
 
 
 
 
-def calculate_available_dimensions(warehouse):
-    """Calculate the available dimensions and area of the warehouse."""
-    used_length = warehouse.usage.used_length
-    used_breadth = warehouse.usage.used_breadth
-    used_height = warehouse.usage.used_height
 
-    available_length = warehouse.length - used_length
-    available_breadth = warehouse.breadth - used_breadth
-    available_height = warehouse.height - used_height
-
-    available_area = available_length * available_breadth
-
-    return available_length, available_breadth, available_height, available_area
 
 class WarehouseUsage(models.Model):
     warehouse = models.OneToOneField(Warehouse, on_delete=models.CASCADE, related_name='usage')
@@ -42,7 +31,7 @@ class Zone(models.Model):
     ]
     
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,unique=True)
     zone_type = models.CharField(max_length=20, choices=ZONE_TYPES)
     length = models.DecimalField(max_digits=10, decimal_places=2, help_text="Length of the zone in meters.")
     breadth = models.DecimalField(max_digits=10, decimal_places=2, help_text="Breadth of the zone in meters.")
@@ -52,40 +41,9 @@ class Zone(models.Model):
     def __str__(self):
         return self.name
 
-    def clean(self):
-        """Custom validation logic to ensure the zone fits within the warehouse and updates warehouse used space."""
-        warehouse = self.warehouse
-        
-        # Calculate available dimensions
-        available_length, available_breadth, available_height, _ = calculate_available_dimensions(warehouse)
+    
 
-        # Check if new zone dimensions are within the warehouse's available dimensions
-        if self.length > available_length or self.breadth > available_breadth or self.height > available_height:
-            raise ValidationError("Zone dimensions exceed available warehouse dimensions.")
-
-    def save(self, *args, **kwargs):
-        self.clean()
-
-        warehouse_usage = self.warehouse.usage
-        
-        warehouse_usage.used_length += self.length
-        warehouse_usage.used_breadth += self.breadth
-        warehouse_usage.used_height += self.height
-        
-        warehouse_usage.save()
-        
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        warehouse_usage = self.warehouse.usage
-        
-        warehouse_usage.used_length -= self.length
-        warehouse_usage.used_breadth -= self.breadth
-        warehouse_usage.used_height -= self.height
-        
-        warehouse_usage.save()
-        
-        super().delete(*args, **kwargs)
+   
 
 class InventoryItem(models.Model):
     """Represents an item stored in the inventory."""
@@ -101,43 +59,68 @@ class InventoryItem(models.Model):
 class InventoryLocation(models.Model):
     """Represents a storage location within a zone, with dimensions and item details."""
     id = models.AutoField(primary_key=True)
-    zone = models.ForeignKey(Zone, on_delete=models.CASCADE)
+    zone = models.ForeignKey(Zone, on_delete=models.CASCADE, related_name='locations')
     item = models.ForeignKey(InventoryItem, on_delete=models.SET_NULL, null=True, blank=True)
     length = models.FloatField(help_text="Length of the storage space in meters.")
     width = models.FloatField(help_text="Width of the storage space in meters.")
     height = models.FloatField(help_text="Height of the storage space in meters.")
     stackable = models.BooleanField(default=False, help_text="Whether the item can be stacked.")
     max_stacking_height = models.FloatField(help_text="Maximum number of stacking layers allowed based on the item height.")
-    aisle_width = models.FloatField(help_text="Width of the aisles between storage units.")
+    
     item_count = models.PositiveIntegerField(default=0, help_text="Number of items in this location.")
 
     def __str__(self):
         return f"Location {self.id} in {self.zone.name}"
 
     def clean(self):
-        """Custom validation logic to ensure the item fits within the location."""
+        self._validate_zone_space()
         if self.item:
-            total_item_volume = self.item.item_length * self.item.item_width * self.item.item_height * self.item_count
-            location_volume = self.length * self.width * self.height
+            self._validate_item_dimensions()
+            self._validate_item_volume()
 
-            # Check if item dimensions are within the storage location dimensions
-            if (self.item.item_length > self.length or
-                self.item.item_width > self.width or
-                self.item.item_height > self.height):
-                raise ValidationError("Item dimensions exceed storage location dimensions.")
+    def _validate_zone_space(self):
+        """Validate that the location fits within the zone's available space."""
+        if self.zone:
+            # Convert sums to Decimal for consistent calculations
+            zone_used_length = Decimal(str(sum(float(location.length) for location in self.zone.locations.all())))
+            zone_used_width = Decimal(str(sum(float(location.width) for location in self.zone.locations.all())))
+            zone_used_height = Decimal(str(sum(float(location.height) for location in self.zone.locations.all())))
+
+            # Perform calculations using Decimal
+            available_length = Decimal(str(self.zone.length)) - zone_used_length
+            available_width = Decimal(str(self.zone.breadth)) - zone_used_width
+            available_height = Decimal(str(self.zone.height)) - zone_used_height
+
+            if self.length > available_length:
+                raise ValidationError(f"Location length exceeds available space in zone. Available: {available_length}m")
+            if self.width > available_width:
+                raise ValidationError(f"Location width exceeds available space in zone. Available: {available_width}m")
+            if self.height > available_height:
+                raise ValidationError(f"Location height exceeds available space in zone. Available: {available_height}m")
+
+    def _validate_item_dimensions(self):
+        """Validate that the item fits within the location dimensions."""
+        if (self.item.item_length > self.length or
+            self.item.item_width > self.width or
+            self.item.item_height > self.height):
+            raise ValidationError("Item dimensions exceed storage location dimensions.")
+
+    def _validate_item_volume(self):
+        """Validate that the item volume fits within the location capacity."""
+        total_item_volume = self.item.item_length * self.item.item_width * self.item.item_height * self.item_count
+        location_volume = self.length * self.width * self.height
+
+        if self.stackable:
+            max_item_height = self.item.item_height * self.max_stacking_height
+            if max_item_height > self.height:
+                raise ValidationError("Stacking height exceeds storage location height.")
             
-            # Check if the item can be stacked
-            if self.stackable:
-                max_item_height = self.item.item_height * self.max_stacking_height
-                if max_item_height > self.height:
-                    raise ValidationError("Stacking height exceeds storage location height.")
-                
-                stackable_volume = self.length * self.width * max_item_height
-                if total_item_volume > stackable_volume:
-                    raise ValidationError("Total volume of stacked items exceeds storage location capacity.")
-            else:
-                if total_item_volume > location_volume:
-                    raise ValidationError("Total volume of items exceeds storage location capacity.")
+            stackable_volume = self.length * self.width * max_item_height
+            if total_item_volume > stackable_volume:
+                raise ValidationError("Total volume of stacked items exceeds storage location capacity.")
+        else:
+            if total_item_volume > location_volume:
+                raise ValidationError("Total volume of items exceeds storage location capacity.")
 
     def save(self, *args, **kwargs):
         self.clean()

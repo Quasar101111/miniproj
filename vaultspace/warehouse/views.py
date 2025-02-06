@@ -9,6 +9,7 @@ from .forms import WarehouseForm, WarehousePhotoForm
 from .models import Warehouse, WarehousePhoto,Location,Lease,upload_signature_path  
 from users.models import Lessor, Profile,User,Tenant,Payment
 from users.views import lessor_index
+from map.models import Map
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -31,12 +32,14 @@ from decimal import Decimal
 
 @login_required
 def add_warehouse(request):
-    locations = Location.objects.all()
     lessor_id = request.session.get('lessor_id')
-    lessor=Lessor.objects.get(lessor_id=lessor_id)
+    lessor = Lessor.objects.get(lessor_id=lessor_id)
     today = now().date()
+
     if request.method == 'POST':
-        location_id = request.POST.get('location')
+        # Get location data from the form
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
         area = request.POST.get('area')
         ownership_document = request.FILES.get('ownership_document')
         landmark = request.POST.get('landmark')
@@ -48,16 +51,15 @@ def add_warehouse(request):
         length = request.POST.get('length')
         breadth = request.POST.get('breadth')
         height = request.POST.get('height')
-        
-        
-        if location_id and area and rental_price:
-            location = Location.objects.get(pk=location_id)
-            
-            if lessor_id:
-                lessor = Lessor.objects.get(pk=lessor_id)
+        # 
+        print("Latitude:", latitude)
+        print("Longitude:", longitude)
+
+        if latitude and longitude and area and rental_price:
+            try:
+                # Create the warehouse first
                 warehouse = Warehouse.objects.create(
                     owner=lessor,
-                    location=location,
                     area=area,
                     ownership_documents=ownership_document,
                     landmarks=landmark,
@@ -65,18 +67,35 @@ def add_warehouse(request):
                     rental_price=rental_price,
                     terms_cond=terms_cond,
                     facilities=','.join(facilities),
-                    status=1,  # Default status
-                    length=length,  # Save length
-                    breadth=breadth,  # Save breadth
-                    height=height,  # Save height
+                    status=1,
+                    length=length,
+                    breadth=breadth,
+                    height=height,
                 )
 
+                # Create the map entry with the warehouse reference
+                Map.objects.create(
+                    warehouse=warehouse,
+                    latitude=latitude,
+                    longitude=longitude
+                )
+
+                # Save warehouse photos
                 for image in images:
                     WarehousePhoto.objects.create(warehouse=warehouse, image=image)
 
                 return redirect('lessor_index')
+            except Exception as e:
+                messages.error(request, f'Error saving warehouse: {str(e)}')
+        else:
+            messages.error(request, 'Please fill in all required fields')
 
-    return render(request, 'warehouse/add_warehouse.html', {'locations': locations,'lessor_id': lessor_id,'lessor': lessor})
+    return render(request, 'warehouse/add_warehouse.html', {
+        'lessor_id': lessor_id,
+        'lessor': lessor,
+        'today': today
+    })
+
 @login_required
 def temp1(request):
     locations = Location.objects.all()
@@ -426,3 +445,17 @@ def warehouse_status_chart_data(request):
         'labels': ['Occupied', 'Available'],
         'data': [occupied, available]
     })
+
+
+
+@login_required
+def compare_warehouse(request):
+    # Fetch all warehouses with their photos
+    warehouses = Warehouse.objects.prefetch_related('photos').all()
+
+    # Prepare the context with the warehouse data
+    context = {
+        'warehouses': warehouses,
+    }
+    
+    return render(request, 'warehouse/compare_warehouse.html', context)

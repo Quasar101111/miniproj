@@ -21,7 +21,7 @@ class Warehouse(models.Model):
     warehouse_id = models.AutoField(primary_key=True)
     name=models.CharField(max_length=255,blank=True)
     owner = models.ForeignKey('users.Lessor', on_delete=models.CASCADE)
-    location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    location = models.ForeignKey('Location', on_delete=models.CASCADE,blank=True,null=True)
     area = models.DecimalField(max_digits=10,decimal_places=2)
     ownership_documents = models.FileField(upload_to='ownership_docs/', blank=True, null=True)
     facilities = models.CharField(max_length=255)

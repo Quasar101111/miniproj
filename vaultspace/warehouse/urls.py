@@ -25,6 +25,8 @@ urlpatterns = [
     path('revenue-chart-data/', views.revenue_chart_data, name='revenue_chart_data'),
     path('warehouse-status-chart-data/', views.warehouse_status_chart_data, name='warehouse_status_chart_data'),
 
+     path('compare/', views.compare_warehouse, name='compare_warehouse'),
+
  
 ]
 urlpatterns=urlpatterns+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

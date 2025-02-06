@@ -1,0 +1,504 @@
+{% load static%}
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="{% static 'css/compare/reset.css' %}"> <!-- CSS reset -->
+	<link rel="stylesheet" href="{% static 'css/compare/style.css' %}"> <!-- Resource style -->
+	{% comment %} <script src="js/modernizr.js"></script> <!-- Modernizr --> {% endcomment %}
+  	
+	<title>Warehouse Comparison Table</title>
+    
+    <!-- Google Fonts CDN -->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Font Awesome CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js" ></script>
+    <!-- Bootstrap CSS CDN (optional, for additional styling) -->
+    {% comment %} <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> {% endcomment %}
+
+    <!-- Combined CSS -->
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Navigation */
+        .cd-table-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .cd-table-navigation a {
+            text-decoration: none;
+            color: #3498db;
+        }
+
+        .cd-table-navigation a.inactive {
+            color: #ccc;
+        }
+
+        .help-text {
+            font-size: 1.4rem;
+            color: #404042;
+            margin-top: 10px;
+            text-align: center; /* Center the help text */
+        }
+    </style>
+</head>
+<body>
+	<section class="cd-intro">
+		<h1><i class="fas fa-warehouse"></i> Warehouse Comparison Table</h1>
+	</section> <!-- .cd-intro -->
+
+	<section class="cd-products-comparison-table">
+		<header>
+			<h2><i class="fas fa-balance-scale"></i> Compare Warehouses</h2>
+            <p class="help-text">
+                <i class="fas fa-info-circle"></i> Tip: Click on warehouse headers to select them for comparison. 
+                Use the filter button to view only selected warehouses.
+            </p>
+			<div class="actions">
+				<a href="#0" class="reset"><i class="fas fa-undo"></i> Reset</a>
+				<a href="#0" class="filter"><i class="fas fa-filter"></i> Filter</a>
+			</div>
+		</header>
+
+		<div class="cd-products-table">
+			<div class="features">
+				<div class="top-info">Warehouses</div>
+				<ul class="cd-features-list">
+					<li><i class="fas fa-ruler-combined"></i> Area (sq ft)</li>
+					<li><i class="fas fa-dollar-sign"></i> Rental Price</li>
+					<li><i class="fas fa-info-circle"></i> Status</li>
+					<li><i class="fas fa-tools"></i> Facilities</li>
+                    <li></li>
+                    <li></li>
+					<li><i class="fas fa-calendar-alt"></i> Year Built</li>
+				</ul>
+			</div> <!-- .features -->
+			
+			<div class="cd-products-wrapper">
+				<ul class="cd-products-columns">
+					{% for warehouse in warehouses %}
+					<li class="product">
+						<div class="top-info">
+							<div class="check"></div>
+                            {% if warehouse.photos.all %}
+                                <img src="{{ warehouse.photos.first.image.url }}" alt="Warehouse Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">
+                            {% else %}
+                                <img src="{% static 'images/no-image.jpg' %}" alt="No Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">
+                            {% endif %}
+							<h3>Warehouse ID: {{ warehouse.warehouse_id }}</h3>
+                            <a href="{% url 'warehouse_detail' warehouse.warehouse_id %}" class="btn btn-primary mt-2">
+                                <i class="fas fa-eye"></i> Visit Warehouse
+                            </a>
+						</div> <!-- .top-info -->
+
+						<ul class="cd-features-list">
+							<li><strong>Area (sq ft):</strong> {{ warehouse.area }}</li>
+							<li><strong>Rental Price:</strong> ${{ warehouse.rental_price }}</li>
+							<li><strong>Status:</strong> {% if warehouse.status == 1 %}
+								Available {% else%} On Rent 
+								{% endif%}
+                                
+                            </li>
+							<li><strong>Facilities:</strong> {{ warehouse.facilities }}</li>
+                            
+							<li><strong>Year Built:</strong> {{ warehouse.year_built }}</li>
+						</ul>
+					</li> <!-- .product -->
+					{% endfor %}
+				</ul> <!-- .cd-products-columns -->
+			</div> <!-- .cd-products-wrapper -->
+			
+			<ul class="cd-table-navigation">
+                <li>
+                    <a href="#0" class="prev inactive" title="Previous">
+                        <i class="fas fa-chevron-right "></i> Prev
+                    </a>
+                </li>
+                <li>
+                    <a href="#0" class="next" title="Next">
+                         <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+            
+		</div> <!-- .cd-products-table -->
+	</section> <!-- .cd-products-comparison-table -->
+{% comment %} <script src="js/jquery-2.1.4.js"></script> {% endcomment %}
+<script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+
+<script src="{% static 'vendor/swiper/js/swiper-bundle.min.js' %}"></script>
+<script src="{% static 'vendor/magnific-popup/magnific-popup.js' %}"></script>
+<script src="{% static 'vendor/nouislider/nouislider.min.js' %}"></script>
+{% comment %} <script src="js/main.js"></script> <!-- Resource jQuery --> {% endcomment %}
+<script>
+jQuery(document).ready(function($){
+	function productsTable( element ) {
+		this.element = element;
+		this.table = this.element.children('.cd-products-table');
+		this.tableHeight = this.table.height();
+		this.productsWrapper = this.table.children('.cd-products-wrapper');
+		this.tableColumns = this.productsWrapper.children('.cd-products-columns');
+		this.products = this.tableColumns.children('.product');
+		this.productsNumber = this.products.length;
+		this.productWidth = this.products.eq(0).width();
+		this.productsTopInfo = this.table.find('.top-info');
+		this.featuresTopInfo = this.table.children('.features').children('.top-info');
+		this.topInfoHeight = this.featuresTopInfo.innerHeight() + 30;
+		this.leftScrolling = false;
+		this.filterBtn = this.element.find('.filter');
+		this.resetBtn = this.element.find('.reset');
+		this.filtering = false,
+		this.selectedproductsNumber = 0;
+		this.filterActive = false;
+		this.navigation = this.table.children('.cd-table-navigation');
+		// bind table events
+		this.bindEvents();
+	}
+
+	productsTable.prototype.bindEvents = function() {
+		var self = this;
+		//detect scroll left inside producst table
+		self.productsWrapper.on('scroll', function(){
+			if(!self.leftScrolling) {
+				self.leftScrolling = true;
+				(!window.requestAnimationFrame) ? setTimeout(function(){self.updateLeftScrolling();}, 250) : window.requestAnimationFrame(function(){self.updateLeftScrolling();});
+			}
+		});
+		//select single product to filter
+		self.products.on('click', '.top-info', function(){
+			var product = $(this).parents('.product');
+			if( !self.filtering && product.hasClass('selected') ) {
+				product.removeClass('selected');
+				self.selectedproductsNumber = self.selectedproductsNumber - 1;
+				self.upadteFilterBtn();
+			} else if( !self.filtering && !product.hasClass('selected') ) {
+				product.addClass('selected');
+				self.selectedproductsNumber = self.selectedproductsNumber + 1;
+				self.upadteFilterBtn();
+			}
+		});
+		//filter products
+		self.filterBtn.on('click', function(event){
+			event.preventDefault();
+			if(self.filterActive) {
+				self.filtering =  true;
+				self.showSelection();
+				self.filterActive = false;
+				this.filterBtn.removeClass('active');
+			}
+		});
+		//reset product selection
+		self.resetBtn.on('click', function(event){
+			event.preventDefault();
+			if( self.filtering ) {
+				self.filtering =  false;
+				self.resetSelection();
+			} else {
+				self.products.removeClass('selected');
+			}
+			self.selectedproductsNumber = 0;
+			self.upadteFilterBtn();
+		});
+		//scroll inside products table
+		this.navigation.on('click', 'a', function(event){
+			event.preventDefault();
+			self.updateSlider( $(event.target).hasClass('next') );
+		});
+	}
+
+	productsTable.prototype.upadteFilterBtn = function() {
+		//show/hide filter btn
+		if( this.selectedproductsNumber >= 2 ) {
+			this.filterActive = true;
+			this.filterBtn.addClass('active');
+		} else {
+			this.filterActive = false;
+			this.filterBtn.removeClass('active');
+		}
+	}
+
+	productsTable.prototype.updateLeftScrolling = function() {
+		var totalTableWidth = parseInt(this.tableColumns.eq(0).outerWidth(true)),
+			tableViewport = parseInt(this.element.width()),
+			scrollLeft = this.productsWrapper.scrollLeft();
+
+		( scrollLeft > 0 ) ? this.table.addClass('scrolling') : this.table.removeClass('scrolling');
+
+		if( this.table.hasClass('top-fixed') && checkMQ() == 'desktop') {
+			setTranformX(this.productsTopInfo, '-'+scrollLeft);
+			setTranformX(this.featuresTopInfo, '0');
+		}
+
+		this.leftScrolling =  false;
+
+		this.updateNavigationVisibility(scrollLeft);
+	}
+
+	productsTable.prototype.updateNavigationVisibility = function(scrollLeft) {
+		( scrollLeft > 0 ) ? this.navigation.find('.prev').removeClass('inactive') : this.navigation.find('.prev').addClass('inactive');
+		( scrollLeft < this.tableColumns.outerWidth(true) - this.productsWrapper.width() && this.tableColumns.outerWidth(true) > this.productsWrapper.width() ) ? this.navigation.find('.next').removeClass('inactive') : this.navigation.find('.next').addClass('inactive');
+	}
+
+	productsTable.prototype.updateTopScrolling = function(scrollTop) {
+		var offsetTop = this.table.offset().top,
+			tableScrollLeft = this.productsWrapper.scrollLeft(),
+			tableHeight = this.table.height();
+		
+		if ( offsetTop <= scrollTop && offsetTop + tableHeight - this.topInfoHeight >= scrollTop ) {
+			//fix products top-info && arrows navigation
+			if( !this.table.hasClass('top-fixed') && $(document).height() > offsetTop + $(window).height() + 200) { 
+				this.table.addClass('top-fixed').removeClass('top-scrolling');
+				if( checkMQ() == 'desktop' ) {
+					this.productsTopInfo.css('top', '0');
+					this.navigation.find('a').css('top', '0px');
+				}
+			}
+
+		} else if( offsetTop <= scrollTop ) {
+			//product top-info && arrows navigation -  scroll with table
+			this.table.removeClass('top-fixed').addClass('top-scrolling');
+			if( checkMQ() == 'desktop' )  {
+				this.productsTopInfo.css('top', (tableHeight - this.topInfoHeight) +'px');
+				this.navigation.find('a').css('top', (tableHeight - this.topInfoHeight) +'px');
+			}
+		} else {
+			//product top-info && arrows navigation -  reset style
+			this.table.removeClass('top-fixed top-scrolling');
+			this.productsTopInfo.attr('style', '');
+			this.navigation.find('a').attr('style', '');
+		}
+
+		this.updateLeftScrolling();
+	}
+
+	productsTable.prototype.updateProperties = function() {
+		this.tableHeight = this.table.height();
+		this.productWidth = this.products.eq(0).width();
+		this.topInfoHeight = this.featuresTopInfo.innerHeight() + 30;
+		this.tableColumns.css('width', this.productWidth*this.productsNumber + 'px');
+	}
+
+	productsTable.prototype.showSelection = function() {
+		this.element.addClass('filtering');
+		this.filterProducts();
+	}
+
+	productsTable.prototype.resetSelection = function() {
+		this.tableColumns.css('width', this.productWidth*this.productsNumber + 'px');
+		this.element.removeClass('no-product-transition');
+		this.resetProductsVisibility();
+	}
+
+	productsTable.prototype.filterProducts = function() {
+		var self = this,
+			containerOffsetLeft = self.tableColumns.offset().left,
+			scrollLeft = self.productsWrapper.scrollLeft(),
+			selectedProducts = this.products.filter('.selected'),
+			numberProducts = selectedProducts.length;
+
+		selectedProducts.each(function(index){
+			var product = $(this),
+				leftTranslate = containerOffsetLeft + index*self.productWidth + scrollLeft - product.offset().left;
+			setTranformX(product, leftTranslate);
+			
+			if(index == numberProducts - 1 ) {
+				product.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(){
+					setTimeout(function(){
+						self.element.addClass('no-product-transition');
+					}, 50);
+					setTimeout(function(){
+						self.element.addClass('filtered');
+						self.productsWrapper.scrollLeft(0);
+						self.tableColumns.css('width', self.productWidth*numberProducts + 'px');
+						selectedProducts.attr('style', '');
+						product.off('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend');
+						self.updateNavigationVisibility(0);
+					}, 100);
+				});
+			}
+		});
+
+		if( $('.no-csstransitions').length > 0 ) {
+			//browser not supporting css transitions
+			self.element.addClass('filtered');
+			self.productsWrapper.scrollLeft(0);
+			self.tableColumns.css('width', self.productWidth*numberProducts + 'px');
+			selectedProducts.attr('style', '');
+			self.updateNavigationVisibility(0);
+		}
+	}
+	
+	productsTable.prototype.resetProductsVisibility = function() {
+		var self = this,
+			containerOffsetLeft = self.tableColumns.offset().left,
+			selectedProducts = this.products.filter('.selected'),
+			numberProducts = selectedProducts.length,
+			scrollLeft = self.productsWrapper.scrollLeft(),
+			n = 0;
+
+		self.element.addClass('no-product-transition').removeClass('filtered');
+
+		self.products.each(function(index){
+			var product = $(this);
+			if (product.hasClass('selected')) {
+				n = n + 1;
+				var leftTranslate = (-index + n - 1)*self.productWidth;
+				setTranformX(product, leftTranslate);
+			}
+		});
+
+		setTimeout(function(){
+			self.element.removeClass('no-product-transition filtering');
+			setTranformX(selectedProducts, '0');
+			selectedProducts.removeClass('selected').attr('style', '');
+		}, 50);
+	}
+
+	productsTable.prototype.updateSlider = function(bool) {
+		var scrollLeft = this.productsWrapper.scrollLeft();
+		scrollLeft = ( bool ) ? scrollLeft + this.productWidth : scrollLeft - this.productWidth;
+
+		if( scrollLeft < 0 ) scrollLeft = 0;
+		if( scrollLeft > this.tableColumns.outerWidth(true) - this.productsWrapper.width() ) scrollLeft = this.tableColumns.outerWidth(true) - this.productsWrapper.width();
+		
+		this.productsWrapper.animate( {scrollLeft: scrollLeft}, 200 );
+	}
+
+	var comparisonTables = [];
+	$('.cd-products-comparison-table').each(function(){
+		//create a productsTable object for each .cd-products-comparison-table
+		comparisonTables.push(new productsTable($(this)));
+	});
+	
+	var windowScrolling = false;
+	//detect window scroll - fix product top-info on scrolling
+	$(window).on('scroll', function(){
+		if(!windowScrolling) {
+			windowScrolling = true;
+			(!window.requestAnimationFrame) ? setTimeout(checkScrolling, 250) : window.requestAnimationFrame(checkScrolling);
+		}
+	});
+
+	var windowResize = false;
+	//detect window resize - reset .cd-products-comparison-table properties
+	$(window).on('resize', function(){
+		if(!windowResize) {
+			windowResize = true;
+			(!window.requestAnimationFrame) ? setTimeout(checkResize, 250) : window.requestAnimationFrame(checkResize);
+		}
+	});
+
+	function checkScrolling(){
+		var scrollTop = $(window).scrollTop();
+		comparisonTables.forEach(function(element){
+			element.updateTopScrolling(scrollTop);
+		});
+
+		windowScrolling = false;
+	}
+
+	function checkResize(){
+		comparisonTables.forEach(function(element){
+			element.updateProperties();
+		});
+
+		windowResize = false;
+	}
+
+	function checkMQ() {
+		//check if mobile or desktop device
+		return window.getComputedStyle(comparisonTables[0].element.get(0), '::after').getPropertyValue('content').replace(/'/g, "").replace(/"/g, "");
+	}
+
+	function setTranformX(element, value) {
+		element.css({
+		    '-moz-transform': 'translateX(' + value + 'px)',
+		    '-webkit-transform': 'translateX(' + value + 'px)',
+			'-ms-transform': 'translateX(' + value + 'px)',
+			'-o-transform': 'translateX(' + value + 'px)',
+			'transform': 'translateX(' + value + 'px)'
+		});
+	}
+});
+</script>
+
+<!-- Bootstrap JS CDN (optional, for additional functionality) -->
+{% comment %} <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script> {% endcomment %}
+</body>
+</html>

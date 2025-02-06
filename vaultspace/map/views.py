@@ -29,15 +29,28 @@ def get_nearby_features(lat, lon):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data from Overpass API: {e}")
         return None
+import datetime 
 
-
-def map_view(request):
+def map_view(request,warehouse_id):
     """Render the map with filtered nearby features."""
+    
+
     try:
-        lat = float(request.GET.get('lat', 11.810711))  # Default latitude
-        lon = float(request.GET.get('lon', 75.613307))  # Default longitude
-    except ValueError:
-        return HttpResponseBadRequest("Invalid latitude or longitude")
+        # Get warehouse_id from request if not passed as an argument
+        warehouse_id = request.GET.get('warehouse_id', warehouse_id)  # Use the passed warehouse_id if available
+        print(f"Debug: warehouse_id after GET: {warehouse_id}")  # Print the warehouse_id after checking GET
+
+        # Fetch the map location for the given warehouse_id
+        map_location = Map.objects.get(warehouse_id=warehouse_id)
+        
+        lat = float(map_location.latitude)
+        lon = float(map_location.longitude)
+
+        print(f"Debug: Latitude: {lat}, Longitude: {lon}")  # Print the latitude and longitude
+
+    except (Warehouse.DoesNotExist, Map.DoesNotExist, ValueError) as e:
+        print(f"Debug: Exception occurred: {str(e)}")  # Print the exception message
+        return HttpResponseBadRequest("Invalid warehouse or location data")
 
     # Fetch nearby features using the helper function
     features = get_nearby_features(lat, lon)

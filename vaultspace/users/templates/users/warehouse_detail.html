@@ -235,7 +235,7 @@
         <div class="row">
             <div class="col-md-8">
                 <h1>{{ warehouse.name }} <span class="float-right">₹  {{ warehouse.rental_price }}/month</span></h1>
-                <p><i class="fas fa-map-marker-alt"></i> {{ warehouse.location.city}}, {{ warehouse.location.state }}</p>
+                <!-- <p><i class="fas fa-map-marker-alt"></i> {{ warehouse.location.city}}, {{ warehouse.location.state }}</p> -->
                 {% if warehouse.status == 1 %}
                 <span class="badge badge-primary">FOR RENT</span>
                 {% else %}
@@ -375,10 +375,31 @@
                                 <td>India</td>
                             </tr>
                         </table>
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ warehouse.location.address|urlencode }}"
+                        {% comment %} <a href="{% url 'map_view' warehouse.warehouse_id %}"
                             class="btn btn-primary btn-sm float-right" target="_blank">
-                            <i class="fas fa-map-marker-alt"></i> Open on Google Maps
+                            <i class="fas fa-map-marker-alt"></i> Open in map
+                        </a> {% endcomment %}
+                        <a href="#" onclick="openMapView()" class="btn btn-primary btn-sm float-right">
+                            <i class="fas fa-map-marker-alt"></i> Open in map
                         </a>
+
+                        <script>
+                            function openMapView() {
+                                // Open the map view in a new window
+                                const mapWindow = window.open("{% url 'map_view' warehouse.warehouse_id %}", "Map View", 
+                                    "width=800,height=600,scrollbars=yes");
+                            
+                                // Listen for messages from the map view window
+                                window.addEventListener('message', function(event) {
+                                    if (event.data.type === 'location_selected') {
+                                        document.getElementById('selectedLocation').value = event.data.address;
+                                        document.getElementById('latitude').value = event.data.latitude;
+                                        document.getElementById('longitude').value = event.data.longitude;
+                                        mapWindow.close();
+                                    }
+                                }, false);
+                            }
+                            </script>
                     </div>
                 </div>
 

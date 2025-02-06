@@ -8,6 +8,38 @@
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let warehouseZonesJson = JSON.parse('{{ warehouse_zones_json|escapejs }}'); 
+    
+            if (!warehouseZonesJson || warehouseZonesJson.length === 0) {
+                console.log("No warehouse zones found!");
+                return;
+            }
+    
+            console.log("Warehouse Zones JSON:", warehouseZonesJson); // Debugging
+    
+            document.getElementById("location_zone").addEventListener("change", function () {
+                let selectedZoneId = parseInt(this.value); // Convert ID to integer
+                let selectedZone = warehouseZonesJson.find(zone => zone.id === selectedZoneId);
+    
+                if (selectedZone) {
+                    console.log("Selected Zone:", selectedZone);
+                    document.getElementById("available-length").textContent = (selectedZone.length - selectedZone.used_length).toFixed(2);
+                    document.getElementById("available-width").textContent = (selectedZone.breadth - selectedZone.used_breadth).toFixed(2);
+                    document.getElementById("available-height").textContent = (selectedZone.height - selectedZone.used_height).toFixed(2);
+                } else {
+                    console.log("Zone not found!");
+                }
+            });
+        });
+    </script>
+    
+
+   
+    
 </head>
 <body>
     <div class="container my-5">
@@ -24,6 +56,32 @@
         <p style="color: red;">{{ error }}</p>
         {% endif %}
     
+        <!-- Details Section -->
+        <div class="card mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle-fill me-2"></i>About the Forms</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-light">
+                        <i class="bi bi-pin-map-fill text-primary me-2"></i>
+                        <strong class="text-primary">Create Zone:</strong> 
+                        <span class="text-muted">Define different areas in your warehouse (Receiving, Storage, Picking) with specific dimensions.</span>
+                    </li>
+                    <li class="list-group-item bg-light">
+                        <i class="bi bi-box-seam-fill text-success me-2"></i>
+                        <strong class="text-success">Create Inventory Item:</strong> 
+                        <span class="text-muted">Add products or items to your inventory with their physical dimensions.</span>
+                    </li>
+                    <li class="list-group-item bg-light">
+                        <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                        <strong class="text-warning">Create Inventory Location:</strong> 
+                        <span class="text-muted">Designate specific storage spaces within zones, specifying dimensions and item storage details.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Navigation Buttons -->
         <ul class="nav nav-tabs" id="formTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -133,29 +191,71 @@
                             <div class="mb-3">
                                 <label for="location_zone" class="form-label">Zone:</label>
                                 <select id="location_zone" name="location_zone" class="form-select" required>
-                                    <option value="RECEIVING">Receiving Area</option>
-                                    <option value="STORAGE">Storage Area</option>
-                                    <option value="PICKING">Picking Area</option>
+                                    <option value="" disabled selected>Select a zone</option>
+                                    {% for zone in warehouse_zones %}
+                                        <option value="{{ zone.id }}">{{ zone.name }} ({{ zone.get_zone_type_display }})</option>
+                                    {% endfor %}
                                 </select>
+                                <small class="form-text text-muted">Select a zone from this warehouse</small>
                             </div>
                             <div class="mb-3">
                                 <label for="location_item" class="form-label">Item:</label>
                                 <select id="location_item" name="location_item" class="form-select">
-                                    <!-- Populate with Item options dynamically -->
+                                    <option value="" disabled selected>Select an item</option>
+                                    {% for item in inventory_items %}
+                                        <option value="{{ item.id }}">{{ item.name }} ({{ item.item_length }}m × {{ item.item_width }}m × {{ item.item_height }}m)</option>
+                                    {% endfor %}
                                 </select>
+                                <small class="form-text text-muted">Select the item to be stored in this location (optional)</small>
                             </div>
-                            <div class="mb-3">
+                            {% comment %} <div class="mb-3">
                                 <label for="location_length" class="form-label">Length (m):</label>
                                 <input type="number" id="location_length" name="location_length" class="form-control" step="0.01" required>
+                                <small class="form-text text-muted" data-for="length">
+                                    Available length: <span id="available-length">{{ selected_zone.available_length|floatformat:2 }}</span> meters
+                                </small>
                             </div>
                             <div class="mb-3">
                                 <label for="location_width" class="form-label">Width (m):</label>
                                 <input type="number" id="location_width" name="location_width" class="form-control" step="0.01" required>
+                                <small class="form-text text-muted" data-for="width">
+                                    Available width: <span id="available-width">{{ selected_zone.available_width|floatformat:2 }}</span> meters
+                                </small>
                             </div>
                             <div class="mb-3">
                                 <label for="location_height" class="form-label">Height (m):</label>
                                 <input type="number" id="location_height" name="location_height" class="form-control" step="0.01" required>
+                                <small class="form-text text-muted" data-for="height">
+                                    Available height: <span id="available-height">{{ selected_zone.available_height|floatformat:2 }}</span> meters
+                                </small>
+                            </div> {% endcomment %}
+                          
+                            <div class="mb-3">
+                                <label for="location_length" class="form-label">Length (m):</label>
+                                <input type="number" id="location_length" name="location_length" class="form-control" step="0.01" required>
+                                <small class="form-text text-muted">
+                                    Available length: <span id="available-length">Select a zone</span> meters
+                                </small>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label for="location_width" class="form-label">Width (m):</label>
+                                <input type="number" id="location_width" name="location_width" class="form-control" step="0.01" required>
+                                <small class="form-text text-muted">
+                                    Available width: <span id="available-width">Select a zone</span> meters
+                                </small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="location_height" class="form-label">Height (m):</label>
+                                <input type="number" id="location_height" name="location_height" class="form-control" step="0.01" required>
+                                <small class="form-text text-muted">
+                                    Available height: <span id="available-height">Select a zone</span> meters
+                                </small>
+                            </div>
+                          
+                          
+                          
                             <div class="mb-3">
                                 <label for="stackable" class="form-label">Stackable:</label>
                                 <select id="stackable" name="stackable" class="form-select" required>
@@ -168,9 +268,14 @@
                                 <input type="number" id="max_stacking_height" name="max_stacking_height" class="form-control" step="0.01">
                             </div>
                             <div class="mb-3">
+                                <label for="item_count" class="form-label">Item Count:</label>
+                                <input type="number" id="item_count" name="item_count" class="form-control" min="0" required>
+                                <small class="form-text text-muted">Number of items to store in this location</small>
+                            </div>
+                            {% comment %} <div class="mb-3">
                                 <label for="aisle_width" class="form-label">Aisle Width (m):</label>
                                 <input type="number" id="aisle_width" name="aisle_width" class="form-control" step="0.01" required>
-                            </div>
+                            </div> {% endcomment %}
                             <button type="submit" class="btn btn-warning">Save Location</button>
                         </form>
                     </div>
@@ -181,5 +286,8 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+   
+
 </body>
 </html>
