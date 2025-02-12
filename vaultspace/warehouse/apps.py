@@ -20,9 +20,9 @@ class WarehouseConfig(AppConfig):
         scheduler.add_job(
             send_lease_expiry_notifications_and_cleanup,
             trigger='cron',
-            minute='*/2',  # This will run the job every 2 minutes
-            # hour=0,  # Set the hour you want the job to run (e.g., midnight)
-            # minute=0,
+            # minute='*/2',  # This will run the job every 2 minutes
+            hour=0,  # Set the hour you want the job to run (e.g., midnight)
+            minute=0,
             id='lease_notification_job',
             replace_existing=True
         )

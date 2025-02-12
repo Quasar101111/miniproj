@@ -10,6 +10,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
 	path('insert_data/', views.insert_data, name='insert_data'),
+    path('get-item-details/<int:item_id>/', views.get_item_details, name='get_item_details'),
+    path('warehouse-dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
 
  
 ]
