@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'users.middleware.NoCacheMiddleware', #custom middleware
+    # 'vaultspace.middleware.RecommendationMiddleware'
 ]
 
 ROOT_URLCONF = 'vaultspace.urls'
@@ -101,7 +102,12 @@ TEMPLATES = [
 ]
 
 # SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
-
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'recommendations-cache',
+    }
+}
 
 
 
@@ -123,6 +129,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
+
+# ML_SERVICE_URL = "http://localhost:8001"
 
 MEDIA_URL='media/'
 

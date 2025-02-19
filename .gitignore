@@ -6,3 +6,10 @@ vaultspace/.env
 >>>>>>> edit
 *.env
 git_log.txt
+
+proj/val.txt
+
+# Ignore TensorFlow binaries
+proj/Lib/site-packages/tensorflow/
+
+proj/

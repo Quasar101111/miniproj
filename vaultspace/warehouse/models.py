@@ -33,6 +33,8 @@ class Warehouse(models.Model):
     length = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Length in meters
     breadth = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Breadth in meters
     height = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Height in meters
+    popularity_score = models.FloatField(default=0.0)
+    last_activity = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Warehouse {self.warehouse_id}"

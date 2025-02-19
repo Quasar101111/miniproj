@@ -222,3 +222,41 @@ def select_location(request):
     
     # For GET requests, render the template
     return render(request, 'map/select_location.html')
+
+################################
+#test implementation of blockchain
+
+from django.http import JsonResponse
+from .blockchain import add_warehouse
+
+
+def add_warehouse_view(request):
+    if request.method == 'POST':
+        # try:
+            # Convert capacity to integer
+            capacity = int(request.POST['capacity'])
+            
+            txn_hash = add_warehouse({
+                'name': request.POST['name'],
+                'location': request.POST['location'],
+                'capacity': capacity,
+                'facilities': request.POST['facilities']
+            })
+            
+            return render(request, 'map/success.html', {
+                'txn_hash': txn_hash.hex(),
+                'name': request.POST['name'],
+                'location': request.POST['location'],
+                'capacity': capacity,
+                'facilities': request.POST['facilities']
+            })
+            
+        # except ValueError:
+        #     return render(request, 'map/error.html', {
+        #         'error': 'Invalid capacity value - must be a number'
+        #     })
+        # except Exception as e:
+        #     return render(request, 'map/error.html', {
+        #         'error': str(e)
+        #     })
+    return render(request, 'map/add_warehouse_test.html')

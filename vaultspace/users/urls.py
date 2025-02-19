@@ -3,6 +3,7 @@
 from django.urls import path, include
 from django.conf import settings
 from . import views
+from . import views2 
 
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
@@ -70,7 +71,10 @@ urlpatterns = [
 
 
 
+    #Location capure
+    path('update-location/', views2.update_location, name='update_location'),
 
+     path('recommend/<int:tenant_id>/', views2.get_recommendations, name='recommendations'),
 
     ]
 if settings.DEBUG:

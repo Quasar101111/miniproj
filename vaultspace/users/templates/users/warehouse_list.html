@@ -85,6 +85,58 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="mb-3">
+    <button class="btn btn-outline-primary" onclick="captureLocation()">
+        <i class="bi bi-geo-alt"></i> Update My Location
+    </button>
+    <small id="locationStatus" class="text-muted ms-2"></small>
+</div>
+
+            <script>
+            function captureLocation() {
+                const statusElement = document.getElementById('locationStatus');
+                
+                if (!navigator.geolocation) {
+                    statusElement.textContent = "Geolocation is not supported by this browser.";
+                    return;
+                }
+
+                statusElement.textContent = "Locating...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Send to server
+                        fetch('{% url "update_location" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                latitude: lat,
+                                longitude: lng
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            statusElement.textContent = data.message;
+                            statusElement.className = data.success ? 'text-success ms-2' : 'text-danger ms-2';
+                        })
+                        .catch(error => {
+                            statusElement.textContent = "Error saving location";
+                            statusElement.className = 'text-danger ms-2';
+                        });
+                    },
+                    (error) => {
+                        statusElement.textContent = "Unable to retrieve your location";
+                        statusElement.className = 'text-danger ms-2';
+                    }
+                );
+            }
+            </script>
             <h2>{{ warehouses.count }} Properties</h2>
             <div class="dropdown">
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="sortDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

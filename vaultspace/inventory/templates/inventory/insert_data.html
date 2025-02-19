@@ -40,31 +40,186 @@
     </script>
     
     <style>
-        .storage-list {
-            max-height: 200px;
-            overflow-y: auto;
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
         }
-        .storage-list li {
-            padding: 2px 0;
-            border-bottom: 1px solid #eee;
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: 
+                15px 15px 30px rgba(0, 0, 0, 0.1),
+                -15px -15px 30px rgba(255, 255, 255, 0.8),
+                0 0 50px rgba(108, 117, 125, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
         }
-        .alert-list {
-            max-height: 200px;
-            overflow-y: auto;
+
+        .card-header {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
         }
-        .alert {
+
+        .nav-tabs {
+            border: none;
+            gap: 10px;
+            padding: 0 1rem;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            font-weight: 500;
+            color: #6b7280;
+            background: #ffffff;
+            box-shadow: 
+                5px 5px 10px rgba(0, 0, 0, 0.05),
+                -5px -5px 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 
+                inset 2px 2px 5px rgba(0, 0, 0, 0.05),
+                inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            box-shadow: 
+                5px 5px 10px rgba(0, 0, 0, 0.05),
+                -5px -5px 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge {
             padding: 0.5rem 1rem;
-            font-size: 0.9rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            box-shadow: 
+                3px 3px 6px rgba(0, 0, 0, 0.05),
+                -3px -3px 6px rgba(255, 255, 255, 0.5);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.25rem;
+            box-shadow: 
+                5px 5px 10px rgba(0, 0, 0, 0.05),
+                -5px -5px 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .container-fluid {
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c7d2fe;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 992px) {
+            .mx-lg-5 {
+                margin-left: 4rem !important;
+                margin-right: 4rem !important;
+            }
+        }
+
+        /* Dashboard card specific styles */
+        .sticky-top {
+            top: 20px;
+        }
+
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 
+                5px 5px 10px rgba(0, 0, 0, 0.05),
+                -5px -5px 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .table th {
+            background-color: #f9fafb;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        /* Progress bar styles */
+        .progress {
+            height: 8px;
+            border-radius: 9999px;
+            background-color: #e5e7eb;
+            box-shadow: 
+                inset 2px 2px 5px rgba(0, 0, 0, 0.05),
+                inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
         }
     </style>
     
 </head>
 <body>
     <div class="container-fluid my-5">
-        <div class="row">
-            <!-- Main content column (form) -->
-            <div class="col-md-8">
-                <h1 class="text-center mb-4">Data Insert</h1>
+        <h2 class="text-center mb-4">Data Insert</h2>
+        
+        <!-- Main content row with side margins -->
+        <div class="row mx-lg-5">  <!-- Horizontal margins on large screens -->
+            <!-- Left column -->
+            <div class="col-md-8 px-lg-4">  <!-- Added side padding -->
                 <!-- Alert messages -->
                 {% if messages %}
                     {% for message in messages %}
@@ -319,8 +474,8 @@
                 </div>
             </div>
 
-            <!-- Dashboard column (right side) -->
-            <div class="col-md-4">
+            <!-- Right dashboard column -->
+            <div class="col-md-4 px-lg-4">  <!-- Added side padding -->
                 <div class="card border-info sticky-top" style="top: 20px;">
                     <div class="card-header bg-info text-white">
                         <h5 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Warehouse Usage Dashboard</h5>
@@ -443,7 +598,7 @@
     </div>
                 </div>
                 
-           
+                
             </div>
         </div>
     </div>

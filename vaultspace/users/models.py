@@ -55,7 +55,9 @@ class Tenant(models.Model):
     photo = models.ImageField(upload_to='tenant_photos/')
     identity_proof = models.FileField(upload_to='tenant_id/', null=True, blank=True)
     state = models.CharField(max_length=50)
-    city = models.CharField(max_length=50)    
+    city = models.CharField(max_length=50)  
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)  
                                         
     def __str__(self):
        return f'Tenant: {self.tenant_name} ({self.tenant_id})'        

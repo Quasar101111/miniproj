@@ -459,3 +459,20 @@ def compare_warehouse(request):
     }
     
     return render(request, 'warehouse/compare_warehouse.html', context)
+
+
+
+def trending_warehouses(request):
+    trending = Warehouse.objects.filter(status=1).order_by('-popularity_score')[:10]
+    return JsonResponse({
+        'trending': [
+            {
+                'id': wh.warehouse_id,
+                'name': wh.name,
+                'price': float(wh.rental_price),
+                'popularity': wh.popularity_score,
+                'photo': wh.photos.first().image.url if wh.photos.exists() else None
+            } 
+            for wh in trending
+        ]
+    })

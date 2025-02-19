@@ -1,0 +1,9 @@
+tenant_id,warehouse_id,rating,leased,area,length,breadth,height,rental_price,facilities,tenant_lat,tenant_long,warehouse_lat,warehouse_long
+5,7,5,1,9900.00,110.00,90.00,40.00,8900.00,"Racking Systems,Restrooms and break areas",0.0,0.0,0.0,0.0
+5,11,5,1,800.00,40.00,20.00,200.00,8000.00,"Security personnel,Restrooms and break areas,Office spaces",0.0,0.0,0.0,0.0
+4,10,5,1,425.00,25.00,17.00,12.00,48878.00,"Loading Docks,Restrooms and break areas,Office spaces",9.526009,76.814419,9.527345,76.822888
+4,9,5,1,192.00,16.00,12.00,10.00,6000.00,"Racking Systems,Restrooms and break areas,Office spaces",9.526009,76.814419,0.0,0.0
+4,11,5,1,800.00,40.00,20.00,200.00,8000.00,"Security personnel,Restrooms and break areas,Office spaces",9.526009,76.814419,0.0,0.0
+4,11,5,1,800.00,40.00,20.00,200.00,8000.00,"Security personnel,Restrooms and break areas,Office spaces",9.526009,76.814419,0.0,0.0
+4,10,5,1,425.00,25.00,17.00,12.00,48878.00,"Loading Docks,Restrooms and break areas,Office spaces",9.526009,76.814419,9.527345,76.822888
+4,9,5,1,192.00,16.00,12.00,10.00,6000.00,"Racking Systems,Restrooms and break areas,Office spaces",9.526009,76.814419,0.0,0.0

@@ -405,7 +405,7 @@ def view_warehouse(request, warehouse_id):
 @login_required(login_url='login')
 def warehouse_list(request):
     warehouses = Warehouse.objects.prefetch_related('photos').all()
-    
+    print(request.user)
     sort = request.GET.get('sort', 'default')
     current_sort = 'Default Order'
 

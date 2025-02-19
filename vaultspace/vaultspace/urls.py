@@ -21,6 +21,7 @@ from warehouse import views as warehouse_view
 from moderator import views as moderator_view
 from inventory import views as inventory_view
 from map import views as map_view
+from map import views as map_view
 from django.contrib.auth import views as auth
 from django.conf.urls.static import static
 from django.conf import settings
@@ -77,7 +78,7 @@ urlpatterns = [
 
     path('inventory/', include('inventory.urls')),
 
- 
+    # path('add_warehouse_test/', map_view.add_warehouse_test, name='add_warehouse_test'),
     path('map/', include('map.urls')),
     
 ]
