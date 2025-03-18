@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse 3D View</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 100;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        #info:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        #info h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        #legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #333;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+            min-width: 240px;
+            max-width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        #legend:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .legend-title {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+
+        .legend-section {
+            margin-bottom: 20px;
+            background: rgba(249, 249, 249, 0.7);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .legend-section-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 0 0 12px 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 6px;
+        }
+
+        #legend::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #legend::-webkit-scrollbar-track {
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        #legend::-webkit-scrollbar-thumb {
+            background: #95a5a6;
+            border-radius: 4px;
+        }
+
+        #legend::-webkit-scrollbar-thumb:hover {
+            background: #7f8c8d;
+        }
+
+        .legend-subsection {
+            margin-left: 10px;
+            margin-bottom: 15px;
+            padding: 8px 8px 8px 12px;
+            border-left: 3px solid #ecf0f1;
+            background: rgba(236, 240, 241, 0.5);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .legend-item-details {
+            margin-left: 32px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .legend-item-stats {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #bdc3c7;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #16a085;
+        }
+
+        .zone-receiving {
+            background-color: rgba(46, 204, 113, 0.2);
+            border-left-color: #2ecc71;
+        }
+
+        .zone-storage {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-left-color: #3498db;
+        }
+
+        .zone-picking {
+            background-color: rgba(231, 76, 60, 0.2);
+            border-left-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>Warehouse 3D View</h3>
+        <p>Controls: Left click + drag to rotate, Right click + drag to pan, Scroll to zoom</p>
+    </div>
+
+    <div id="legend">
+        <div class="legend-title">Warehouse Information</div>
+        
+        <div class="legend-section">
+            <div class="legend-section-title">Warehouse Dimensions</div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #3498db;"></div>
+                <span>Length: {{ warehouse.length|default:20 }} feet</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #2ecc71;"></div>
+                <span>Width: {{ warehouse.breadth|default:15 }} feet</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #e74c3c;"></div>
+                <span>Height: {{ warehouse.height|default:10 }} feet</span>
+            </div>
+            <div class="legend-item">
+                <span>Total Area: <span id="total-area" class="stat-value">0</span> sq ft</span>
+            </div>
+        </div>
+
+        <div class="legend-section">
+            <div class="legend-section-title">Zone Information</div>
+            {% for zone in warehouse.zones.all %}
+            <div class="legend-subsection {% if zone.zone_type == 'RECEIVING' %}zone-receiving{% elif zone.zone_type == 'STORAGE' %}zone-storage{% else %}zone-picking{% endif %}">
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: {% if zone.zone_type == 'RECEIVING' %}#2ecc71{% elif zone.zone_type == 'STORAGE' %}#3498db{% else %}#e74c3c{% endif %}; opacity: 0.8;"></div>
+                    <span><strong>{{ zone.name }}</strong> ({{ zone.zone_type }})</span>
+                </div>
+                <div class="legend-item-details">
+                    <span>Dimensions: {{ zone.length }}x{{ zone.breadth }}x{{ zone.height }} feet</span><br>
+                    <span>Total Locations: {{ zone.locations.count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="legend-section">
+            <div class="legend-section-title">Warehouse Structure</div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #e0e0e0;"></div>
+                <span>Walls</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #1a1a1a;"></div>
+                <span>Floor/Ceiling</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #88ccff; opacity: 0.6;"></div>
+                <span>Windows</span>
+            </div>
+        </div>
+
+        <div class="legend-section">
+            <div class="legend-section-title">Zone Types</div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #2ecc71; opacity: 0.8;"></div>
+                <span>Receiving Area - For incoming goods</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #3498db; opacity: 0.8;"></div>
+                <span>Storage Area - Main storage space</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #e74c3c; opacity: 0.8;"></div>
+                <span>Picking Area - Order fulfillment</span>
+            </div>
+        </div>
+
+        <div class="legend-section">
+            <div class="legend-section-title">Storage Locations</div>
+            <div class="legend-item">
+                <div class="color-box" style="background-color: #ecf0f1; opacity: 0.8;"></div>
+                <span>Empty Location - Available for storage</span>
+            </div>
+        </div>
+
+        <div class="legend-section">
+            <div class="legend-section-title">Items by Category</div>
+            <div id="item-legend">
+                <!-- Item colors will be added dynamically -->
+            </div>
+            <div class="legend-item-stats">
+                <span>Total Items: <span id="total-items" class="stat-value">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Scene Setup
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);  // Light gray background
+            
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            // Add OrbitControls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Enhanced Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Add point lights at corners
+            const pointLights = [];
+            const pointLightPositions = [
+                { x: -1, y: 0.8, z: -1 },
+                { x: 1, y: 0.8, z: -1 },
+                { x: -1, y: 0.8, z: 1 },
+                { x: 1, y: 0.8, z: 1 }
+            ];
+
+            pointLightPositions.forEach(pos => {
+                const pointLight = new THREE.PointLight(0xffffff, 0.5);
+                pointLight.position.set(pos.x, pos.y, pos.z);
+                scene.add(pointLight);
+                pointLights.push(pointLight);
+            });
+
+            // Warehouse Data (from Django template context)
+            const warehouseData = {
+                id: {{ warehouse.id|default:0 }},
+                name: "{{ warehouse.name|default:'Warehouse' }}",
+                length: {{ warehouse.length|default:20 }},
+                width: {{ warehouse.breadth|default:15 }},
+                height: {{ warehouse.height|default:10 }},
+                zones: [
+                    {% for zone in warehouse.zones.all %}
+                    {
+                        name: "{{ zone.name }}",
+                        type: "{{ zone.zone_type }}",
+                        length: {{ zone.length|default:5 }},
+                        width: {{ zone.breadth|default:5 }},
+                        height: {{ zone.height|default:3 }},
+                        locations: [
+                            {% for location in zone.locations.all %}
+                            {
+                                length: {{ location.length }},
+                                width: {{ location.width }},
+                                height: {{ location.height }},
+                                item: {% if location.item %}
+                                    {
+                                        name: "{{ location.item.name }}",
+                                        count: {{ location.item_count }}
+                                    }
+                                {% else %}
+                                    null
+                                {% endif %}
+                            }{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        ]
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            };
+
+            // Create Warehouse Structure
+            function createWarehouse(data) {
+                const wallThickness = 0.2;
+                const group = new THREE.Group();
+
+                // Floor
+                const floorGeometry = new THREE.BoxGeometry(data.length, wallThickness, data.width);
+                const floorMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x1a1a1a, // Dark grey, almost black
+                    roughness: 0.8,
+                    metalness: 0.4
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.position.y = -wallThickness/2;
+                floor.receiveShadow = true;
+                group.add(floor);
+
+                // Ceiling
+                const ceiling = floor.clone();
+                ceiling.position.y = data.height + wallThickness/2;
+                ceiling.receiveShadow = true;
+                group.add(ceiling);
+
+                // Walls
+                const wallMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xe0e0e0,
+                    roughness: 0.7,
+                    metalness: 0.3,
+                    side: THREE.DoubleSide
+                });
+
+                // Front Wall
+                const frontWallGeometry = new THREE.BoxGeometry(data.length, data.height, wallThickness);
+                const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+                frontWall.position.set(0, data.height/2, -data.width/2);
+                frontWall.castShadow = true;
+                frontWall.receiveShadow = true;
+                group.add(frontWall);
+
+                // Back Wall
+                const backWall = frontWall.clone();
+                backWall.position.z = data.width/2;
+                group.add(backWall);
+
+                // Left Wall
+                const leftWallGeometry = new THREE.BoxGeometry(wallThickness, data.height, data.width);
+                const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+                leftWall.position.set(-data.length/2, data.height/2, 0);
+                leftWall.castShadow = true;
+                leftWall.receiveShadow = true;
+                group.add(leftWall);
+
+                // Right Wall
+                const rightWall = leftWall.clone();
+                rightWall.position.x = data.length/2;
+                group.add(rightWall);
+
+                // Add windows to front wall
+                const windowMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x88ccff,
+                    transparent: true,
+                    opacity: 0.6
+                });
+
+                const windowWidth = 2;
+                const windowHeight = 1.5;
+                const windowGeometry = new THREE.BoxGeometry(windowWidth, windowHeight, 0.1);
+                
+                // Add multiple windows
+                const numWindows = Math.floor(data.length / 4);
+                for(let i = 0; i < numWindows; i++) {
+                    const window = new THREE.Mesh(windowGeometry, windowMaterial);
+                    window.position.set(
+                        -data.length/2 + (i + 1) * (data.length/(numWindows + 1)),
+                        data.height * 0.7,
+                        -data.width/2
+                    );
+                    group.add(window);
+                }
+
+                return group;
+            }
+
+            // Create and add warehouse structure
+            const warehouseStructure = createWarehouse(warehouseData);
+            scene.add(warehouseStructure);
+
+            // Zone colors based on type - updated to more modern colors
+            const zoneColors = {
+                'RECEIVING': 0x2ecc71,  // Green - Emerald
+                'STORAGE': 0x3498db,    // Blue - Peter River
+                'PICKING': 0xe74c3c     // Red - Alizarin
+            };
+
+            // Color palette for items - modern flat colors
+            const itemColors = {
+                // Basic materials
+                'Wood': 0xd35400,       // Pumpkin
+                'Metal': 0x7f8c8d,      // Asbestos
+                'Plastic': 0x3498db,    // Peter River
+                'Glass': 0xecf0f1,      // Clouds
+                'Paper': 0xf5f5f5,      // White Smoke
+                
+                // Electronics
+                'Electronics': 0x2c3e50, // Midnight Blue
+                'Computers': 0x2980b9,   // Belize Hole
+                'Phones': 0x3498db,      // Peter River
+                
+                // Furniture
+                'Furniture': 0x8e44ad,   // Wisteria
+                'Chairs': 0x9b59b6,      // Amethyst
+                'Tables': 0x8e44ad,      // Wisteria
+                
+                // Clothing
+                'Clothing': 0xe84393,    // Ripe Pink
+                'Shoes': 0xfd79a8,       // Pico Pink
+                'Accessories': 0xfd79a8, // Pico Pink
+                
+                // Food & Beverages
+                'Food': 0x27ae60,        // Nephritis
+                'Beverages': 0x2ecc71,   // Emerald
+                'Snacks': 0x2ecc71,      // Emerald
+                
+                // Default color for unknown items
+                'default': 0xf39c12      // Orange
+            };
+
+            // Function to get color for an item
+            function getItemColor(itemName) {
+                // Convert itemName to lowercase and try to match with color keys
+                const normalizedName = itemName.toLowerCase();
+                for (const [category, color] of Object.entries(itemColors)) {
+                    if (normalizedName.includes(category.toLowerCase())) {
+                        return color;
+                    }
+                }
+                return itemColors.default;
+            }
+
+            // Function to update legend with actual items
+            function updateItemLegend(items) {
+                const itemLegend = document.getElementById('item-legend');
+                const addedItems = new Set();
+
+                items.forEach(item => {
+                    if (!addedItems.has(item.name)) {
+                        const color = getItemColor(item.name);
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'legend-item';
+                        legendItem.innerHTML = `
+                            <div class="color-box" style="background-color: #${color.toString(16)}; opacity: 0.8;"></div>
+                            <span>${item.name}</span>
+                        `;
+                        itemLegend.appendChild(legendItem);
+                        addedItems.add(item.name);
+                    }
+                });
+            }
+
+            // Collect all items for the legend
+            const allItems = [];
+            if (warehouseData.zones) {
+                warehouseData.zones.forEach(zone => {
+                    if (zone.locations) {
+                        zone.locations.forEach(location => {
+                            if (location.item) {
+                                allItems.push(location.item);
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Update the legend with actual items
+            updateItemLegend(allItems);
+
+            // Create Zones with proper positioning
+            if (warehouseData.zones && warehouseData.zones.length > 0) {
+                const zoneSpacing = 0.5;
+                let currentX = -warehouseData.length/2 + zoneSpacing;
+
+                warehouseData.zones.forEach((zone, index) => {
+                    // Create zone box
+                    const zoneGeometry = new THREE.BoxGeometry(
+                        zone.length,
+                        zone.height,
+                        zone.width
+                    );
+                    const zoneMaterial = new THREE.MeshPhongMaterial({
+                        color: zoneColors[zone.type] || 0x808080,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+                    const zoneMesh = new THREE.Mesh(zoneGeometry, zoneMaterial);
+                    
+                    zoneMesh.position.set(
+                        currentX + zone.length/2,
+                        zone.height/2,
+                        0
+                    );
+                    zoneMesh.castShadow = true;
+                    zoneMesh.receiveShadow = true;
+                    scene.add(zoneMesh);
+
+                    // Add zone label
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = 256;
+                    canvas.height = 128;
+                    context.font = 'Bold 40px Arial';
+                    context.fillStyle = 'white';
+                    context.textAlign = 'center';
+                    context.fillText(zone.name, 128, 64);
+
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const labelMaterial = new THREE.SpriteMaterial({ map: texture });
+                    const label = new THREE.Sprite(labelMaterial);
+                    label.position.set(
+                        zoneMesh.position.x,
+                        zone.height + 1,
+                        zoneMesh.position.z
+                    );
+                    label.scale.set(5, 2.5, 1);
+                    scene.add(label);
+
+                    // Create locations within zone
+                    if (zone.locations) {
+                        // Distribute locations more evenly
+                        const locationRows = Math.ceil(Math.sqrt(zone.locations.length));
+                        const locationCols = Math.ceil(zone.locations.length / locationRows);
+                        const spacing = 0.2;
+
+                        zone.locations.forEach((location, locIndex) => {
+                            const locationGeometry = new THREE.BoxGeometry(
+                                location.length,
+                                location.height,
+                                location.width
+                            );
+                            
+                            // Use specific color for item if present
+                            const locationColor = location.item ? getItemColor(location.item.name) : 0xecf0f1; // Changed empty location color
+                            const locationMaterial = new THREE.MeshPhongMaterial({
+                                color: locationColor,
+                                transparent: true,
+                                opacity: location.item ? 0.8 : 0.4,
+                                // Add shininess for better appearance
+                                shininess: location.item ? 30 : 10
+                            });
+
+                            const locationMesh = new THREE.Mesh(locationGeometry, locationMaterial);
+                            
+                            // Calculate grid position
+                            const row = Math.floor(locIndex / locationCols);
+                            const col = locIndex % locationCols;
+                            
+                            // Position based on grid layout
+                            const gridWidth = (zone.width - spacing * (locationCols + 1)) / locationCols;
+                            const gridLength = (zone.length - spacing * (locationRows + 1)) / locationRows;
+                            
+                            const locX = zoneMesh.position.x - zone.length/2 + spacing + col * (gridWidth + spacing) + gridWidth/2;
+                            const locY = location.height/2;
+                            const locZ = zoneMesh.position.z - zone.width/2 + spacing + row * (gridLength + spacing) + gridLength/2;
+                            
+                            locationMesh.position.set(locX, locY, locZ);
+                            locationMesh.castShadow = true;
+                            locationMesh.receiveShadow = true;
+                            scene.add(locationMesh);
+
+                            if (location.item) {
+                                // Add item label
+                                const itemCanvas = document.createElement('canvas');
+                                const itemContext = itemCanvas.getContext('2d');
+                                itemCanvas.width = 256;
+                                itemCanvas.height = 128;
+                                itemContext.font = 'bold 24px Arial';
+                                itemContext.fillStyle = 'black';
+                                itemContext.textAlign = 'center';
+                                itemContext.fillText(`${location.item.name}`, 128, 50);
+                                itemContext.font = '20px Arial';
+                                itemContext.fillText(`Qty: ${location.item.count}`, 128, 80);
+
+                                const itemTexture = new THREE.CanvasTexture(itemCanvas);
+                                const itemLabelMaterial = new THREE.SpriteMaterial({ map: itemTexture });
+                                const itemLabel = new THREE.Sprite(itemLabelMaterial);
+                                itemLabel.position.set(
+                                    locationMesh.position.x,
+                                    locationMesh.position.y + location.height/2 + 0.5,
+                                    locationMesh.position.z
+                                );
+                                itemLabel.scale.set(2.5, 1.25, 1);
+                                scene.add(itemLabel);
+                            }
+                        });
+                    }
+
+                    currentX += zone.length + zoneSpacing;
+                });
+            }
+
+            // Camera Positioning
+            camera.position.set(
+                warehouseData.length * 1.5,
+                warehouseData.height * 2,
+                warehouseData.width * 1.5
+            );
+            camera.lookAt(0, 0, 0);
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+
+                // Update point light positions relative to camera
+                pointLights.forEach((light, index) => {
+                    const angle = (Date.now() * 0.001 + index * Math.PI/2) % (Math.PI * 2);
+                    light.position.x = Math.cos(angle) * warehouseData.length/2;
+                    light.position.z = Math.sin(angle) * warehouseData.width/2;
+                });
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Update item statistics in legend
+            function updateItemStats(items) {
+                const categories = new Set();
+                let totalItems = 0;
+
+                items.forEach(item => {
+                    totalItems += item.count || 1;
+                    // Determine category based on item name
+                    for (const category of Object.keys(itemColors)) {
+                        if (item.name.toLowerCase().includes(category.toLowerCase())) {
+                            categories.add(category);
+                            break;
+                        }
+                    }
+                });
+
+                document.getElementById('total-items').textContent = totalItems;
+            }
+
+            // Call updateItemStats after collecting items
+            updateItemStats(allItems);
+
+            // Calculate warehouse metrics
+            function updateWarehouseMetrics() {
+                const length = {{ warehouse.length|default:20 }};
+                const width = {{ warehouse.breadth|default:15 }};
+                
+                // Calculate total area
+                const totalArea = length * width;
+                document.getElementById('total-area').textContent = totalArea.toLocaleString();
+            }
+
+            // Call the function to update metrics
+            updateWarehouseMetrics();
+        });
+    </script>
+</body>
+</html>

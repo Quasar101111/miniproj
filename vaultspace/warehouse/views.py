@@ -26,9 +26,20 @@ from django.db.models.functions import TruncMonth
 
 from django.http import JsonResponse
 
-
+import os
 import json
 from decimal import Decimal
+
+from blockchain.service import BlockchainService
+from web3 import Web3
+
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from ai.service import GeminiService
+import uuid
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
 
 @login_required
 def add_warehouse(request):
@@ -51,7 +62,28 @@ def add_warehouse(request):
         length = request.POST.get('length')
         breadth = request.POST.get('breadth')
         height = request.POST.get('height')
-        # 
+        
+        # Check for files uploaded via chat
+        chat_uploaded_files = request.session.get('uploaded_files', {})
+        
+        # Get ownership document from chat uploads if not provided in form
+        if not ownership_document and 'ownership_document' in chat_uploaded_files:
+            # Get the saved path
+            doc_path = chat_uploaded_files['ownership_document']
+            # Create a file object from the saved file
+            ownership_document = default_storage.open(doc_path)
+            print(f"Using ownership document uploaded via chat: {doc_path}")
+        
+        # Get images from chat uploads and combine with form uploads
+        chat_images = []
+        if 'images' in chat_uploaded_files and chat_uploaded_files['images']:
+            for img_path in chat_uploaded_files['images']:
+                chat_images.append(default_storage.open(img_path))
+                print(f"Using image uploaded via chat: {img_path}")
+        
+        # Combine images from both sources
+        all_images = list(images) + chat_images
+        
         print("Latitude:", latitude)
         print("Longitude:", longitude)
 
@@ -80,9 +112,62 @@ def add_warehouse(request):
                     longitude=longitude
                 )
 
+                # Store in blockchain
+                try:
+                    service = BlockchainService()
+                    location_string = f"{latitude},{longitude}"
+                    
+                    # Get current gas price and nonce
+                    current_gas_price = service.w3.eth.gas_price
+                    if current_gas_price == 0:
+                        raise ValueError("Invalid gas price received from network")
+                    
+                    wallet_address = os.getenv('WALLET_ADDRESS')
+                    nonce = service.w3.eth.get_transaction_count(wallet_address)
+
+                    # Build transaction with proper gas parameters
+                    tx = service.contract.functions.addWarehouse(
+                        str(warehouse.warehouse_id),
+                        location_string,
+                        int(float(area)),
+                        int(float(rental_price))
+                    ).build_transaction({
+                        'chainId': 11155111,  # Sepolia chain ID
+                        'from': wallet_address,
+                        'nonce': nonce,
+                        'gas': 2000000,  # Fixed gas limit
+                        'maxFeePerGas': int(current_gas_price * 2),
+                        'maxPriorityFeePerGas': int(current_gas_price * 1.5),
+                    })
+
+                    # Sign and send transaction
+                    signed_tx = service.w3.eth.account.sign_transaction(
+                        tx, 
+                        private_key=os.getenv('PRIVATE_KEY')
+                    )
+                    tx_hash = service.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+                    
+                    # Wait for receipt with longer timeout
+                    receipt = service.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+                    warehouse.blockchain_tx = tx_hash.hex()
+                    warehouse.save()
+                    
+                    if receipt.status != 1:
+                        messages.warning(request, 'Warehouse saved but blockchain storage failed')
+                    else:
+                        messages.success(request, 'Warehouse saved successfully including blockchain storage')
+                    
+                except Exception as e:
+                    messages.warning(request, f'Warehouse saved but blockchain storage failed: {str(e)}')
+
                 # Save warehouse photos
-                for image in images:
+                for image in all_images:
                     WarehousePhoto.objects.create(warehouse=warehouse, image=image)
+
+                # Clear the uploaded files from the session
+                if 'uploaded_files' in request.session:
+                    del request.session['uploaded_files']
+                    request.session.modified = True
 
                 return redirect('lessor_index')
             except Exception as e:
@@ -476,3 +561,313 @@ def trending_warehouses(request):
             for wh in trending
         ]
     })
+
+def manage_availability(request):
+    if request.method == "POST":
+        form = WarehouseAvailabilityForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('warehouse_availability')
+    else:
+        form = WarehouseAvailabilityForm()
+    
+    availabilities = WarehouseAvailability.objects.all()
+    return render(request, 'warehouse_availability.html', {'form': form, 'availabilities': availabilities})
+
+@login_required
+def tenant_availability_calendar(request):
+    # Fetch all warehouses and their availability/lease data
+    warehouses = Warehouse.objects.all()
+    return render(request, 'warehouse/tenant_availability_calendar.html', {'warehouses': warehouses})
+
+
+@login_required
+def tenant_availability_api(request):
+    # Fetch all warehouses
+    warehouses = Warehouse.objects.all()
+    events = []
+
+    # Add warehouse availability events
+    for warehouse in warehouses:
+        # Get all leases for this warehouse
+        warehouse_leases = leases.filter(warehouse=warehouse).order_by('lease_start_date')
+
+        # Initialize availability start date (e.g., today or a fixed date)
+        availability_start = timezone.now().date()
+
+        # Iterate through leases to calculate availability periods
+        for lease in warehouse_leases:
+            # If the lease starts after the current availability period, there's a gap
+            if lease.lease_start_date > availability_start:
+                events.append({
+                    "title": f"{warehouse.name} - Available",
+                    "start": str(availability_start),
+                    "end": str(lease.lease_start_date - timedelta(days=1)),  # End before lease starts
+                    "backgroundColor": "#4CAF50"  # Green for available
+                })
+
+            # Update the availability start date to after the lease ends
+            availability_start = lease.lease_end_date + timedelta(days=1)
+
+        # Add the final availability period (after the last lease)
+        events.append({
+            "title": f"{warehouse.warehouse_id} - Available",
+            "start": str(availability_start),
+            "end": str(availability_start + timedelta(days=365)),  # Arbitrary end date (e.g., 1 year later)
+            "backgroundColor": "#4CAF50"  # Green for available
+        })
+
+    # Add lease events
+    for lease in leases:
+        events.append({
+            "title": f"{lease.warehouse.warehouse_id} - Leased to {lease.tenant.tenant_name}",
+            "start": str(lease.lease_start_date),
+            "end": str(lease.lease_end_date),
+            "backgroundColor": "#ff4d4d"  # Red for leased
+        })
+
+    # Print the events data for debugging
+    print("Events data being passed to the calendar:", events)
+
+    return JsonResponse(events, safe=False)
+
+
+
+@require_POST
+def process_warehouse_chat(request):
+    """Process warehouse chat messages and extract warehouse details."""
+    try:
+        message = request.POST.get('message', '')
+        print(f"Received message: '{message}'")
+        
+        if not message:
+            return JsonResponse({
+                'message': 'Please type a message about your warehouse.',
+                'data': None,
+                'type': 'error'
+            })
+        
+        # Initialize the Gemini service
+        gemini_service = GeminiService()
+        
+        # Process the message and get response
+        result = gemini_service.parse_warehouse_details(message)
+        print(f"AI service result: {result}")
+        
+        # Check if the result is a dictionary containing a message (error case)
+        if isinstance(result, dict) and 'message' in result:
+            return JsonResponse({
+                'message': result['message'],
+                'data': None,
+                'type': 'error'
+            })
+        
+        # Normal case - we have warehouse details
+        if isinstance(result, dict):
+            # Clean up the data to ensure proper types
+            if result.get('length'):
+                result['length'] = float(result['length']) if result['length'] is not None else None
+            if result.get('breadth'):
+                result['breadth'] = float(result['breadth']) if result['breadth'] is not None else None
+            if result.get('height'):
+                result['height'] = float(result['height']) if result['height'] is not None else None
+            if result.get('rental_price'):
+                # Remove currency symbol and convert to number
+                if isinstance(result['rental_price'], str):
+                    price_str = result['rental_price'].replace('₹', '').replace(',', '')
+                    result['rental_price'] = float(price_str)
+            
+            # Fix landmarks/landmark field
+            if result.get('landmarks') and not result.get('landmark'):
+                result['landmark'] = result.pop('landmarks')
+            
+            # Construct a nice response message
+            response_parts = []
+            
+            # Create a more natural response when the user provides information
+            if result.get('length') or result.get('breadth') or result.get('height'):
+                dimensions = []
+                if result.get('length'):
+                    dimensions.append(f"{result['length']} feet long")
+                if result.get('breadth'):
+                    dimensions.append(f"{result['breadth']} feet wide")
+                if result.get('height'):
+                    dimensions.append(f"{result['height']} feet high")
+                
+                if len(dimensions) == 1:
+                    response_parts.append(f"I see your warehouse is {dimensions[0]}.")
+                elif len(dimensions) == 2:
+                    response_parts.append(f"I see your warehouse is {dimensions[0]} and {dimensions[1]}.")
+                else:
+                    response_parts.append(f"I see your warehouse is {', '.join(dimensions[:-1])}, and {dimensions[-1]}.")
+            
+            if result.get('landmark'):
+                response_parts.append(f"It's located near {result['landmark']}.")
+            
+            if result.get('rental_price'):
+                response_parts.append(f"You're offering it for rent at ₹{result['rental_price']} per month.")
+            
+            if result.get('facilities') and len(result['facilities']) > 0:
+                if len(result['facilities']) == 1:
+                    response_parts.append(f"It has {result['facilities'][0]}.")
+                elif len(result['facilities']) == 2:
+                    response_parts.append(f"It has {result['facilities'][0]} and {result['facilities'][1]}.")
+                else:
+                    response_parts.append(f"It has {', '.join(result['facilities'][:-1])}, and {result['facilities'][-1]}.")
+            
+            response_message = " ".join(response_parts)
+            
+            # If we have details to confirm
+            if response_parts:
+                response_message += " I've updated your form with these details."
+                
+                # Add contextual follow-up questions based on missing fields
+                follow_ups = []
+                if (result.get('length') is None or result.get('breadth') is None or result.get('height') is None):
+                    missing_dimensions = []
+                    if result.get('length') is None:
+                        missing_dimensions.append("length")
+                    if result.get('breadth') is None:
+                        missing_dimensions.append("width")
+                    if result.get('height') is None:
+                        missing_dimensions.append("height")
+                    
+                    if missing_dimensions:
+                        dimension_text = " and ".join(missing_dimensions)
+                        follow_ups.append(f"Could you also tell me the {dimension_text} of your warehouse?")
+                
+                if result.get('landmark') is None:
+                    follow_ups.append("Where is your warehouse located?")
+                
+                if result.get('rental_price') is None:
+                    follow_ups.append("How much are you planning to rent it for?")
+                
+                if not result.get('facilities') or len(result['facilities']) == 0:
+                    follow_ups.append("What facilities does your warehouse offer?")
+                
+                # Add a maximum of 2 follow-up questions to keep it conversational
+                if follow_ups:
+                    if len(follow_ups) == 1:
+                        response_message += f" {follow_ups[0]}"
+                    else:
+                        response_message += f" {follow_ups[0]} {follow_ups[1]}"
+            else:
+                # If we couldn't extract any details
+                response_message = "I'd like to help you with your warehouse details. Could you tell me more about it? For example, you could describe its size, location, facilities, or rental price."
+            
+            # Return the formatted response
+            print(f"Returning processed data: {result}")
+            return JsonResponse({
+                'message': response_message,
+                'data': result,
+                'type': 'warehouse_details'
+            })
+        
+        # Fallback response if no valid result
+        return JsonResponse({
+            'message': "I'm having trouble understanding that. Could you try describing your warehouse in a different way? For example, you could tell me about its size, location, or what facilities it has.",
+            'data': None,
+            'type': 'error'
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error processing warehouse chat: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'message': "I'm having a bit of trouble processing that. Could you try breaking it down into smaller pieces? For example, you could start by telling me about the warehouse's size, then its location, and finally what facilities it offers.",
+            'data': None,
+            'type': 'error'
+        })
+
+@require_POST
+def process_warehouse_files(request):
+    """Process file uploads from the warehouse chat interface."""
+    try:
+        files = request.FILES.getlist('files[]')
+        print(f"Received {len(files)} files")
+        
+        if not files:
+            return JsonResponse({
+                'message': 'No files were uploaded.',
+                'files': []
+            })
+        
+        processed_files = []
+        
+        for file in files:
+            original_name = file.name
+            file_extension = os.path.splitext(original_name)[1].lower()
+            
+            # Generate a unique filename
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            
+            # Determine file type based on extension
+            file_type = 'image' if file_extension in ['.jpg', '.jpeg', '.png'] else 'ownership_document'
+            
+            # Determine the appropriate path
+            if file_type == 'image':
+                path = f'warehouse_photos/{unique_filename}'
+            else:
+                path = f'ownership_documents/{unique_filename}'
+            
+            # Save the file to the appropriate location
+            saved_path = default_storage.save(path, ContentFile(file.read()))
+            
+            # Add to processed files
+            processed_files.append({
+                'name': original_name,
+                'saved_as': saved_path,
+                'type': file_type,
+                'size': file.size
+            })
+            
+            print(f"Saved file {original_name} as {saved_path}")
+        
+        # Create a descriptive message
+        image_count = sum(1 for f in processed_files if f['type'] == 'image')
+        doc_count = sum(1 for f in processed_files if f['type'] == 'ownership_document')
+        
+        message_parts = []
+        
+        if image_count > 0:
+            message_parts.append(f"{image_count} warehouse image{'s' if image_count > 1 else ''}")
+        
+        if doc_count > 0:
+            message_parts.append(f"{doc_count} ownership document{'s' if doc_count > 1 else ''}")
+        
+        message = f"I've received {' and '.join(message_parts)}. "
+        
+        if image_count > 0:
+            message += "The images will be used for your warehouse listing. "
+        
+        if doc_count > 0:
+            message += "The ownership document will be used to verify your ownership of the warehouse."
+        
+        # Store the file paths in the session to access them when the form is submitted
+        if 'uploaded_files' not in request.session:
+            request.session['uploaded_files'] = {}
+        
+        for file in processed_files:
+            if file['type'] == 'image':
+                if 'images' not in request.session['uploaded_files']:
+                    request.session['uploaded_files']['images'] = []
+                request.session['uploaded_files']['images'].append(file['saved_as'])
+            else:
+                request.session['uploaded_files']['ownership_document'] = file['saved_as']
+        
+        request.session.modified = True
+        
+        return JsonResponse({
+            'message': message,
+            'files': processed_files
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error processing file uploads: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'message': f"There was an error processing your files: {str(e)}",
+            'files': []
+        }, status=500)

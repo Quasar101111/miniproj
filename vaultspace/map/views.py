@@ -227,36 +227,97 @@ def select_location(request):
 #test implementation of blockchain
 
 from django.http import JsonResponse
-from .blockchain import add_warehouse
+# from .blockchain import add_warehouse
 
 
-def add_warehouse_view(request):
-    if request.method == 'POST':
-        # try:
-            # Convert capacity to integer
-            capacity = int(request.POST['capacity'])
+# def add_warehouse_view(request):
+#     if request.method == 'POST':
+#         # try:
+#             # Convert capacity to integer
+#             capacity = int(request.POST['capacity'])
             
-            txn_hash = add_warehouse({
-                'name': request.POST['name'],
-                'location': request.POST['location'],
-                'capacity': capacity,
-                'facilities': request.POST['facilities']
-            })
+#             txn_hash = add_warehouse({
+#                 'name': request.POST['name'],
+#                 'location': request.POST['location'],
+#                 'capacity': capacity,
+#                 'facilities': request.POST['facilities']
+#             })
             
-            return render(request, 'map/success.html', {
-                'txn_hash': txn_hash.hex(),
-                'name': request.POST['name'],
-                'location': request.POST['location'],
-                'capacity': capacity,
-                'facilities': request.POST['facilities']
-            })
+#             return render(request, 'map/success.html', {
+#                 'txn_hash': txn_hash.hex(),
+#                 'name': request.POST['name'],
+#                 'location': request.POST['location'],
+#                 'capacity': capacity,
+#                 'facilities': request.POST['facilities']
+#             })
             
-        # except ValueError:
-        #     return render(request, 'map/error.html', {
-        #         'error': 'Invalid capacity value - must be a number'
-        #     })
-        # except Exception as e:
-        #     return render(request, 'map/error.html', {
-        #         'error': str(e)
-        #     })
-    return render(request, 'map/add_warehouse_test.html')
+#         # except ValueError:
+#         #     return render(request, 'map/error.html', {
+#         #         'error': 'Invalid capacity value - must be a number'
+#         #     })
+#         # except Exception as e:
+#         #     return render(request, 'map/error.html', {
+#         #         'error': str(e)
+#         #     })
+#     return render(request, 'map/add_warehouse_test.html')
+
+
+
+from .services import get_recommendations
+
+from asgiref.sync import sync_to_async
+from users.models import Tenant
+from map.models import Map
+
+from warehouse.models import Warehouse
+
+from django.db import DatabaseError
+
+# Database operations as separate sync functions
+def get_tenant_sync():
+    return Tenant.objects.get(email='agustine02343zxxx@gmail.com')
+
+def get_warehouse_maps_sync():
+    return list(
+        Map.objects.filter(warehouse__status=1)
+        .select_related('warehouse')
+        .order_by('?')[:5]
+    )
+
+async def recommend_warehouse(request):
+    try:
+        # 1. Get tenant (async-wrapped)
+        tenant = await sync_to_async(get_tenant_sync, thread_sensitive=True)()
+        
+        # 2. Get warehouse maps (async-wrapped)
+        warehouse_maps = await sync_to_async(get_warehouse_maps_sync, thread_sensitive=True)()
+        
+        # 3. Prepare recommendations
+        recommendations = [
+            {
+                "warehouse_id": m.warehouse.warehouse_id,
+                "name": m.warehouse.name,
+                "location": m.warehouse.location,
+                "rental_price": float(m.warehouse.rental_price),
+                "area": float(m.warehouse.area),
+                "status": m.warehouse.status,
+                "similarity_score": 0.95 - (i * 0.05),
+                "ranking": i + 1,
+                "lat": float(m.latitude),
+                "lng": float(m.longitude)
+            } for i, m in enumerate(warehouse_maps)
+        ]
+
+        # 4. Return sync-wrapped render
+        return await sync_to_async(render, thread_sensitive=True)(
+            request,
+            'map/recommend_warehouse.html',
+            {'recommendations': recommendations}
+        )
+
+    except Tenant.DoesNotExist:
+        return HttpResponseBadRequest("Tenant not found")
+    except DatabaseError as e:
+        return HttpResponseBadRequest(f"Database error: {str(e)}")
+    except Exception as e:
+        return HttpResponseBadRequest(f"Unexpected error: {str(e)}")

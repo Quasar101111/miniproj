@@ -252,8 +252,8 @@
                       </div>
                       <a href="{% url 'warehouse_detail' warehouse.warehouse_id %}" class="card-body-link"> 
                       <div class="card-body">
-                          <h5 class="card-title"> Warehouse in {{ warehouse.location.city }} </h5>
-                          <p class="card-text"> {{ warehouse.location.city }}, {{ warehouse.location.state }}</p>
+                          {% comment %} <h5 class="card-title"> Warehouse in {{ warehouse.location.city }} </h5>
+                          <p class="card-text"> {{ warehouse.location.city }}, {{ warehouse.location.state }}</p> {% endcomment %}
                           <p class="card-text"><strong>Rs. {{ warehouse.rental_price }}</strong> / month</p>
                           <div class="d-flex justify-content-between">
                               <span><i class="fas fa-warehouse"></i> {{ warehouse.area }} sq ft</span>

@@ -65,6 +65,8 @@ from django.core.files.base import ContentFile
 from PIL import Image, PngImagePlugin 
 import numpy as np 
 import hashlib
+import traceback
+from blockchain.service import BlockchainService  # Add this import
 
 #################### index####################################### 
 @login_required(login_url='login')
@@ -428,15 +430,76 @@ def warehouse_list(request):
 
     return render(request, 'users/warehouse_list.html', {'warehouses': warehouses, 'current_sort': current_sort})
 
+from map.models import Map
 def warehouse_detail(request, warehouse_id):
     warehouse = Warehouse.objects.select_related('owner', 'location').get(warehouse_id=warehouse_id)
     warehouse_facilities = warehouse.facilities.split(',')
-    reviews = WarehouseReview.objects.filter(warehouse=warehouse).select_related('tenant')  # Fetch reviews for the warehouse
-
+    reviews = WarehouseReview.objects.filter(warehouse=warehouse).select_related('tenant')
+    
+    # Add blockchain verification
+    blockchain_verified = True
+    if warehouse.blockchain_tx:
+        try:
+            # Fetch location from Map model if location field is None
+            if warehouse.location is None:
+                map_location = Map.objects.filter(warehouse=warehouse).first()
+                if map_location:
+                    local_location = f"{map_location.latitude},{map_location.longitude}"
+                else:
+                    raise ValueError("Warehouse location is not set in either Location or Map model")
+            else:
+                local_location = f"{warehouse.location.latitude},{warehouse.location.longitude}"
+            
+            service = BlockchainService()
+            # Fetch warehouse data from blockchain
+            blockchain_data = service.contract.functions.getWarehouse(warehouse.warehouse_id).call()
+            
+            # Prepare local data for comparison
+            local_area = int(float(warehouse.area))
+            local_rental_price = int(float(warehouse.rental_price))
+            
+            # Debugging: Print blockchain and local data
+            print("\n=== Blockchain Data ===")
+            print(f"Warehouse ID: {blockchain_data[0]} (Type: {type(blockchain_data[0])})")
+            print(f"Name: {blockchain_data[1]} (Type: {type(blockchain_data[1])})")
+            print(f"Location: {blockchain_data[2]} (Type: {type(blockchain_data[2])})")
+            print(f"Area: {blockchain_data[3]} (Type: {type(blockchain_data[3])})")
+            print(f"Rental Price: {blockchain_data[4]} (Type: {type(blockchain_data[4])})")
+            print(f"Owner: {blockchain_data[5]} (Type: {type(blockchain_data[5])})")
+            
+            print("\n=== Local Data ===")
+            print(f"Warehouse ID: {warehouse.warehouse_id} (Type: {type(warehouse.warehouse_id)})")
+            print(f"Name: {warehouse.name} (Type: {type(warehouse.name)})")
+            print(f"Location: {local_location} (Type: {type(local_location)})")
+            print(f"Area: {local_area} (Type: {type(local_area)})")
+            print(f"Rental Price: {local_rental_price} (Type: {type(local_rental_price)})")
+            print(f"Owner: {warehouse.owner.wallet_address} (Type: {type(warehouse.owner.wallet_address)})")
+            
+            # Compare blockchain data with local data
+            if (blockchain_data[0] == warehouse.warehouse_id and
+                blockchain_data[1] == warehouse.name and
+                blockchain_data[2] == local_location and
+                blockchain_data[3] == local_area and
+                blockchain_data[4] == local_rental_price and
+                blockchain_data[5] == warehouse.owner.wallet_address):
+                blockchain_verified = True
+                print("\n=== Verification Result ===")
+                print("✅ Blockchain data matches local data")
+            else:
+                print("\n=== Verification Result ===")
+                print("❌ Blockchain data does NOT match local data")
+                
+        except Exception as e:
+            print(f"\n=== Blockchain Verification Error ===")
+            print(f"Error: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
+    else:
+        blockchain_verified = False
     return render(request, 'users/warehouse_detail.html', {
         'warehouse': warehouse,
         'warehouse_facilities': warehouse_facilities,
         'reviews': reviews,
+        'blockchain_verified': blockchain_verified,
     })
 
 

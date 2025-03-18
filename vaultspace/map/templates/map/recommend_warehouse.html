@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recommended Warehouses</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { 
+            height: 600px; 
+            width: 100%;
+        }
+        .recommendation-card {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .recommendation-card h4 {
+            margin: 0 0 10px 0;
+        }
+        .recommendation-card p {
+            margin: 5px 0;
+        }
+        .recommendation-card button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .recommendation-card button:hover {
+            background-color: #0056b3;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .map-container {
+            flex: 2;
+        }
+        .recommendations-container {
+            flex: 1;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recommended Warehouses</h1>
+    <div class="container">
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+        <div class="recommendations-container">
+            {% for rec in recommendations %}
+            <div class="recommendation-card">
+                <h4>{{ rec.name }} (ID: {{ rec.warehouse_id }})</h4>
+                <p><strong>Location:</strong> {{ rec.location }}</p>
+                <p><strong>Rental Price:</strong> ${{ rec.rental_price|floatformat:2 }}</p>
+                <p><strong>Area:</strong> {{ rec.area }} sq. ft.</p>
+                <p><strong>Status:</strong> {{ rec.status }}</p>
+                <p><strong>Match Score:</strong> {{ rec.similarity_score|floatformat:2 }}</p>
+                <p><strong>Ranking:</strong> {{ rec.ranking }}</p>
+                <button onclick="focusOnWarehouse({{ rec.lat }}, {{ rec.lng }})">
+                    Show on Map
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([0, 0], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Add markers for warehouses
+        var markers = [];
+        {% for rec in recommendations %}
+            var marker = L.marker([{{ rec.lat }}, {{ rec.lng }}])
+                .bindPopup(
+                    "<b>{{ rec.name }}</b><br>" +
+                    "Location: {{ rec.location }}<br>" +
+                    "Rental Price: ${{ rec.rental_price|floatformat:2 }}<br>" +
+                    "Area: {{ rec.area }} sq. ft.<br>" +
+                    "Status: {{ rec.status }}"
+                )
+                .addTo(map);
+            markers.push(marker);
+        {% endfor %}
+
+        // Function to focus on warehouse
+        function focusOnWarehouse(lat, lng) {
+            map.setView([lat, lng], 15);
+        }
+
+        // Fit map to show all markers
+        if (markers.length > 0) {
+            var group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds());
+        }
+    </script>
+</body>
+</html>

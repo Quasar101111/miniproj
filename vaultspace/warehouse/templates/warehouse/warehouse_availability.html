@@ -1,0 +1,151 @@
+{% block content %}
+<div class="container">
+    <h1>Warehouse Availability Management</h1>
+    
+    <!-- Availability Form -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add/Update Availability</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="warehouse">Warehouse</label>
+                            <select class="form-control" id="warehouse" name="warehouse" required>
+                                {% for warehouse in warehouses %}
+                                    <option value="{{ warehouse.warehouse_id }}">{{ warehouse.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="end_date">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="status">Status</label>
+                            <select class="form-control" id="status" name="status" required>
+                                <option value="available">Available</option>
+                                <option value="booked">Booked</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Availability</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Display -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Availability Calendar</h4>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    
+    // Fetch events from the API
+    fetch('/api/tenant_availability/')
+        .then(response => response.json())
+        .then(data => {
+            // Initialize the calendar with the fetched data
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: data,
+                eventDisplay: 'block',
+                eventTimeFormat: {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    meridiem: 'short'
+                },
+                eventClick: function(info) {
+                    // Format dates for better display
+                    const startDate = new Date(info.event.start).toLocaleDateString();
+                    const endDate = new Date(info.event.end).toLocaleDateString();
+                    
+                    alert('Warehouse: ' + info.event.title + '\n' +
+                          'Status: ' + (info.event.title.includes('Available') ? 'Available' : 'Booked') + '\n' +
+                          'From: ' + startDate + '\n' +
+                          'To: ' + endDate);
+                }
+            });
+            
+            calendar.render();
+        })
+        .catch(error => {
+            console.error('Error fetching availability data:', error);
+            document.getElementById('calendar').innerHTML = 
+                '<div class="alert alert-danger">Error loading calendar data. Please try again later.</div>';
+        });
+});
+</script>
+
+<style>
+/* Custom Calendar Styling */
+#calendar {
+    max-width: 100%;
+    margin: 0 auto;
+    height: 650px;
+}
+
+.fc-event {
+    cursor: pointer;
+    border: none;
+    padding: 3px;
+}
+
+.fc-daygrid-event {
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-weight: 500;
+}
+
+/* Status colors */
+.fc-event.available {
+    background-color: #4CAF50 !important;
+    border-color: #4CAF50 !important;
+}
+
+.fc-event.booked {
+    background-color: #F44336 !important;
+    border-color: #F44336 !important;
+}
+
+/* Improved responsive layout */
+@media (max-width: 768px) {
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+
+{% endblock %}

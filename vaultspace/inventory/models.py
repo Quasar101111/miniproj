@@ -36,7 +36,7 @@ class Zone(models.Model):
     length = models.DecimalField(max_digits=10, decimal_places=2, help_text="Length of the zone in meters.")
     breadth = models.DecimalField(max_digits=10, decimal_places=2, help_text="Breadth of the zone in meters.")
     height = models.DecimalField(max_digits=10, decimal_places=2, help_text="Height of the zone in meters.")
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='zones')
 
     def __str__(self):
         return self.name
@@ -52,9 +52,19 @@ class InventoryItem(models.Model):
     item_length = models.FloatField(help_text="Length of the item in meters.")
     item_width = models.FloatField(help_text="Width of the item in meters.")
     item_height = models.FloatField(help_text="Height of the item in meters.")
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.CASCADE,
+        related_name='inventory_items',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        unique_together = ('name', 'warehouse')
 
 class InventoryLocation(models.Model):
     """Represents a storage location within a zone, with dimensions and item details."""

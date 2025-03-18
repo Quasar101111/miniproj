@@ -8,15 +8,34 @@ logger = logging.getLogger(__name__)
 
 def send_lease_expiry_notifications_and_cleanup():
     today = timezone.now().date()
-    five_days_from_now = today + timezone.timedelta(days=5)
-    print(f"Today's date: {today}")
-    print(f"Date five days from now: {five_days_from_now}")
+    
+    # Expired leases: All leases that ended before today and still not marked expired
+    expired_leases = Lease.objects.filter(
+        lease_end_date__lt=today,  # All dates before today
+        payment_status__in=['Paid', 'Pending']  # Include both statuses
+    )
+    
+    # Update payment status and warehouse availability
+    for lease in expired_leases:
+        lease.payment_status = 'Expired'
+        lease.save()
+        
+        # Only update warehouse if it's still marked as occupied
+        if lease.warehouse.status != 1:
+            lease.warehouse.status = 1  # Available
+            lease.warehouse.save()
+            
+        logger.info(f"Updated lease {lease.lease_id} (ended {lease.lease_end_date}) to Expired")
 
-    # Notify tenants whose leases are expiring within the next 5 days
-    expiring_leases = Lease.objects.filter(lease_end_date__range=(today, five_days_from_now))
+    # Notifications for upcoming expiries (next 5 days)
+    five_days_later = today + timezone.timedelta(days=5)
+    expiring_soon = Lease.objects.filter(
+        lease_end_date__range=(today, five_days_later),
+        payment_status='Paid'
+    )
     
     print("Expiring Leases:")
-    for lease in expiring_leases:
+    for lease in expiring_soon:
         print(f"Lease ID: {lease.lease_id}, Tenant: {lease.tenant.tenant_name}, Warehouse: {lease.warehouse}, "
               f"Lease End Date: {lease.lease_end_date}")
 
@@ -32,19 +51,4 @@ def send_lease_expiry_notifications_and_cleanup():
             f"Details: Warehouse: {lease.warehouse}, Tenant: {lease.tenant}, "
             f"Lease Start: {lease.lease_start_date}, Lease End: {lease.lease_end_date}, "
             f"Total Amount: {lease.total_amount}"
-        )
-    yesterday = today - timezone.timedelta(days=1)
-     # Update payment status to 'Expired' for leases that ended yesterday
-    expired_leases = Lease.objects.filter(lease_end_date__lt=today, lease_end_date__gte=yesterday, payment_status='Paid')
-    print("--Expired Leases:--")
-    expired_leases.update(payment_status='Expired')
-    for lease in expired_leases:
-        lease.warehouse.status = 1
-        lease.warehouse.save()
-        logger.info(
-            f"leases ended"
-            f"Lease {lease.lease_id} status updated to 'Expired'. "
-            f"Details: Warehouse: {lease.warehouse}, Tenant: {lease.tenant}, "
-            f"Lease Start: {lease.lease_start_date}, Lease End: {lease.lease_end_date}, "
-            f"Rental Amount: {lease.rental_amount}, Total Amount: {lease.total_amount}"
         )

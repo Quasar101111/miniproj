@@ -80,6 +80,9 @@ urlpatterns = [
 
     # path('add_warehouse_test/', map_view.add_warehouse_test, name='add_warehouse_test'),
     path('map/', include('map.urls')),
+
+
+        path('api/tenant_availability/', warehouse_view.tenant_availability_api, name='tenant_availability_api'),
     
 ]
 

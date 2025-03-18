@@ -169,7 +169,7 @@
 
 						<ul class="cd-features-list">
 							<li><strong>Area (sq ft):</strong> {{ warehouse.area }}</li>
-							<li><strong>Rental Price:</strong> ${{ warehouse.rental_price }}</li>
+							<li><strong>Rental Price:</strong> Rs. {{ warehouse.rental_price }}</li>
 							<li><strong>Status:</strong> {% if warehouse.status == 1 %}
 								Available {% else%} On Rent 
 								{% endif%}

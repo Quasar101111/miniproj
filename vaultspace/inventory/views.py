@@ -1,6 +1,6 @@
 # Create your views here.
 # inventory/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from warehouse.models import Warehouse
 from .models import Zone, InventoryItem, InventoryLocation,WarehouseUsage
 from django.core.exceptions import ValidationError
@@ -10,7 +10,7 @@ from django.core.serializers import serialize
 from django.http import JsonResponse
 from django.db.models import Sum, IntegerField
 from django.db.models.functions import Coalesce  # Correct location for Coalesce
-
+from django.db.models import F
 def calculate_available_dimensions(warehouse):
     """Calculate the available dimensions and area of the warehouse."""
     # Debug: Print warehouse details
@@ -90,9 +90,10 @@ def calculate_zone_data(zone, warehouse):
         }
     }
 
-def get_item_location_data():
-    # Get items with their total count across all locations
-    items = InventoryItem.objects.annotate(
+def get_item_location_data(warehouse):
+    items = InventoryItem.objects.filter(
+        warehouse=warehouse
+    ).annotate(
         total_in_locations=Coalesce(
             Sum('inventorylocation__item_count'),
             0,
@@ -100,12 +101,10 @@ def get_item_location_data():
         )
     ).values('id', 'name', 'total_in_locations')
     
-    # Get locations with their item counts
-    locations = InventoryLocation.objects.select_related('item', 'zone').values(
-        'id',
-        'zone__name',
-        'item__name',
-        'item_count'
+    locations = InventoryLocation.objects.filter(
+        zone__warehouse=warehouse
+    ).select_related('item', 'zone').values(
+        'id', 'zone__name', 'item_id', 'item_count'
     )
     
     return {
@@ -139,10 +138,10 @@ def get_zone_utilization_alerts(warehouse, warning_threshold=90, underutilized_t
     # Sort by severity (warning first, then underutilized)
     return sorted(alerts, key=lambda x: (-x['usage'] if x['type'] == 'warning' else x['usage']))
 
-def insert_data(request):
+def insert_data(request, warehouse_id):
     context = {}
     
-    warehouse = Warehouse.objects.get(warehouse_id=10)
+    warehouse = Warehouse.objects.get(warehouse_id=warehouse_id)
     
     # Initialize usage if it doesn't exist
     if not hasattr(warehouse, 'usage'):
@@ -153,7 +152,11 @@ def insert_data(request):
 
     # Get zones with calculated data
     warehouse_zones = Zone.objects.filter(warehouse=warehouse)
-    inventory_items = InventoryItem.objects.all()
+    
+    # Get items only from this warehouse's locations
+    inventory_items = InventoryItem.objects.filter(
+        inventorylocation__zone__warehouse=warehouse
+    ).distinct()
 
     # Prepare zone data for both context and JSON
     zones_data = []
@@ -186,7 +189,7 @@ def insert_data(request):
         'available_height': available_height,
         'warehouse': warehouse,
         'inventory_items': inventory_items,
-        'item_location_data': get_item_location_data(),
+        'item_location_data': get_item_location_data(warehouse),
         'utilization_alerts': get_zone_utilization_alerts(warehouse),
     })
 
@@ -234,7 +237,15 @@ def insert_data(request):
                 item_length = float(request.POST.get('item_length'))
                 item_width = float(request.POST.get('item_width'))
                 item_height = float(request.POST.get('item_height'))
-                InventoryItem.objects.create(name=name, item_length=item_length, item_width=item_width, item_height=item_height)
+                
+                InventoryItem.objects.create(
+                    name=name,
+                    item_length=item_length,
+                    item_width=item_width,
+                    item_height=item_height,
+                    warehouse=warehouse  # Set warehouse automatically
+                )
+                return redirect('insert_data', warehouse_id=warehouse_id)
             
             elif form_type == 'location':
                 zone_id = int(request.POST.get('location_zone'))
@@ -243,7 +254,22 @@ def insert_data(request):
                 width = float(request.POST.get('location_width'))
                 height = float(request.POST.get('location_height'))
                 stackable = request.POST.get('stackable') == 'on'
-                max_stacking_height = float(request.POST.get('max_stacking_height'))
+                max_stacking_height = 0.0  # Default value
+                
+                try:
+                    if stackable:
+                        # Only process if stackable is checked
+                        max_stacking_height_str = request.POST.get('max_stacking_height')
+                        if max_stacking_height_str:
+                            max_stacking_height = float(max_stacking_height_str)
+                        else:
+                            raise ValidationError("Max stacking height required when stackable is checked")
+                
+                except ValueError as e:
+                    return render(request, 'inventory/insert_data.html', {
+                        **context, 
+                        'error': f"Invalid stacking height: {str(e)}"
+                    })
                 
                 item_count = int(request.POST.get('item_count'))
                 
@@ -257,7 +283,7 @@ def insert_data(request):
         
         except ValidationError as e:
             return render(request, 'inventory/insert_data.html', {**context, 'error': e.message})
-        return redirect('insert_data')
+        return redirect('insert_data',warehouse_id=warehouse_id)
     
     return render(request, 'inventory/insert_data.html', context)
 
@@ -310,3 +336,96 @@ def warehouse_dashboard(request):
     })
 
     return render(request, 'inventory/warehouse_dashboard.html', context)
+
+def get_zone_items(request, zone_id):
+    try:
+        zone = get_object_or_404(Zone, id=zone_id)
+        items = InventoryItem.objects.filter(
+            warehouse=zone.warehouse
+        ).values(
+            'id', 'name', 
+            'item_length', 'item_width', 'item_height'
+        )
+        
+        return JsonResponse({
+            'items': [
+                {
+                    'id': item['id'],
+                    'name': item['name'],
+                    'dimensions': f"{item['item_length']}m × {item['item_width']}m × {item['item_height']}m",
+                    'item_length': item['item_length'],
+                    'item_width': item['item_width'],
+                    'item_height': item['item_height']
+                }
+                for item in items
+            ]
+        })
+    except Exception as e:
+        print(f"Error in get_zone_items: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+
+def warehouse_data(request):
+    warehouses = Warehouse.objects.all()
+    data = []
+
+    for warehouse in warehouses:
+        zones = Zone.objects.filter(warehouse=warehouse)
+        zone_data = []
+
+        for zone in zones:
+            locations = InventoryLocation.objects.filter(zone=zone)
+            location_data = [
+                {
+                    "id": loc.id,
+                    "length": loc.length,
+                    "width": loc.width,
+                    "height": loc.height,
+                    "stackable": loc.stackable,
+                    "max_stacking_height": loc.max_stacking_height,
+                    "item_count": loc.item_count,
+                }
+                for loc in locations
+            ]
+
+            zone_data.append({
+                "name": zone.name,
+                "type": zone.zone_type,
+                "length": zone.length,
+                "breadth": zone.breadth,
+                "height": zone.height,
+                "locations": location_data
+            })
+
+        data.append({
+            "warehouse_id": warehouse.id,
+            "name": warehouse.name,
+            "length": warehouse.length,
+            "breadth": warehouse.breadth,
+            "height": warehouse.height,
+            "zones": zone_data
+        })
+
+    return JsonResponse(data, safe=False)
+
+def warehouse_3d_view(request):
+    warehouse = get_object_or_404(Warehouse, warehouse_id=10)
+    # Prefetch related zones and their locations with items
+    warehouse = Warehouse.objects.prefetch_related(
+        'zones',
+        'zones__locations',
+        'zones__locations__item'
+    ).get(warehouse_id=9)
+    
+    return render(request, 'inventory/3d_view.html', {
+        'warehouse': warehouse
+    })
+
+def map_view(request, warehouse_id):
+    warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+    
+    return render(request, 'map/map_view.html', {
+        'warehouse': warehouse,
+    })

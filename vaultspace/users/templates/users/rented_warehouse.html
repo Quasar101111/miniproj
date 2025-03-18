@@ -130,6 +130,9 @@
                                 <td>Rs. {{ payment_dict|get_item:lease.lease_id|default:"N/A" }}</td> <!-- Display total amount -->
                                 <td>
                                     <a href="{% url 'download_lease_report' lease.lease_id %}" class="btn btn-primary">Download Report</a>
+                                    <a href="{% url 'insert_data' lease.warehouse.warehouse_id %}" class="btn btn-info ms-2">
+                                        Insert Inventory Data
+                                    </a>
                                 </td>
                                 
                             </tr>

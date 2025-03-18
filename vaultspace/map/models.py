@@ -1,10 +1,11 @@
+#map/models.py
 from django.db import models
 from warehouse.models import Warehouse
 
   
 class Map(models.Model):
     map_id = models.AutoField(primary_key=True)
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE,related_name='map_location')
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     last_updated = models.DateTimeField(auto_now=True)

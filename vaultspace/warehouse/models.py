@@ -7,7 +7,9 @@ from django.utils.timezone import now
 
 from users.models import Lessor, Tenant
 import os
+from blockchain.service import BlockchainService
 
+# Remove Map import since we're using lazy loading
 
 class Location(models.Model):
     location_id = models.AutoField(primary_key=True)
@@ -35,9 +37,38 @@ class Warehouse(models.Model):
     height = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Height in meters
     popularity_score = models.FloatField(default=0.0)
     last_activity = models.DateTimeField(auto_now=True)
+    blockchain_tx = models.CharField(max_length=66, blank=True)
 
     def __str__(self):
         return f"Warehouse {self.warehouse_id}"
+
+    # def save(self, *args, **kwargs):
+    #     # First save to get the ID
+    #     super().save(*args, **kwargs)
+
+    #     if not self.blockchain_tx:  # Only if not already on blockchain
+    #         service = BlockchainService()
+            
+    #         try:
+    #             # Use the related name from Map model
+    #             map_location = self.map_location
+    #             location_string = f"{map_location.latitude},{map_location.longitude}"
+    #         except:
+    #             location_string = self.landmarks or "No location"
+            
+    #         tx = service.contract.functions.addWarehouse(
+    #             self.name or f"Warehouse {self.warehouse_id}",
+    #             location_string,
+    #             int(float(self.area)),
+    #             int(float(self.rental_price))
+    #         ).build_transaction(service.get_tx_params())
+            
+    #         signed_tx = service.w3.eth.account.sign_transaction(
+    #             tx, os.getenv('PRIVATE_KEY'))
+    #         # Use raw_transaction instead of rawTransaction
+    #         tx_hash = service.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    #         self.blockchain_tx = tx_hash.hex()
+    #         super().save(update_fields=['blockchain_tx'])
 
 class WarehousePhoto(models.Model):
     warehouse = models.ForeignKey(Warehouse, related_name='photos', on_delete=models.CASCADE)
@@ -82,11 +113,30 @@ class Lease(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
     tenant_signature = models.ImageField(upload_to=upload_signature_path, null=True, blank=True)
     lessor_signature = models.ImageField(upload_to=upload_signature_path, null=True, blank=True)
-
+    blockchain_tx = models.CharField(max_length=66, blank=True)
 
     def __str__(self):
         return f"Lease {self.lease_id} - {self.warehouse} - {self.tenant}"
     
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            service = BlockchainService()
+            tx = service.contract.functions.createLease(
+                self.warehouse.warehouse_id,
+                self.tenant.wallet_address,
+                int(float(self.rental_amount)),
+                int(self.lease_start_date.timestamp()),
+                int(self.lease_end_date.timestamp())
+            ).build_transaction(service.get_tx_params())
+            
+            signed_tx = service.w3.eth.account.sign_transaction(
+                tx, os.getenv('PRIVATE_KEY'))
+            # Use raw_transaction instead of rawTransaction
+            tx_hash = service.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            self.blockchain_tx = tx_hash.hex()
+        
+        super().save(*args, **kwargs)
+
 class WarehouseReview(models.Model):
     
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='reviews')
@@ -99,4 +149,16 @@ class WarehouseReview(models.Model):
         return f"Review by {self.tenant} for {self.warehouse} - Rating: {self.rating}"
 
 
-   
+class WarehouseAvailability(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="availabilities")
+    start_date = models.DateField()
+    end_date = models.DateField()
+    booked_by = models.ForeignKey(Lessor, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[('available', 'Available'), ('booked', 'Booked')],
+        default='available'
+    )
+
+    def __str__(self):
+        return f"{self.warehouse.name} ({self.start_date} - {self.end_date})"

@@ -27,6 +27,13 @@ urlpatterns = [
 
      path('compare/', views.compare_warehouse, name='compare_warehouse'),
 
+    # path('warehouse_availability/', views.manage_availability, name='warehouse_availability'),
+    # path('api/warehouse_availability/', views.warehouse_availability_api, name='warehouse_availability_api'),
+    path('tenant_availability/',  views.tenant_availability_calendar, name='tenant_availability'),
+    path('api/tenant_availability/',  views.tenant_availability_api, name='tenant_availability_api'),
+    path('process-warehouse-chat/', views.process_warehouse_chat, name='process_warehouse_chat'),
+    path('process_warehouse_files/', views.process_warehouse_files, name='process_warehouse_files'),
+
  
 ]
 urlpatterns=urlpatterns+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

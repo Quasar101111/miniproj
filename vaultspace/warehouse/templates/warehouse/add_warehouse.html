@@ -64,7 +64,7 @@
                 // Check if both length and breadth are provided
                 if (length > 0 && breadth > 0) {
                     // Calculate area in square feet 
-                    const areaInSquareFeet = (length * breadth ).toFixed(2);
+                    const areaInSquareFeet = (length * breadth).toFixed(2);
                     $('#area').val(areaInSquareFeet); // Display area
                 } else {
                     $('#area').val(''); // Clear area if inputs are not valid
@@ -73,6 +73,154 @@
     
             // Attach input event listeners
             $('#length, #breadth').on('input', calculateArea);
+
+            // Custom validation for dimensions
+            $.validator.addMethod("positiveNumber", function(value, element) {
+                return this.optional(element) || (parseFloat(value) > 0);
+            }, "Please enter a positive number");
+
+            // Custom validation for area
+            $.validator.addMethod("validArea", function(value, element) {
+                const length = parseFloat($('#length').val()) || 0;
+                const breadth = parseFloat($('#breadth').val()) || 0;
+                const area = parseFloat(value) || 0;
+                return this.optional(element) || (area === length * breadth);
+            }, "Area must be equal to length × breadth");
+
+            var validator = $("#addWarehouseForm").validate({
+                ignore: [],
+                rules: {
+                    length: {
+                        required: true,
+                        positiveNumber: true,
+                        min: 1
+                    },
+                    breadth: {
+                        required: true,
+                        positiveNumber: true,
+                        min: 1
+                    },
+                    height: {
+                        required: true,
+                        positiveNumber: true,
+                        min: 1
+                    },
+                    area: {
+                        required: true,
+                        validArea: true
+                    },
+                    landmark: {
+                        required: true,
+                        minlength: 3
+                    },
+                    rental_price: {
+                        required: true,
+                        positiveNumber: true,
+                        min: 0
+                    },
+                    terms_cond: {
+                        required: true,
+                        minlength: 10
+                    },
+                    "facilities[]": {
+                        required: true
+                    }
+                },
+                messages: {
+                    length: {
+                        required: "Please enter the length",
+                        positiveNumber: "Length must be greater than 0",
+                        min: "Length must be at least 1 foot"
+                    },
+                    breadth: {
+                        required: "Please enter the breadth",
+                        positiveNumber: "Breadth must be greater than 0",
+                        min: "Breadth must be at least 1 foot"
+                    },
+                    height: {
+                        required: "Please enter the height",
+                        positiveNumber: "Height must be greater than 0",
+                        min: "Height must be at least 1 foot"
+                    },
+                    area: {
+                        required: "Please enter the area",
+                        validArea: "Area must be equal to length × breadth"
+                    },
+                    landmark: {
+                        required: "Please enter a landmark",
+                        minlength: "Landmark should be at least 3 characters long"
+                    },
+                    rental_price: {
+                        required: "Please enter the rental price",
+                        positiveNumber: "Rental price must be greater than 0",
+                        min: "Rental price cannot be negative"
+                    },
+                    terms_cond: {
+                        required: "Please enter the terms and conditions",
+                        minlength: "Terms and conditions should be at least 10 characters long"
+                    },
+                    "facilities[]": "Please select at least one facility"
+                },
+                errorElement: "span",
+                errorPlacement: function(error, element) {
+                    error.addClass("invalid-feedback");
+                    if (element.prop("type") === "checkbox") {
+                        error.insertAfter(element.parent("label"));
+                    } else if (element.hasClass("select2-hidden-accessible")) {
+                        error.insertAfter(element.next("span.select2"));
+                    } else {
+                        error.insertAfter(element);
+                    }
+                },
+                highlight: function(element, errorClass, validClass) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                    if ($(element).hasClass("select2-hidden-accessible")) {
+                        $(element).next("span.select2").find(".select2-selection").addClass("is-invalid").removeClass("is-valid");
+                    }
+                },
+                unhighlight: function(element, errorClass, validClass) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                    if ($(element).hasClass("select2-hidden-accessible")) {
+                        $(element).next("span.select2").find(".select2-selection").removeClass("is-invalid").addClass("is-valid");
+                    }
+                },
+                submitHandler: function(form) {
+                    // Validate area before submission
+                    const length = parseFloat($('#length').val()) || 0;
+                    const breadth = parseFloat($('#breadth').val()) || 0;
+                    const area = parseFloat($('#area').val()) || 0;
+                    
+                    if (area !== length * breadth) {
+                        $('#area').val(length * breadth);
+                    }
+                    form.submit();
+                }
+            });
+
+            // Trigger validation on keyup, change, and blur for all inputs
+            $("#addWarehouseForm input, #addWarehouseForm textarea, #addWarehouseForm select").on('keyup change blur', function() {
+                validator.element(this);
+            });
+
+            // Special handling for Select2
+            $('#selectedLocation').on('select2:select select2:unselect', function (e) {
+                $(this).valid();
+            });
+
+            // Special handling for file inputs
+            $('input[type="file"]').on('change', function() {
+                validator.element(this);
+            });
+
+            // Special handling for datepicker
+            $('#datepicker').on('changeDate', function() {
+                $(this).valid();
+            });
+
+            // Special handling for checkboxes
+            $('input[type="checkbox"]').on('change', function() {
+                validator.element('input[name="' + $(this).attr('name') + '"]:first');
+            });
         });
     </script>
 
@@ -123,6 +271,38 @@
 
         .select2-container--default .select2-selection--single.is-valid {
             border-color: #28a745;
+        }
+
+        <!-- CSS for highlighting fields -->
+        .highlight-field {
+            animation: pulse-highlight 3s;
+            box-shadow: 0 0 8px 4px rgba(13, 110, 253, 0.5);
+            border-radius: 4px;
+        }
+        
+        .highlight-section {
+            animation: pulse-fade 3s;
+        }
+        
+        @keyframes pulse-highlight {
+            0% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 16px 8px rgba(13, 110, 253, 0.4);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+            }
+        }
+        
+        @keyframes pulse-fade {
+            0% {
+                background-color: rgba(13, 110, 253, 0.2);
+            }
+            100% {
+                background-color: transparent;
+            }
         }
     </style>
 </head>
@@ -233,6 +413,42 @@
             <div class="content-body">
                 <div class="container-fluid">
                     <div class="row">
+                        <div class="col-lg-4 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Warehouse Details Assistant</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div id="chat-container" class="mb-3" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background-color: #f8f9fa;">
+                                        <div id="chat-messages">
+                                            <!-- Chat messages will be added here by JavaScript -->
+                                        </div>
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <input type="text" id="user-input" class="form-control" 
+                                               placeholder="type help for more information">
+                                        <button class="btn btn-primary" onclick="sendMessage()">
+                                            <i class="fas fa-paper-plane"></i> Send
+                                        </button>
+                                    </div>
+                                    {% comment %} <div class="input-group mb-2">
+                                        <input type="file" id="chat-file-upload" class="form-control" multiple>
+                                        <button class="btn btn-secondary" onclick="handleFileUpload()">
+                                            <i class="fas fa-upload"></i> Upload Files
+                                        </button>
+                                    </div> {% endcomment %}
+                                    <div class="mt-2 small text-muted">
+                                        <p>Try asking about:</p>
+                                        <ul class="mb-0">
+                                            <li>Warehouse dimensions (length, width, height)</li>
+                                            <li>Rental price and terms</li>
+                                            <li>Available facilities</li>
+                                            <li>Upload ownership documents or photos using the file upload button</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-xl-8 col-lg-6">
                             <div class="card">
                                 <div class="card-header">
@@ -240,7 +456,7 @@
                                     lessor_id:{{ lessor_id }}
                                 </div>
                                 <div class="card-body">
-
+                                    <a href="{% url 'tenant_availability' %}">View Availability Calendar</a>
                                     <div class="basic-form">
                                         <form id="addWarehouseForm" method="POST" enctype="multipart/form-data">
                                             {% csrf_token %}
@@ -268,7 +484,7 @@
                                                 </div>
                                                 <div class="mb-3 col-lg-4 col-md-4">
                                                     <label class="form-label">Height (in Feet)</label>
-                                                    <input type="number" step="0.01" class="form-control" name="height" placeholder="Height" required>
+                                                    <input type="number" step="0.01" class="form-control" name="height" id="warehouseHeight" placeholder="Height" required>
                                                 </div>
 
                                                 
@@ -279,7 +495,7 @@
 
                                                 <div class="mb-3 col-lg-6 col-md-6">
                                                     <label class="form-label">Landmark</label>
-                                                    <input type="text" class="form-control" name="landmark" placeholder="landmark" required>
+                                                    <input type="text" class="form-control" name="landmark" id="landmark" placeholder="landmark" required>
                                                 </div>
 
                                                 <div class="mb-3 col-lg-6 col-md-6">
@@ -311,7 +527,7 @@
                                                 </script>
                                                 <div class="mb-3 col-lg-6 col-md-6">
                                                     <label class="form-label">Rental Price ₹</label>
-                                                    <input type="number" class="form-control" name="rental_price" placeholder="in rupees" required>
+                                                    <input type="number" class="form-control" name="rental_price" id="rental_price" placeholder="in rupees" required>
                                                 </div>
 
                                                 <div class="mb-3 col-lg-6 col-md-6">
@@ -443,7 +659,7 @@
 	<script>
         function openLocationSelector() {
             // Open the location selector in a new window
-            const locationWindow = window.open("{% url 'select_location' %}", "Select Location", 
+            const locationWindow = window.open("{% url 'map:select_location' %}", "Select Location", 
                 "width=800,height=600,scrollbars=yes");
         
             // Listen for messages from the location selector window
@@ -615,6 +831,940 @@
 <script src="{% static 'js/custom.min.js' %}"></script>
 <script src="{% static 'js/deznav-init.js' %}"></script>
 
+<!-- Add the warehouse assistant chat functionality -->
+<script>
+// Function to update form fields based on chat response data
+function updateFormFields(data) {
+    debugLog("Updating form fields with data", data);
+    
+    // If data is nested inside a data property, use that
+    if (data.data && typeof data.data === 'object') {
+        data = data.data;
+        debugLog("Using nested data object", data);
+    }
+    
+    // Map of data fields to form field IDs and their types
+    const fieldMap = {
+        length: { id: 'length', type: 'number' },
+        breadth: { id: 'breadth', type: 'number' },
+        height: { id: 'warehouseHeight', type: 'number' },
+        landmark: { id: 'landmark', type: 'text' },  // Changed from landmarks to landmark
+        landmarks: { id: 'landmark', type: 'text' },  // Include both for compatibility
+        rental_price: { id: 'rental_price', type: 'number' },
+        terms_cond: { id: 'comment', type: 'text' }
+    };
+    
+    // Track whether any fields were updated
+    let fieldsUpdated = false;
+    
+    // Update each field if data exists
+    for (const [dataKey, fieldInfo] of Object.entries(fieldMap)) {
+        const value = data[dataKey];
+        if (value !== null && value !== undefined) {
+            const field = document.getElementById(fieldInfo.id);
+            if (field) {
+                // Only update if the value is different
+                const currentValue = fieldInfo.type === 'number' ? 
+                    parseFloat(field.value) || 0 : field.value;
+                const newValue = fieldInfo.type === 'number' ? 
+                    parseFloat(value) : value;
+                
+                if (currentValue !== newValue) {
+                    debugLog(`Updating field ${fieldInfo.id} with value`, newValue);
+                    
+                    // Set the new value
+                    field.value = newValue;
+                    
+                    // Trigger change event
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    // Add visual feedback
+                    field.classList.add('highlight-update');
+                    setTimeout(() => field.classList.remove('highlight-update'), 2000);
+                    
+                    // Scroll field into view
+                    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    fieldsUpdated = true;
+                } else {
+                    debugLog(`Field ${fieldInfo.id} already has value ${newValue}`, null);
+                }
+            } else {
+                console.warn(`Field element not found: ${fieldInfo.id}`);
+            }
+        }
+    }
+    
+    // Handle facilities separately
+    if (data.facilities && Array.isArray(data.facilities)) {
+        debugLog('Updating facilities', data.facilities);
+        const facilityCheckboxes = document.querySelectorAll('input[name="facilities"]');
+        facilityCheckboxes.forEach(checkbox => {
+            const shouldBeChecked = data.facilities.some(facility => 
+                facility.toLowerCase() === checkbox.value.toLowerCase()
+            );
+            if (checkbox.checked !== shouldBeChecked) {
+                checkbox.checked = shouldBeChecked;
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Add visual feedback
+                const container = checkbox.closest('.form-check');
+                if (container) {
+                    container.classList.add('highlight-update');
+                    setTimeout(() => container.classList.remove('highlight-update'), 2000);
+                }
+                
+                fieldsUpdated = true;
+            }
+        });
+    }
+    
+    // Calculate area if length and breadth are both updated
+    const lengthField = document.getElementById('length');
+    const breadthField = document.getElementById('breadth');
+    const areaField = document.getElementById('area');
+    
+    if (lengthField && breadthField && areaField && 
+        lengthField.value && breadthField.value) {
+        const length = parseFloat(lengthField.value);
+        const breadth = parseFloat(breadthField.value);
+        
+        if (!isNaN(length) && !isNaN(breadth) && length > 0 && breadth > 0) {
+            const calculatedArea = (length * breadth).toFixed(2);
+            
+            // Update the area field
+            if (areaField.value !== calculatedArea) {
+                debugLog('Updating area field with calculated value', calculatedArea);
+                areaField.value = calculatedArea;
+                
+                // Add visual feedback for area field
+                areaField.classList.add('highlight-update');
+                setTimeout(() => areaField.classList.remove('highlight-update'), 2000);
+                
+                // Make area field visible to the user
+                areaField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                fieldsUpdated = true;
+            }
+        }
+    }
+    
+    return fieldsUpdated;
+}
+
+// Debug helper function
+function debugLog(message, data) {
+    console.log(`%c${message}`, 'background: #2196F3; color: white; padding: 2px 5px; border-radius: 3px;', data);
+}
+
+// Modified sendMessage function to handle summary command
+function sendMessage() {
+    const userInput = document.getElementById('user-input').value.trim();
+    if (!userInput) return;
+    
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    
+    debugLog('Sending message', userInput);
+    
+    // Add user message
+    chatMessages.innerHTML += `
+        <div class="alert alert-secondary mb-2">
+            <strong>You:</strong> ${userInput}
+        </div>`;
+    
+    // Check if user is asking for a summary
+    if (userInput.toLowerCase() === 'summary') {
+        generateWarehouseSummary();
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    // Check if user is asking for help
+    if (userInput.toLowerCase() === 'help') {
+        showHelpMessage();
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    // Check if user is asking about specific fields that need interactive buttons
+    const lowerCaseInput = userInput.toLowerCase();
+    
+    // Handle special field requests locally when possible
+    if (lowerCaseInput.includes('location') && 
+        (lowerCaseInput.includes('set') || lowerCaseInput.includes('select') || 
+         lowerCaseInput.includes('map') || lowerCaseInput.includes('how') || 
+         lowerCaseInput.includes('where'))) {
+        
+        addInteractiveMessage('location', 'To set your warehouse location, click the button below to open our map selection tool:');
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    if (lowerCaseInput.includes('date') || 
+        (lowerCaseInput.includes('construction') && 
+         (lowerCaseInput.includes('date') || lowerCaseInput.includes('built') || lowerCaseInput.includes('when')))) {
+        
+        addInteractiveMessage('date', 'To set your warehouse construction date, click the button below:');
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    if ((lowerCaseInput.includes('facilities') || lowerCaseInput.includes('amenities')) && 
+        (lowerCaseInput.includes('select') || lowerCaseInput.includes('choose') || 
+         lowerCaseInput.includes('add') || lowerCaseInput.includes('what') || 
+         lowerCaseInput.includes('how'))) {
+        
+        addInteractiveMessage('facilities', 'To select the facilities your warehouse offers, click the button below:');
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    if ((lowerCaseInput.includes('photo') || lowerCaseInput.includes('image') || lowerCaseInput.includes('picture')) && 
+        (lowerCaseInput.includes('upload') || lowerCaseInput.includes('add') || 
+         lowerCaseInput.includes('how') || lowerCaseInput.includes('where'))) {
+        
+        addInteractiveMessage('photos', 'To upload photos of your warehouse, click the button below:');
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    if ((lowerCaseInput.includes('document') || lowerCaseInput.includes('ownership') || lowerCaseInput.includes('proof')) && 
+        (lowerCaseInput.includes('upload') || lowerCaseInput.includes('add') || 
+         lowerCaseInput.includes('how') || lowerCaseInput.includes('where'))) {
+        
+        addInteractiveMessage('document', 'To upload your ownership document, click the button below:');
+        document.getElementById('user-input').value = '';
+        return;
+    }
+    
+    // Continue with normal processing for other messages
+    // Show loading indicator
+    chatMessages.innerHTML += `
+        <div id="loading-indicator" class="text-center mb-2">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>`;
+    
+    // Scroll to bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    // Send request to backend
+    fetch("{% url 'process_warehouse_chat' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `message=${encodeURIComponent(userInput)}`
+    })
+    .then(response => {
+        debugLog('Response status', response.status);
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Remove loading indicator
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+        
+        debugLog('Received response', data);
+        
+        // Add AI response to chat
+        chatMessages.innerHTML += `
+            <div class="alert alert-info mb-2">
+                <strong>Assistant:</strong> ${data.message}
+            </div>`;
+        
+        // Check if we should add interactive buttons based on the response
+        // This helps if the AI detected something that needs special handling
+        if (data.message) {
+            const lowerCaseMessage = data.message.toLowerCase();
+            
+            if (lowerCaseMessage.includes('location') && 
+                (lowerCaseMessage.includes('map') || lowerCaseMessage.includes('select'))) {
+                addInteractiveMessage('location', 'Click here to select your warehouse location on a map:');
+            }
+            
+            if (lowerCaseMessage.includes('facilities') && 
+                (lowerCaseMessage.includes('select') || lowerCaseMessage.includes('choose'))) {
+                addInteractiveMessage('facilities', 'Click here to select your warehouse facilities:');
+            }
+            
+            if ((lowerCaseMessage.includes('photo') || lowerCaseMessage.includes('image')) && 
+                (lowerCaseMessage.includes('upload') || lowerCaseMessage.includes('add'))) {
+                addInteractiveMessage('photos', 'Click here to upload photos of your warehouse:');
+            }
+            
+            if ((lowerCaseMessage.includes('document') || lowerCaseMessage.includes('ownership')) && 
+                (lowerCaseMessage.includes('upload') || lowerCaseMessage.includes('add'))) {
+                addInteractiveMessage('document', 'Click here to upload your ownership document:');
+            }
+            
+            if (lowerCaseMessage.includes('date') && 
+                (lowerCaseMessage.includes('construction') || lowerCaseMessage.includes('built'))) {
+                addInteractiveMessage('date', 'Click here to set your warehouse construction date:');
+            }
+        }
+        
+        // Update form fields if we have warehouse details
+        if (data.type === 'warehouse_details' && data.data) {
+            debugLog('Processing warehouse details', data.data);
+            updateFormFields(data.data);
+            
+            // Highlight the form section to draw attention
+            const formCard = document.querySelector('.card-body form');
+            if (formCard) {
+                formCard.classList.add('highlight-section');
+                setTimeout(() => formCard.classList.remove('highlight-section'), 3000);
+            }
+        }
+        
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // Remove loading indicator
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+        
+        // Show error message
+        chatMessages.innerHTML += `
+            <div class="alert alert-danger mb-2">
+                <strong>Error:</strong> ${error.message || 'Failed to process your message. Please try again.'}
+            </div>`;
+        
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    });
+    
+    // Clear input field
+    document.getElementById('user-input').value = '';
+}
+
+// Function to show a comprehensive help message
+function showHelpMessage() {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    
+    const helpHtml = `
+        <div class="alert alert-primary mb-2">
+            <strong>Assistant:</strong> <h5>Warehouse Assistant Help</h5>
+            
+            <div class="mb-2">
+                <strong>Quick Commands:</strong>
+                <ul class="mb-1">
+                    <li><code>help</code> - Show this help message</li>
+                    <li><code>summary</code> - View a summary of your warehouse details</li>
+                </ul>
+            </div>
+            
+            <div class="mb-2">
+                <strong>Describing Your Warehouse:</strong>
+                <ul class="mb-1">
+                    <li><strong>Dimensions:</strong> "My warehouse is 30 feet long, 20 feet wide, and 15 feet high"</li>
+                    <li><strong>Location:</strong> "It's located near City Mall" or "landmark: Central Park"</li>
+                    <li><strong>Rental Price:</strong> "I'm renting it for ₹15,000 per month"</li>
+                    <li><strong>Facilities:</strong> "It has loading docks, security cameras, and office spaces"</li>
+                    <li><strong>Terms:</strong> "Terms and conditions: minimum lease period of 6 months"</li>
+                </ul>
+            </div>
+            
+            <div class="mb-2">
+                <strong>Interactive Features - Type These to Access:</strong>
+                <ul class="mb-1">
+                    <li>"Set location" - Open the map selector</li>
+                    <li>"Upload photos" - Access the image uploader</li>
+                    <li>"Upload document" - Upload ownership document</li>
+                    <li>"Select facilities" - Choose warehouse amenities</li>
+                    <li>"Set construction date" - Select when the warehouse was built</li>
+                </ul>
+            </div>
+            
+            <div>
+                <strong>💡 Pro Tips:</strong>
+                <ul class="mb-0">
+                    <li>You can include multiple details in one message: "30×20×15 feet warehouse near City Mall for ₹15k monthly"</li>
+                    <li>After describing your warehouse, type "summary" to see what information is still needed</li>
+                    <li>When you're ready, click the "Add" button to submit your warehouse listing</li>
+                </ul>
+            </div>
+        </div>`;
+    
+    chatMessages.innerHTML += helpHtml;
+    
+    // Scroll to bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Add styles for visual feedback
+const style = document.createElement('style');
+style.textContent = `
+    .highlight-update {
+        animation: highlightFade 2s ease-out;
+    }
+    
+    .highlight-section {
+        animation: sectionHighlight 3s ease-out;
+    }
+    
+    @keyframes highlightFade {
+        0% {
+            background-color: rgba(77, 189, 116, 0.2);
+            border-color: #4dbd74;
+            box-shadow: 0 0 5px rgba(77, 189, 116, 0.5);
+        }
+        100% {
+            background-color: transparent;
+            border-color: #ced4da;
+            box-shadow: none;
+        }
+    }
+    
+    @keyframes sectionHighlight {
+        0%, 20% {
+            box-shadow: 0 0 15px 5px rgba(0, 123, 255, 0.5);
+        }
+        100% {
+            box-shadow: none;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Add event listener for Enter key
+document.getElementById('user-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Initialize chat when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    debugLog("Chat interface initialized", new Date().toISOString());
+    
+    // Verify all form field IDs are correct
+    const formFields = {
+        length: document.getElementById('length'),
+        breadth: document.getElementById('breadth'),
+        height: document.getElementById('warehouseHeight'),
+        landmark: document.getElementById('landmark'),
+        rental_price: document.getElementById('rental_price'),
+        comment: document.getElementById('comment'),
+        area: document.getElementById('area')
+    };
+    
+    // Check if all fields are found
+    const missingFields = Object.entries(formFields)
+        .filter(([key, element]) => !element)
+        .map(([key]) => key);
+        
+    if (missingFields.length > 0) {
+        console.error('Missing form fields:', missingFields);
+    } else {
+        debugLog('All form fields found', formFields);
+    }
+    
+    // Add test button for debugging
+    const chatContainer = document.getElementById('chat-container');
+    const debugButton = document.createElement('button');
+    debugButton.innerText = 'Test Form Updates';
+    debugButton.className = 'btn btn-sm btn-secondary mt-2 mb-2';
+    debugButton.onclick = function() {
+        // Test data
+        const testData = {
+            length: 30,
+            breadth: 20,
+            height: 15,
+            landmark: "City Mall",
+            rental_price: 15000,
+            facilities: ["Loading Docks", "Security personnel"]
+        };
+        
+        debugLog('Running form update test with data', testData);
+        updateFormFields(testData);
+    };
+    
+    // Add the button after the chat container
+    chatContainer.parentNode.insertBefore(debugButton, chatContainer.nextSibling);
+    
+    // Add welcome message
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = `
+        <div class="alert alert-primary mb-2">
+            <strong>Warehouse Assistant:</strong> 👋 Welcome! I'll help you add your warehouse details quickly and easily.
+        </div>
+        <div class="alert alert-info mb-2">
+            <strong>Warehouse Assistant:</strong> Try telling me about:
+            <ul>
+                <li>Dimensions (e.g., "30 feet long, 20 feet wide, 15 feet high")</li>
+                <li>Location (e.g., "near City Mall")</li>
+                <li>Rental price (e.g., "₹15,000 per month")</li>
+                <li>Facilities (e.g., "with loading docks and security cameras")</li>
+            </ul>
+            <p>You can also ask for help with special fields:</p>
+        </div>`;
+    
+    // Add interactive buttons for special fields
+    addInteractiveMessage('location', 'Need to set your warehouse location on a map?');
+    addInteractiveMessage('date', 'Need to set the construction date?');
+    addInteractiveMessage('facilities', 'Want to select the facilities your warehouse offers?');
+    addInteractiveMessage('photos', 'Need to upload photos of your warehouse?');
+    addInteractiveMessage('document', 'Need to upload ownership documents?');
+});
+
+// Add a function to help users with location selection and other complex fields
+function addInteractiveMessage(type, message) {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    
+    let buttonHtml = '';
+    
+    // Create different buttons based on the type
+    if (type === 'location') {
+        buttonHtml = `
+            <button class="btn btn-sm btn-primary mt-2" onclick="focusOnLocationSelection()">
+                <i class="fas fa-map-marker-alt"></i> Select Location on Map
+            </button>`;
+    } else if (type === 'facilities') {
+        buttonHtml = `
+            <button class="btn btn-sm btn-primary mt-2" onclick="focusOnFacilities()">
+                <i class="fas fa-check-square"></i> Select Facilities
+            </button>`;
+    } else if (type === 'date') {
+        buttonHtml = `
+            <button class="btn btn-sm btn-primary mt-2" onclick="focusOnDatePicker()">
+                <i class="fas fa-calendar-alt"></i> Set Construction Date
+            </button>`;
+    } else if (type === 'photos') {
+        buttonHtml = `
+            <button class="btn btn-sm btn-primary mt-2" onclick="focusOnPhotoUpload()">
+                <i class="fas fa-images"></i> Upload Photos
+            </button>`;
+    } else if (type === 'document') {
+        buttonHtml = `
+            <button class="btn btn-sm btn-primary mt-2" onclick="focusOnDocumentUpload()">
+                <i class="fas fa-file-upload"></i> Upload Ownership Document
+            </button>`;
+    }
+    
+    // Add message with button to chat
+    chatMessages.innerHTML += `
+        <div class="alert alert-info mb-2">
+            <strong>Assistant:</strong> ${message}
+            <div>${buttonHtml}</div>
+        </div>`;
+    
+    // Scroll to bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Function to focus on location selection
+function focusOnLocationSelection() {
+    // Find the location selection button and trigger a click
+    const locationButton = document.querySelector('button[onclick="openLocationSelector()"]');
+    if (locationButton) {
+        // Highlight the button first
+        locationButton.classList.add('highlight-update');
+        setTimeout(() => locationButton.classList.remove('highlight-update'), 2000);
+        
+        // Scroll to it
+        locationButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Optionally automatically click after a delay to allow for scrolling
+        setTimeout(() => {
+            locationButton.click();
+        }, 1000);
+    } else {
+        console.warn('Location selection button not found');
+    }
+}
+
+// Function to focus on facilities selection
+function focusOnFacilities() {
+    // Find the first facility checkbox
+    const firstFacilityCheckbox = document.querySelector('input[name="facilities"]');
+    if (firstFacilityCheckbox) {
+        // Find the parent container with all checkboxes
+        const facilitiesContainer = firstFacilityCheckbox.closest('.mb-3');
+        if (facilitiesContainer) {
+            // Highlight the section
+            facilitiesContainer.classList.add('highlight-section');
+            setTimeout(() => facilitiesContainer.classList.remove('highlight-section'), 3000);
+            
+            // Scroll to it
+            facilitiesContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } else {
+        console.warn('Facilities checkboxes not found');
+    }
+}
+
+// Function to focus on date picker
+function focusOnDatePicker() {
+    const dateField = document.getElementById('datepicker');
+    if (dateField) {
+        // Highlight the field
+        dateField.classList.add('highlight-update');
+        setTimeout(() => dateField.classList.remove('highlight-update'), 2000);
+        
+        // Scroll to it
+        dateField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Focus the field
+        dateField.focus();
+    } else {
+        console.warn('Date picker not found');
+    }
+}
+
+// Function to focus on photo upload
+function focusOnPhotoUpload() {
+    const photoUpload = document.getElementById('id_image');
+    if (photoUpload) {
+        // Highlight the field
+        photoUpload.classList.add('highlight-update');
+        setTimeout(() => photoUpload.classList.remove('highlight-update'), 2000);
+        
+        // Scroll to it
+        photoUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Focus the field
+        photoUpload.focus();
+    } else {
+        console.warn('Photo upload field not found');
+    }
+}
+
+// Function to focus on document upload
+function focusOnDocumentUpload() {
+    const documentUpload = document.getElementById('formFileSm');
+    if (documentUpload) {
+        // Highlight the field
+        documentUpload.classList.add('highlight-update');
+        setTimeout(() => documentUpload.classList.remove('highlight-update'), 2000);
+        
+        // Scroll to it
+        documentUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Focus the field
+        documentUpload.focus();
+    } else {
+        console.warn('Document upload field not found');
+    }
+}
+
+// Function to generate a summary of all entered warehouse data
+function generateWarehouseSummary() {
+    // Get values from all form fields
+    const length = document.getElementById('length')?.value || null;
+    const breadth = document.getElementById('breadth')?.value || null;
+    const height = document.getElementById('warehouseHeight')?.value || null;
+    const area = document.getElementById('area')?.value || null;
+    const landmark = document.getElementById('landmark')?.value || null;
+    const rentalPrice = document.getElementById('rental_price')?.value || null;
+    const termsConditions = document.getElementById('comment')?.value || null;
+    const constructionDate = document.getElementById('datepicker')?.value || null;
+    
+    // Get selected facilities
+    const selectedFacilities = [];
+    document.querySelectorAll('input[name="facilities"]:checked').forEach(checkbox => {
+        selectedFacilities.push(checkbox.value);
+    });
+    
+    // Format construction date if present
+    let formattedDate = null;
+    if (constructionDate) {
+        try {
+            const dateObj = new Date(constructionDate);
+            formattedDate = dateObj.toLocaleDateString('en-IN', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+        } catch (error) {
+            formattedDate = constructionDate; // Fallback to raw value
+        }
+    }
+    
+    // Create summary HTML
+    let summaryItems = [];
+    
+    // Add dimensions if available
+    if (length) {
+        summaryItems.push(`<li><strong>Length:</strong> ${length} feet</li>`);
+    }
+    
+    if (breadth) {
+        summaryItems.push(`<li><strong>Breadth:</strong> ${breadth} feet</li>`);
+    }
+    
+    if (height) {
+        summaryItems.push(`<li><strong>Height:</strong> ${height} feet</li>`);
+    }
+    
+    // Add calculated area
+    if (area) {
+        summaryItems.push(`<li><strong>Area:</strong> ${area} square feet</li>`);
+    }
+    
+    // Add calculated volume if all dimensions are available
+    if (length && breadth && height) {
+        const volume = (parseFloat(length) * parseFloat(breadth) * parseFloat(height)).toFixed(2);
+        summaryItems.push(`<li><strong>Volume:</strong> ${volume} cubic feet</li>`);
+    }
+    
+    // Add landmark
+    if (landmark) {
+        summaryItems.push(`<li><strong>Landmark:</strong> ${landmark}</li>`);
+    }
+    
+    // Add rental price
+    if (rentalPrice) {
+        summaryItems.push(`<li><strong>Rental Price:</strong> ₹${rentalPrice} per month</li>`);
+    }
+    
+    // Add construction date
+    if (formattedDate) {
+        summaryItems.push(`<li><strong>Construction Date:</strong> ${formattedDate}</li>`);
+    }
+    
+    // Add terms and conditions (truncated if too long)
+    if (termsConditions) {
+        const truncatedTerms = termsConditions.length > 100 
+            ? termsConditions.substring(0, 100) + '...' 
+            : termsConditions;
+        summaryItems.push(`<li><strong>Terms & Conditions:</strong> ${truncatedTerms}</li>`);
+    }
+    
+    // Add facilities
+    if (selectedFacilities.length > 0) {
+        summaryItems.push(`<li><strong>Facilities:</strong> ${selectedFacilities.join(', ')}</li>`);
+    }
+    
+    // Check for location coordinates
+    const latitude = document.getElementById('latitude')?.value;
+    const longitude = document.getElementById('longitude')?.value;
+    if (latitude && longitude) {
+        summaryItems.push(`<li><strong>Location Coordinates:</strong> ${latitude}, ${longitude}</li>`);
+    }
+    
+    // Check for file uploads
+    const ownershipDocInput = document.getElementById('formFileSm');
+    const hasOwnershipDoc = ownershipDocInput && ownershipDocInput.files.length > 0;
+    
+    const imagesInput = document.getElementById('id_image');
+    const numImages = imagesInput && imagesInput.files.length;
+    
+    if (hasOwnershipDoc) {
+        const docName = ownershipDocInput.files[0].name;
+        summaryItems.push(`<li><strong>Ownership Document:</strong> ${docName}</li>`);
+    }
+    
+    if (numImages > 0) {
+        summaryItems.push(`<li><strong>Warehouse Photos:</strong> ${numImages} image(s) selected</li>`);
+    }
+    
+    // Add missing fields section
+    const missingFields = [];
+    if (!length) missingFields.push('Length');
+    if (!breadth) missingFields.push('Breadth');
+    if (!height) missingFields.push('Height');
+    if (!landmark) missingFields.push('Landmark');
+    if (!rentalPrice) missingFields.push('Rental Price');
+    if (!constructionDate) missingFields.push('Construction Date');
+    if (!termsConditions) missingFields.push('Terms & Conditions');
+    if (selectedFacilities.length === 0) missingFields.push('Facilities');
+    if (!latitude || !longitude) missingFields.push('Location Coordinates');
+    if (!hasOwnershipDoc) missingFields.push('Ownership Document');
+    if (!numImages) missingFields.push('Warehouse Photos');
+    
+    // Create the final summary message
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    
+    if (summaryItems.length === 0) {
+        // No data entered yet
+        chatMessages.innerHTML += `
+            <div class="alert alert-warning mb-2">
+                <strong>Assistant:</strong> 
+                <p><strong>Warehouse Summary:</strong></p>
+                <p>No warehouse details have been entered yet. Try describing your warehouse to get started.</p>
+            </div>`;
+    } else {
+        let summaryHtml = `
+            <div class="alert alert-success mb-2">
+                <strong>Assistant:</strong>
+                <p><strong>Warehouse Summary:</strong></p>
+                <ul class="mb-1">
+                    ${summaryItems.join('')}
+                </ul>`;
+                
+        if (missingFields.length > 0) {
+            summaryHtml += `
+                <div class="mt-2">
+                    <strong>Missing Information:</strong>
+                    <span class="text-muted">${missingFields.join(', ')}</span>
+                </div>`;
+                
+            // Add interactive buttons for missing fields in the same message
+            summaryHtml += `<div class="mt-3"><strong>Complete your warehouse information:</strong></div>`;
+            summaryHtml += `<div class="d-flex flex-wrap gap-2 mt-2">`;
+            
+            if (missingFields.includes('Location Coordinates')) {
+                summaryHtml += `
+                    <button class="btn btn-sm btn-outline-primary" onclick="openLocationSelector()">
+                        <i class="fas fa-map-marker-alt"></i> Set Location
+                    </button>`;
+            }
+            
+            if (missingFields.includes('Facilities')) {
+                summaryHtml += `
+                    <button class="btn btn-sm btn-outline-primary" onclick="focusOnFacilities()">
+                        <i class="fas fa-check-square"></i> Select Facilities
+                    </button>`;
+            }
+            
+            if (missingFields.includes('Construction Date')) {
+                summaryHtml += `
+                    <button class="btn btn-sm btn-outline-primary" onclick="focusOnDatePicker()">
+                        <i class="fas fa-calendar-alt"></i> Set Construction Date
+                    </button>`;
+            }
+            
+            if (missingFields.includes('Warehouse Photos')) {
+                summaryHtml += `
+                    <button class="btn btn-sm btn-outline-primary" onclick="focusOnPhotoUpload()">
+                        <i class="fas fa-images"></i> Upload Photos
+                    </button>`;
+            }
+            
+            if (missingFields.includes('Ownership Document')) {
+                summaryHtml += `
+                    <button class="btn btn-sm btn-outline-primary" onclick="focusOnDocumentUpload()">
+                        <i class="fas fa-file-upload"></i> Upload Document
+                    </button>`;
+            }
+            
+            if (missingFields.includes('Terms & Conditions')) {
+                summaryHtml += `
+                    <button class="btn btn-sm btn-outline-primary" onclick="focusOnTermsAndConditions()">
+                        <i class="fas fa-file-contract"></i> Set Terms & Conditions
+                    </button>`;
+            }
+            
+            summaryHtml += `</div>`;
+        }
+        
+        summaryHtml += `</div>`;
+        
+        chatMessages.innerHTML += summaryHtml;
+    }
+    
+    // Scroll to bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Function to highlight a form field and scroll to it
+function highlightField(elementId) {
+    const element = document.getElementById(elementId);
+    
+    // If element not found by ID, try getting by class name
+    if (!element) {
+        const elements = document.getElementsByClassName(elementId);
+        if (elements.length > 0) {
+            elements[0].classList.add('highlight-field');
+            elements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                elements[0].classList.remove('highlight-field');
+            }, 3000);
+            return;
+        }
+        console.error(`Element with ID/class ${elementId} not found`);
+        return;
+    }
+    
+    // Highlight the element
+    element.classList.add('highlight-field');
+    
+    // Scroll to the element
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Remove the highlight after 3 seconds
+    setTimeout(() => {
+        element.classList.remove('highlight-field');
+    }, 3000);
+    
+    // Try to focus the element if it's an input
+    if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') {
+        element.focus();
+    }
+}
+
+// Function to focus on the map 
+function focusMap() {
+    // Try to click the map element or button that opens the map
+    const mapButton = document.querySelector('[data-target="#locationModal"]');
+    if (mapButton) {
+        mapButton.click();
+    }
+}
+
+// Add new function for Terms & Conditions
+function focusOnTermsAndConditions() {
+    const termsField = document.getElementById('comment');
+    if (termsField) {
+        // Highlight the field
+        termsField.classList.add('highlight-update');
+        setTimeout(() => termsField.classList.remove('highlight-update'), 2000);
+        
+        // Scroll to it
+        termsField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Focus the field
+        termsField.focus();
+    } else {
+        console.warn('Terms & Conditions field not found');
+    }
+}
+</script>
+
+<style>
+.highlight-field {
+    box-shadow: 0 0 10px 2px #4e73df !important;
+    border-color: #4e73df !important;
+}
+
+.highlight-update {
+    animation: highlightFade 2s ease-out;
+}
+
+@keyframes highlightFade {
+    0% {
+        background-color: rgba(77, 189, 116, 0.2);
+        border-color: #4dbd74;
+    }
+    100% {
+        background-color: transparent;
+        border-color: #ced4da;
+    }
+}
+</style>
+
 </html>
+
+
+
+  
 
 

@@ -250,6 +250,8 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+RECOMMENDER_API_URL = "http://localhost:8001"
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
