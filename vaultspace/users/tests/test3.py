@@ -101,7 +101,7 @@ except Exception as e:
 
 finally:
     # Close the browser
-    driver.quit()
+    
     logger.info("Browser closed.")
 
 

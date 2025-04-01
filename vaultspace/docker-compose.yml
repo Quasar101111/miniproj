@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"  # Expose port 8000
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=vaultspace.settings
+      - ALLOWED_HOSTS=127.0.0.1,localhost
+      - FASTAPI_URL=http://app.recommender.localhost:8001 
+    networks:
+      - narf-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Enable access to host machine
+      - "app.recommender.localhost:host-gateway"
+    
+networks:
+  narf-network:
+    external: true
+
+volumes:
+  static_volume:
+  media_volume: 
+

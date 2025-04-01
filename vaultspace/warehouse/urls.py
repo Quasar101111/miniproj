@@ -33,7 +33,11 @@ urlpatterns = [
     path('api/tenant_availability/',  views.tenant_availability_api, name='tenant_availability_api'),
     path('process-warehouse-chat/', views.process_warehouse_chat, name='process_warehouse_chat'),
     path('process_warehouse_files/', views.process_warehouse_files, name='process_warehouse_files'),
-
- 
+    path('warehouse/<int:warehouse_id>/optimal-price/', views.get_optimal_lease_price, name='get_optimal_lease_price'),
+    
+    # Blockchain verification and sync URLs
+    path('verify_blockchain/<int:warehouse_id>/', views.verify_warehouse_blockchain, name='verify_warehouse_blockchain'),
+    path('sync_blockchain/<int:warehouse_id>/', views.sync_blockchain_data, name='sync_blockchain_data'),
+    path('blockchain_details/<int:warehouse_id>/', views.get_blockchain_details, name='blockchain_details'),
 ]
 urlpatterns=urlpatterns+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

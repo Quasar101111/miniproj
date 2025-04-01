@@ -154,6 +154,49 @@
                                                 </div>
                                             </div>
 
+                                            <!-- Optimal Price Prediction Section -->
+                                            <div class="row mb-4">
+                                                <div class="col-12">
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h5 class="card-title">AI-Powered Price Suggestions</h5>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="price-suggestion">
+                                                                        <h6>Optimal Monthly Rate</h6>
+                                                                        <p class="optimal-price" id="optimal-price">Loading...</p>
+                                                                    </div>
+                                                                    <div class="price-range mt-3">
+                                                                        <h6>Suggested Price Range</h6>
+                                                                        <div class="range-bar">
+                                                                            <div class="range-fill" id="range-fill"></div>
+                                                                        </div>
+                                                                        <div class="d-flex justify-content-between mt-2">
+                                                                            <span id="range-low">Loading...</span>
+                                                                            <span id="range-high">Loading...</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="price-metrics">
+                                                                        <div class="metric">
+                                                                            <h6>Price per sqft</h6>
+                                                                            <p id="price-per-sqft">Loading...</p>
+                                                                        </div>
+                                                                        <div class="metric mt-3">
+                                                                            <h6>Confidence Level</h6>
+                                                                            <p id="confidence-level">Loading...</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label for="lease_start_date" class="form-label">Lease Start Date</label>
@@ -240,15 +283,85 @@
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-
-
-      
+        // Existing lease form code
         var leaseStartDateInput = document.getElementById('lease_start_date');
         var leaseMonthsInput = document.getElementById('lease_months');
         var leaseEndDateInput = document.getElementById('lease_end_date');
         var newMonthlyRateInput = document.getElementById('new_monthly_rate');
         var totalAmountInput = document.getElementById('total_amount');
 
+        // Show loading state
+        function showLoading() {
+            document.getElementById('optimal-price').textContent = 'Loading...';
+            document.getElementById('range-low').textContent = 'Loading...';
+            document.getElementById('range-high').textContent = 'Loading...';
+            document.getElementById('price-per-sqft').textContent = 'Loading...';
+            document.getElementById('confidence-level').textContent = 'Loading...';
+        }
+
+        // Show error state
+        function showError(message) {
+            document.getElementById('optimal-price').textContent = 'Error loading price suggestions';
+            document.getElementById('range-low').textContent = 'N/A';
+            document.getElementById('range-high').textContent = 'N/A';
+            document.getElementById('price-per-sqft').textContent = 'N/A';
+            document.getElementById('confidence-level').textContent = 'N/A';
+            console.error('Error:', message);
+        }
+
+        // Format currency with Indian Rupee symbol
+        function formatCurrency(amount) {
+            return `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+        }
+
+        // Update price suggestions from server data
+        const priceSuggestions = {{ price_suggestions|default:"null"|safe }};
+        
+        if (priceSuggestions) {
+            // Update optimal price
+            document.getElementById('optimal-price').textContent = formatCurrency(priceSuggestions.optimal_price);
+            
+            // Update price range
+            document.getElementById('range-low').textContent = formatCurrency(priceSuggestions.price_range.low);
+            document.getElementById('range-high').textContent = formatCurrency(priceSuggestions.price_range.high);
+            
+            // Calculate and update range bar
+            const currentPrice = priceSuggestions.current_price;
+            const rangeLow = priceSuggestions.price_range.low;
+            const rangeHigh = priceSuggestions.price_range.high;
+            const rangeWidth = rangeHigh - rangeLow;
+            const currentPosition = ((currentPrice - rangeLow) / rangeWidth) * 100;
+            document.getElementById('range-fill').style.width = `${currentPosition}%`;
+            
+            // Update price per sqft
+            document.getElementById('price-per-sqft').textContent = formatCurrency(priceSuggestions.price_per_sqft);
+            
+            // Update confidence level with color coding
+            const confidenceElement = document.getElementById('confidence-level');
+            confidenceElement.textContent = `${priceSuggestions.confidence}%`;
+            if (priceSuggestions.confidence >= 90) {
+                confidenceElement.style.color = '#28a745'; // Green
+            } else if (priceSuggestions.confidence >= 70) {
+                confidenceElement.style.color = '#ffc107'; // Yellow
+            } else {
+                confidenceElement.style.color = '#dc3545'; // Red
+            }
+            
+            // Set suggested price as default value for new monthly rate
+            newMonthlyRateInput.value = priceSuggestions.optimal_price;
+            
+            // Add tooltip to show current price vs suggested price
+            const priceDiff = ((priceSuggestions.optimal_price - currentPrice) / currentPrice) * 100;
+            const tooltipText = priceDiff > 0 
+                ? `Suggested price is ${priceDiff.toFixed(1)}% higher than current price`
+                : `Suggested price is ${Math.abs(priceDiff).toFixed(1)}% lower than current price`;
+            
+            newMonthlyRateInput.title = tooltipText;
+        } else {
+            showError('Price suggestions not available');
+        }
+
+        // Existing lease form functions
         function updateEndDateAndTotal() {
             var startDate = new Date(leaseStartDateInput.value);
             var months = parseInt(leaseMonthsInput.value) || 0;
@@ -272,9 +385,6 @@
         var today = new Date().toISOString().split('T')[0];
         leaseStartDateInput.min = today;
 
-        // Set initial value for new monthly rate
-        newMonthlyRateInput.value = {{ warehouse.rental_price }};
-
         // Add event listeners
         leaseStartDateInput.addEventListener('input', updateEndDateAndTotal);
         leaseMonthsInput.addEventListener('input', updateEndDateAndTotal);
@@ -283,26 +393,25 @@
         // Initial calculation
         updateEndDateAndTotal();
 
-
+        // Tenant selection validation
         var tenantSelect = document.getElementById('single-select');
-    var form = document.querySelector('form');
-    var tenantError = document.getElementById('tenant-error');
+        var form = document.querySelector('form');
+        var tenantError = document.getElementById('tenant-error');
 
-    form.addEventListener('submit', function(event) {
-        if (tenantSelect.value === "") {
-            event.preventDefault();
-            tenantError.style.display = 'block';
-        } else {
-            tenantError.style.display = 'none';
-        }
-    });
-
-    tenantSelect.addEventListener('change', function() {
-        if (tenantSelect.value !== "") {
-            tenantError.style.display = 'none';
-        }
+        form.addEventListener('submit', function(event) {
+            if (tenantSelect.value === "") {
+                event.preventDefault();
+                tenantError.style.display = 'block';
+            } else {
+                tenantError.style.display = 'none';
+            }
         });
 
+        tenantSelect.addEventListener('change', function() {
+            if (tenantSelect.value !== "") {
+                tenantError.style.display = 'none';
+            }
+        });
     });
     </script>
     <script src="{% static 'vendor/global/global.min.js' %}"></script>

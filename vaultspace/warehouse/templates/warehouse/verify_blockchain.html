@@ -1,0 +1,97 @@
+
+
+{% block title %}Verify Warehouse Blockchain Data{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Warehouse Blockchain Verification</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ warehouse.name|default:"Warehouse" }} #{{ warehouse.warehouse_id }}</h5>
+                    
+                    {% if verification_error %}
+                        <div class="alert alert-danger">
+                            <strong>Error:</strong> {{ verification_error }}
+                        </div>
+                        <p>
+                            <a href="{% url 'warehouse_detail' warehouse.warehouse_id %}" class="btn btn-secondary">Return to Warehouse Details</a>
+                        </p>
+                    {% else %}
+                        <div class="mb-4">
+                            {% if all_fields_match %}
+                                <div class="alert alert-success">
+                                    <strong>Verification Successful!</strong> All data matches between blockchain and database.
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <strong>Verification Incomplete!</strong> Some data fields don't match.
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <form action="{% url 'sync_blockchain_data' warehouse.warehouse_id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fas fa-sync"></i> Sync Database to Blockchain
+                                        </button>
+                                        <small class="form-text text-muted">
+                                            This will update the blockchain data to match the database. This operation may take a few minutes and will require gas fees.
+                                        </small>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Database Value</th>
+                                        <th>Blockchain Value</th>
+                                        <th>Match</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for field, data in comparison_results.items %}
+                                    <tr>
+                                        <td><strong>{{ field|title }}</strong></td>
+                                        <td>{{ data.database }}</td>
+                                        <td>{{ data.blockchain }}</td>
+                                        <td>
+                                            {% if data.match %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i> Match</span>
+                                            {% else %}
+                                                <span class="text-danger"><i class="fas fa-times-circle"></i> No Match</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>Blockchain Transaction Details</h5>
+                            <p>
+                                <strong>Transaction Hash:</strong> 
+                                <a href="https://sepolia.etherscan.io/tx/0x{{ warehouse.blockchain_tx }}" target="_blank">
+                                    {{ warehouse.blockchain_tx }}
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'warehouse_detail' warehouse.warehouse_id %}" class="btn btn-secondary">Return to Warehouse Details</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

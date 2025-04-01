@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  recommender:
+    container_name: recommender
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - narf-network
+    ports:
+      - "8001:8001"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.recommender.rule=Host(`app.recommender.localhost`)"
+      - "traefik.http.routers.recommender.entrypoints=web"
+      - "traefik.http.services.recommender.loadbalancer.server.port=8001"
+      - "traefik.http.routers.recommender.middlewares=recommender-stripprefix"
+      - "traefik.http.middlewares.recommender-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.recommender.priority=1"
+
+  traefik:
+    image: "traefik:v2.10"
+    container_name: "traefik"
+    command:
+      - "--api=true"
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker.network=narf-network"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.narf.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.docker.network=narf-network"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - narf-network
+
+networks:
+  narf-network:
+    driver: bridge 

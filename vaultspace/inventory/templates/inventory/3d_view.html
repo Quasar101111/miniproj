@@ -6,6 +6,7 @@
     <title>Warehouse 3D View</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -38,10 +39,84 @@
             padding-bottom: 8px;
         }
 
-        #legend {
-            position: absolute;
+        #controls {
+            position: fixed;
             top: 10px;
             right: 10px;
+            color: #333;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 101; /* Higher than legend to ensure it's always accessible */
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 200px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        #controls:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .control-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .control-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .control-label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        #views-group button {
+            flex: 1;
+        }
+
+        #rotate-group button {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+
+        .icon {
+            font-size: 16px;
+            margin-right: 5px;
+        }
+
+        #legend {
+            position: fixed;
+            top: 10px;
+            right: 220px;
             color: #333;
             background: rgba(255, 255, 255, 0.92);
             padding: 20px;
@@ -53,6 +128,14 @@
             max-height: 90vh;
             overflow-y: auto;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        #legend.hidden {
+            right: -350px;
+            opacity: 0;
+            pointer-events: none;
         }
 
         #legend:hover {
@@ -163,12 +246,138 @@
             background-color: rgba(231, 76, 60, 0.2);
             border-left-color: #e74c3c;
         }
+
+        /* Add media query for smaller screens */
+        @media (max-width: 1200px) {
+            #legend {
+                right: 220px;
+                max-width: 280px;
+            }
+        }
+        
+        /* Add media query for tablets */
+        @media (max-width: 992px) {
+            #legend {
+                right: 220px;
+                max-width: 250px;
+                font-size: 0.95em;
+            }
+            
+            #controls {
+                width: 180px;
+            }
+            
+            .control-button {
+                font-size: 13px;
+                padding: 7px 10px;
+            }
+        }
+        
+        /* Add media query for mobile screens */
+        @media (max-width: 768px) {
+            #controls {
+                right: 10px;
+                top: 10px;
+                width: 160px;
+                font-size: 0.9em;
+                padding: 10px;
+                max-height: 50vh;
+            }
+            
+            #legend {
+                right: 10px;
+                bottom: 10px;
+                top: auto;
+                max-height: 40vh;
+                max-width: 250px;
+                font-size: 0.85em;
+            }
+            
+            #legend.hidden {
+                bottom: -500px;
+                opacity: 0;
+            }
+            
+            .control-button {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+            
+            .color-box {
+                width: 16px;
+                height: 16px;
+                margin-right: 8px;
+            }
+            
+            .legend-title {
+                font-size: 1.1em;
+            }
+            
+            .legend-section-title {
+                font-size: 1em;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            #info {
+                left: 5px;
+                top: 5px;
+                max-width: 200px;
+                padding: 10px;
+                font-size: 0.85em;
+            }
+            
+            #controls {
+                width: 130px;
+                right: 5px;
+                top: 5px;
+            }
+            
+            #legend {
+                right: 5px;
+                bottom: 5px;
+                max-width: 200px;
+            }
+            
+            .control-button {
+                padding: 4px 6px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="info">
         <h3>Warehouse 3D View</h3>
         <p>Controls: Left click + drag to rotate, Right click + drag to pan, Scroll to zoom</p>
+    </div>
+
+    <div id="controls">
+        <div class="control-label">Camera Views</div>
+        <div id="views-group" class="control-group">
+            <button class="control-button" id="top-view">Top</button>
+            <button class="control-button" id="front-view">Front</button>
+            <button class="control-button" id="side-view">Side</button>
+        </div>
+        
+        <div class="control-label">Rotation</div>
+        <div id="rotate-group" class="control-group">
+            <button class="control-button" id="rotate-left">⟲</button>
+            <button class="control-button" id="rotate-right">⟳</button>
+        </div>
+        
+        <div class="control-label">Options</div>
+        <button class="control-button" id="reset-view">Reset View</button>
+        <button class="control-button" id="toggle-labels">Toggle Labels</button>
+        <button class="control-button" id="toggle-boxes">Toggle Box Details</button>
+        <button class="control-button" id="toggle-legend">Toggle Legend</button>
+        
+        <div class="control-label">Visibility</div>
+        <button class="control-button" id="toggle-zones">Toggle Zones</button>
+        <button class="control-button" id="toggle-walls">Toggle Walls</button>
+        <button class="control-button" id="toggle-pallets">Toggle Pallets</button>
+        <button class="control-button" id="toggle-empty-locations">Toggle Empty Locations</button>
     </div>
 
     <div id="legend">
@@ -277,6 +486,9 @@
             const controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
+            controls.minDistance = 5;
+            controls.maxDistance = 100;
+            controls.maxPolarAngle = Math.PI / 2;
 
             // Enhanced Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -379,11 +591,13 @@
                 frontWall.position.set(0, data.height/2, -data.width/2);
                 frontWall.castShadow = true;
                 frontWall.receiveShadow = true;
+                frontWall.userData = { type: 'wall' };
                 group.add(frontWall);
 
                 // Back Wall
                 const backWall = frontWall.clone();
                 backWall.position.z = data.width/2;
+                backWall.userData = { type: 'wall' };
                 group.add(backWall);
 
                 // Left Wall
@@ -392,11 +606,13 @@
                 leftWall.position.set(-data.length/2, data.height/2, 0);
                 leftWall.castShadow = true;
                 leftWall.receiveShadow = true;
+                leftWall.userData = { type: 'wall' };
                 group.add(leftWall);
 
                 // Right Wall
                 const rightWall = leftWall.clone();
                 rightWall.position.x = data.length/2;
+                rightWall.userData = { type: 'wall' };
                 group.add(rightWall);
 
                 // Add windows to front wall
@@ -468,6 +684,143 @@
                 // Default color for unknown items
                 'default': 0xf39c12      // Orange
             };
+
+            // Create textures for different item types
+            const textureLoader = new THREE.TextureLoader();
+            const textures = {
+                cardboard: textureLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@master/examples/textures/crate.gif'),
+                wood: textureLoader.load('https://threejs.org/examples/textures/hardwood2_diffuse.jpg'),
+                metal: textureLoader.load('https://threejs.org/examples/textures/metal.jpg'),
+                pallet: textureLoader.load('https://threejs.org/examples/textures/plywood.jpg')
+            };
+
+            // Create custom textures with shipping details
+            function createShippingBoxTexture(itemName, itemCount, withTape = true) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 512;
+                canvas.height = 512;
+                
+                // Fill with base color (cardboard brown)
+                ctx.fillStyle = '#D4A76A';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add cardboard texture
+                ctx.strokeStyle = '#C08C53';
+                ctx.lineWidth = 1;
+                
+                // Horizontal lines to simulate cardboard
+                for (let i = 0; i < canvas.height; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+                
+                if (withTape) {
+                    // Add packing tape across the middle
+                    const tapeColor = itemName.toLowerCase().includes('fragile') ? 
+                        'rgba(231, 76, 60, 0.6)' : 'rgba(243, 156, 18, 0.6)';
+                    
+                    ctx.fillStyle = tapeColor;
+                    ctx.fillRect(0, canvas.height/2 - 30, canvas.width, 60);
+                    
+                    // Add tape texture (striped pattern)
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < canvas.width; i += 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, canvas.height/2 - 30);
+                        ctx.lineTo(i, canvas.height/2 + 30);
+                        ctx.stroke();
+                    }
+                    
+                    // Add tape across edges
+                    ctx.fillStyle = tapeColor;
+                    ctx.fillRect(0, 0, canvas.width, 20);
+                    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+                    ctx.fillRect(0, 0, 20, canvas.height);
+                    ctx.fillRect(canvas.width - 20, 0, 20, canvas.height);
+                }
+                
+                // Add shipping label
+                ctx.fillStyle = 'white';
+                ctx.fillRect(50, 50, 412, 200);
+                
+                // Add border to label
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(50, 50, 412, 200);
+                
+                // Add company logo/name
+                ctx.fillStyle = '#3498db';
+                ctx.font = 'bold 40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('VaultSpace', 256, 100);
+                
+                // Add item name
+                ctx.fillStyle = '#333';
+                ctx.font = '30px Arial';
+                ctx.fillText(itemName, 256, 150);
+                
+                // Add item count
+                ctx.font = '26px Arial';
+                ctx.fillText(`QTY: ${itemCount}`, 256, 190);
+                
+                // Add barcode
+                ctx.fillStyle = 'black';
+                const barcodeY = 300;
+                const barcodeHeight = 100;
+                
+                // Draw random barcode bars
+                for (let i = 50; i < 462; i += 6) {
+                    const barWidth = Math.floor(Math.random() * 4) + 1;
+                    if (Math.random() > 0.3) { // 70% chance of drawing a bar
+                        ctx.fillRect(i, barcodeY, barWidth, barcodeHeight);
+                    }
+                }
+                
+                // Add barcode number
+                ctx.fillStyle = '#333';
+                ctx.font = '20px monospace';
+                ctx.fillText(`${Math.floor(Math.random() * 10000000000)}`, 256, barcodeY + barcodeHeight + 30);
+                
+                // Add "Fragile" or "Heavy" for certain items
+                if (itemName.toLowerCase().includes('glass') || itemName.toLowerCase().includes('electronics')) {
+                    ctx.save();
+                    ctx.translate(400, 400);
+                    ctx.rotate(-Math.PI / 4);
+                    ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
+                    ctx.font = 'bold 50px Arial';
+                    ctx.fillText('FRAGILE', 0, 0);
+                    ctx.restore();
+                } else if (itemName.toLowerCase().includes('furniture') || itemCount > 5) {
+                    ctx.save();
+                    ctx.translate(400, 400);
+                    ctx.rotate(-Math.PI / 4);
+                    ctx.fillStyle = 'rgba(41, 128, 185, 0.8)';
+                    ctx.font = 'bold 50px Arial';
+                    ctx.fillText('HEAVY', 0, 0);
+                    ctx.restore();
+                }
+                
+                // Create texture from canvas
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.needsUpdate = true;
+                return texture;
+            }
+
+            // Function to get texture for an item
+            function getItemTexture(itemName) {
+                const name = itemName.toLowerCase();
+                if (name.includes('wood') || name.includes('furniture') || name.includes('table') || name.includes('chair')) {
+                    return textures.wood;
+                } else if (name.includes('metal') || name.includes('electronics') || name.includes('computer')) {
+                    return textures.metal;
+                } else {
+                    return textures.cardboard;
+                }
+            }
 
             // Function to get color for an item
             function getItemColor(itemName) {
@@ -544,6 +897,7 @@
                     );
                     zoneMesh.castShadow = true;
                     zoneMesh.receiveShadow = true;
+                    zoneMesh.userData = { type: 'zone' };
                     scene.add(zoneMesh);
 
                     // Add zone label
@@ -575,24 +929,6 @@
                         const spacing = 0.2;
 
                         zone.locations.forEach((location, locIndex) => {
-                            const locationGeometry = new THREE.BoxGeometry(
-                                location.length,
-                                location.height,
-                                location.width
-                            );
-                            
-                            // Use specific color for item if present
-                            const locationColor = location.item ? getItemColor(location.item.name) : 0xecf0f1; // Changed empty location color
-                            const locationMaterial = new THREE.MeshPhongMaterial({
-                                color: locationColor,
-                                transparent: true,
-                                opacity: location.item ? 0.8 : 0.4,
-                                // Add shininess for better appearance
-                                shininess: location.item ? 30 : 10
-                            });
-
-                            const locationMesh = new THREE.Mesh(locationGeometry, locationMaterial);
-                            
                             // Calculate grid position
                             const row = Math.floor(locIndex / locationCols);
                             const col = locIndex % locationCols;
@@ -605,13 +941,181 @@
                             const locY = location.height/2;
                             const locZ = zoneMesh.position.z - zone.width/2 + spacing + row * (gridLength + spacing) + gridLength/2;
                             
-                            locationMesh.position.set(locX, locY, locZ);
-                            locationMesh.castShadow = true;
-                            locationMesh.receiveShadow = true;
-                            scene.add(locationMesh);
-
+                            // Create location area (transparent)
+                            const locationGeometry = new THREE.BoxGeometry(
+                                location.length,
+                                location.height,
+                                location.width
+                            );
+                            
+                            // Create empty location with subtle outline
+                            const emptyLocationMaterial = new THREE.MeshPhongMaterial({
+                                color: 0xecf0f1,
+                                transparent: true,
+                                opacity: 0.2,
+                                wireframe: true
+                            });
+                            
                             if (location.item) {
-                                // Add item label
+                                // Create a more detailed pallet with slats
+                                function createPallet(length, width, height) {
+                                    const palletGroup = new THREE.Group();
+                                    const palletMaterial = new THREE.MeshPhongMaterial({
+                                        map: textures.pallet,
+                                        roughness: 0.9,
+                                        metalness: 0.1
+                                    });
+                                    
+                                    // Base layer (bottom deck boards)
+                                    const baseGeometry = new THREE.BoxGeometry(length, height/3, width);
+                                    const baseMesh = new THREE.Mesh(baseGeometry, palletMaterial);
+                                    baseMesh.position.y = height/6;
+                                    baseMesh.receiveShadow = true;
+                                    palletGroup.add(baseMesh);
+                                    
+                                    // Create stringers (middle support)
+                                    const stringerWidth = width/10;
+                                    const stringerGeometry = new THREE.BoxGeometry(length, height, stringerWidth);
+                                    
+                                    // Left stringer
+                                    const leftStringer = new THREE.Mesh(stringerGeometry, palletMaterial);
+                                    leftStringer.position.set(0, height/2, -width/2 + stringerWidth/2);
+                                    leftStringer.receiveShadow = true;
+                                    leftStringer.castShadow = true;
+                                    palletGroup.add(leftStringer);
+                                    
+                                    // Middle stringer
+                                    const middleStringer = new THREE.Mesh(stringerGeometry, palletMaterial);
+                                    middleStringer.position.set(0, height/2, 0);
+                                    middleStringer.receiveShadow = true;
+                                    middleStringer.castShadow = true;
+                                    palletGroup.add(middleStringer);
+                                    
+                                    // Right stringer
+                                    const rightStringer = new THREE.Mesh(stringerGeometry, palletMaterial);
+                                    rightStringer.position.set(0, height/2, width/2 - stringerWidth/2);
+                                    rightStringer.receiveShadow = true;
+                                    rightStringer.castShadow = true;
+                                    palletGroup.add(rightStringer);
+                                    
+                                    // Top deck boards
+                                    const numBoards = 5;
+                                    const boardWidth = length / (numBoards + 1);
+                                    const boardLength = width;
+                                    const boardGeometry = new THREE.BoxGeometry(boardWidth, height/3, boardLength);
+                                    
+                                    for (let i = 0; i < numBoards; i++) {
+                                        const board = new THREE.Mesh(boardGeometry, palletMaterial);
+                                        board.position.set(
+                                            -length/2 + boardWidth/2 + (i+1) * (length/(numBoards+1)),
+                                            height - height/6,
+                                            0
+                                        );
+                                        board.receiveShadow = true;
+                                        board.castShadow = true;
+                                        
+                                        // Add nail positions for detail
+                                        const nailGeometry = new THREE.CylinderGeometry(0.01, 0.01, height/2, 6);
+                                        const nailMaterial = new THREE.MeshPhongMaterial({
+                                            color: 0x888888,
+                                            metalness: 0.8,
+                                            roughness: 0.2,
+                                            shininess: 80
+                                        });
+                                        
+                                        // Add nails at each stringer intersection
+                                        const nailOffsets = [-width/2 + stringerWidth/2, 0, width/2 - stringerWidth/2];
+                                        
+                                        nailOffsets.forEach(offset => {
+                                            const nail = new THREE.Mesh(nailGeometry, nailMaterial);
+                                            nail.position.set(0, height/4, offset);
+                                            nail.rotation.x = Math.PI/2;
+                                            board.add(nail);
+                                        });
+                                        
+                                        palletGroup.add(board);
+                                    }
+                                    
+                                    return palletGroup;
+                                }
+                                
+                                // Create detailed pallet
+                                const palletHeight = 0.12; // Height of a standard pallet
+                                const pallet = createPallet(location.length, location.width, palletHeight);
+                                pallet.position.set(locX, palletHeight/2, locZ);
+                                pallet.userData = { type: 'pallet' };
+                                scene.add(pallet);
+                                
+                                // Create cargo boxes on the pallet
+                                const boxCount = Math.min(location.item.count, 8); // Limit to 8 visible boxes max
+                                const boxesPerRow = Math.ceil(Math.sqrt(boxCount));
+                                const boxSize = Math.min(location.length / boxesPerRow * 0.85, location.width / boxesPerRow * 0.85);
+                                const boxHeight = Math.min(boxSize, (location.height - palletHeight) / Math.ceil(boxCount / (boxesPerRow * boxesPerRow)));
+                                
+                                const boxGeometry = new THREE.BoxGeometry(boxSize, boxHeight, boxSize);
+                                
+                                // Use specific color and texture for item
+                                const boxColor = getItemColor(location.item.name);
+                                const boxTexture = getItemTexture(location.item.name);
+                                
+                                // Create shipping box textures with tape details
+                                const frontTexture = createShippingBoxTexture(location.item.name, location.item.count, true);
+                                const sideTexture = createShippingBoxTexture(location.item.name, location.item.count, false);
+                                
+                                // Create multi-material for boxes (different textures on different sides)
+                                const boxMaterials = [
+                                    new THREE.MeshPhongMaterial({ map: frontTexture, shininess: 5 }),  // front
+                                    new THREE.MeshPhongMaterial({ map: frontTexture, shininess: 5 }),  // back
+                                    new THREE.MeshPhongMaterial({ map: sideTexture, shininess: 5 }),   // top
+                                    new THREE.MeshPhongMaterial({ map: sideTexture, shininess: 5 }),   // bottom
+                                    new THREE.MeshPhongMaterial({ map: sideTexture, shininess: 5 }),   // left
+                                    new THREE.MeshPhongMaterial({ map: sideTexture, shininess: 5 })    // right
+                                ];
+                                
+                                // Create group for all boxes
+                                const boxGroup = new THREE.Group();
+                                
+                                // Add individual boxes
+                                for (let i = 0; i < boxCount; i++) {
+                                    const box = new THREE.Mesh(boxGeometry, boxMaterials);
+                                    
+                                    // Arrange boxes in rows and columns
+                                    const boxRow = Math.floor(i / boxesPerRow);
+                                    const boxCol = i % boxesPerRow;
+                                    
+                                    // Calculate box position
+                                    const offsetX = (boxCol - (boxesPerRow - 1) / 2) * boxSize * 1.05;
+                                    const offsetZ = (boxRow - (boxesPerRow - 1) / 2) * boxSize * 1.05;
+                                    const offsetY = palletHeight + boxHeight/2;
+                                    
+                                    // Add slight variation to each box position for more realism
+                                    const jitter = 0.02;
+                                    box.position.set(
+                                        offsetX + (Math.random() - 0.5) * jitter, 
+                                        offsetY, 
+                                        offsetZ + (Math.random() - 0.5) * jitter
+                                    );
+                                    box.castShadow = true;
+                                    box.receiveShadow = true;
+                                    
+                                    // Add slight random rotation for realism
+                                    box.rotation.y = (Math.random() - 0.5) * 0.2;
+                                    
+                                    // Add box edges for more definition
+                                    const boxEdges = new THREE.EdgesGeometry(boxGeometry);
+                                    const boxLines = new THREE.LineSegments(
+                                        boxEdges,
+                                        new THREE.LineBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.4 })
+                                    );
+                                    box.add(boxLines);
+                                    
+                                    boxGroup.add(box);
+                                }
+                                
+                                boxGroup.position.set(locX, 0, locZ);
+                                scene.add(boxGroup);
+                                
+                                // Add label above the boxes
                                 const itemCanvas = document.createElement('canvas');
                                 const itemContext = itemCanvas.getContext('2d');
                                 itemCanvas.width = 256;
@@ -627,12 +1131,38 @@
                                 const itemLabelMaterial = new THREE.SpriteMaterial({ map: itemTexture });
                                 const itemLabel = new THREE.Sprite(itemLabelMaterial);
                                 itemLabel.position.set(
-                                    locationMesh.position.x,
-                                    locationMesh.position.y + location.height/2 + 0.5,
-                                    locationMesh.position.z
+                                    locX,
+                                    boxHeight + palletHeight + 0.8,
+                                    locZ
                                 );
                                 itemLabel.scale.set(2.5, 1.25, 1);
                                 scene.add(itemLabel);
+                                
+                                // Add outline to show the boundaries of the location
+                                const outlineMaterial = new THREE.LineBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.5 });
+                                const outlineGeometry = new THREE.EdgesGeometry(locationGeometry);
+                                const outline = new THREE.LineSegments(outlineGeometry, outlineMaterial);
+                                outline.position.set(locX, locY, locZ);
+                                scene.add(outline);
+                            } else {
+                                // For empty locations, just show the transparent outline
+                                const locationMesh = new THREE.Mesh(locationGeometry, emptyLocationMaterial);
+                                locationMesh.position.set(locX, locY, locZ);
+                                locationMesh.receiveShadow = true;
+                                locationMesh.userData = { type: 'emptyLocation' };
+                                scene.add(locationMesh);
+                                
+                                // Add a subtle grid pattern for the floor of empty locations
+                                const gridHelper = new THREE.GridHelper(
+                                    Math.max(location.length, location.width), 
+                                    5, 
+                                    0xaaaaaa, 
+                                    0xdddddd
+                                );
+                                gridHelper.position.set(locX, 0.01, locZ);
+                                gridHelper.rotation.x = Math.PI / 2;
+                                gridHelper.userData = { type: 'emptyLocation' };
+                                scene.add(gridHelper);
                             }
                         });
                     }
@@ -648,6 +1178,269 @@
                 warehouseData.width * 1.5
             );
             camera.lookAt(0, 0, 0);
+
+            // Initialize control variables
+            let labelsVisible = true;
+            let boxDetailsVisible = true;
+            let zonesVisible = true;
+            let wallsVisible = true;
+            let palletsVisible = true;
+            let emptyLocationsVisible = true;
+            let legendVisible = true;
+            
+            // Store references to different object groups
+            const zoneObjects = [];
+            const wallObjects = [];
+            const palletObjects = [];
+            const emptyLocationObjects = [];
+            
+            // Store original camera position for reset
+            const originalCameraPosition = camera.position.clone();
+            const originalCameraTarget = new THREE.Vector3(0, 0, 0);
+
+            // Control button handlers
+            document.getElementById('top-view').addEventListener('click', function() {
+                setCameraView('top');
+            });
+
+            document.getElementById('front-view').addEventListener('click', function() {
+                setCameraView('front');
+            });
+
+            document.getElementById('side-view').addEventListener('click', function() {
+                setCameraView('side');
+            });
+
+            document.getElementById('rotate-left').addEventListener('click', function() {
+                rotateCamera(-Math.PI/8);
+            });
+
+            document.getElementById('rotate-right').addEventListener('click', function() {
+                rotateCamera(Math.PI/8);
+            });
+
+            document.getElementById('reset-view').addEventListener('click', function() {
+                resetCamera();
+            });
+
+            document.getElementById('toggle-labels').addEventListener('click', function() {
+                toggleLabels();
+            });
+
+            document.getElementById('toggle-boxes').addEventListener('click', function() {
+                toggleBoxDetails();
+            });
+
+            document.getElementById('toggle-zones').addEventListener('click', function() {
+                toggleZones();
+            });
+            
+            document.getElementById('toggle-walls').addEventListener('click', function() {
+                toggleWalls();
+            });
+            
+            document.getElementById('toggle-pallets').addEventListener('click', function() {
+                togglePallets();
+            });
+            
+            document.getElementById('toggle-empty-locations').addEventListener('click', function() {
+                toggleEmptyLocations();
+            });
+
+            document.getElementById('toggle-legend').addEventListener('click', function() {
+                toggleLegend();
+            });
+
+            // Function to set camera to specific views
+            function setCameraView(view) {
+                const distance = Math.max(warehouseData.length, warehouseData.width, warehouseData.height) * 2;
+                
+                // Temporarily disable controls to prevent interference
+                controls.enabled = false;
+                
+                switch(view) {
+                    case 'top':
+                        gsap.to(camera.position, {
+                            duration: 1,
+                            x: 0,
+                            y: distance,
+                            z: 0.1, // Slightly offset to prevent rendering issues
+                            onUpdate: function() {
+                                camera.lookAt(0, 0, 0);
+                            },
+                            onComplete: function() {
+                                controls.target.set(0, 0, 0);
+                                controls.update();
+                                controls.enabled = true;
+                            }
+                        });
+                        break;
+                    case 'front':
+                        gsap.to(camera.position, {
+                            duration: 1,
+                            x: 0,
+                            y: warehouseData.height/2,
+                            z: distance,
+                            onUpdate: function() {
+                                camera.lookAt(0, warehouseData.height/2, 0);
+                            },
+                            onComplete: function() {
+                                controls.target.set(0, warehouseData.height/2, 0);
+                                controls.update();
+                                controls.enabled = true;
+                            }
+                        });
+                        break;
+                    case 'side':
+                        gsap.to(camera.position, {
+                            duration: 1,
+                            x: distance,
+                            y: warehouseData.height/2,
+                            z: 0,
+                            onUpdate: function() {
+                                camera.lookAt(0, warehouseData.height/2, 0);
+                            },
+                            onComplete: function() {
+                                controls.target.set(0, warehouseData.height/2, 0);
+                                controls.update();
+                                controls.enabled = true;
+                            }
+                        });
+                        break;
+                }
+            }
+
+            // Function to rotate camera around the center
+            function rotateCamera(angle) {
+                const currentPos = camera.position.clone();
+                const center = controls.target.clone();
+                const distance = new THREE.Vector2(
+                    currentPos.x - center.x,
+                    currentPos.z - center.z
+                ).length();
+                
+                // Calculate current angle
+                let currentAngle = Math.atan2(
+                    currentPos.z - center.z,
+                    currentPos.x - center.x
+                );
+                
+                // Apply rotation
+                currentAngle += angle;
+                
+                // Calculate new position
+                const newX = center.x + distance * Math.cos(currentAngle);
+                const newZ = center.z + distance * Math.sin(currentAngle);
+                
+                // Temporarily disable controls
+                controls.enabled = false;
+                
+                gsap.to(camera.position, {
+                    duration: 0.5,
+                    x: newX,
+                    z: newZ,
+                    onUpdate: function() {
+                        camera.lookAt(center);
+                    },
+                    onComplete: function() {
+                        controls.update();
+                        controls.enabled = true;
+                    }
+                });
+            }
+
+            // Function to reset camera to original position
+            function resetCamera() {
+                // Temporarily disable controls
+                controls.enabled = false;
+                
+                gsap.to(camera.position, {
+                    duration: 1,
+                    x: originalCameraPosition.x,
+                    y: originalCameraPosition.y,
+                    z: originalCameraPosition.z,
+                    onUpdate: function() {
+                        camera.lookAt(originalCameraTarget);
+                    },
+                    onComplete: function() {
+                        controls.target.copy(originalCameraTarget);
+                        controls.update();
+                        controls.enabled = true;
+                    }
+                });
+            }
+
+            // Function to toggle labels visibility
+            function toggleLabels() {
+                labelsVisible = !labelsVisible;
+                scene.traverse(function(object) {
+                    if (object.type === 'Sprite') {
+                        object.visible = labelsVisible;
+                    }
+                });
+            }
+
+            // Function to toggle box details (edges)
+            function toggleBoxDetails() {
+                boxDetailsVisible = !boxDetailsVisible;
+                scene.traverse(function(object) {
+                    if (object.type === 'LineSegments' && object.parent && object.parent.type === 'Mesh') {
+                        object.visible = boxDetailsVisible;
+                    }
+                });
+            }
+
+            // Function to toggle zones visibility
+            function toggleZones() {
+                zonesVisible = !zonesVisible;
+                scene.traverse(function(object) {
+                    if (object.userData && object.userData.type === 'zone') {
+                        object.visible = zonesVisible;
+                    }
+                });
+            }
+            
+            // Function to toggle walls visibility
+            function toggleWalls() {
+                wallsVisible = !wallsVisible;
+                scene.traverse(function(object) {
+                    if (object.userData && object.userData.type === 'wall') {
+                        object.visible = wallsVisible;
+                    }
+                });
+            }
+            
+            // Function to toggle pallets visibility
+            function togglePallets() {
+                palletsVisible = !palletsVisible;
+                scene.traverse(function(object) {
+                    if (object.userData && object.userData.type === 'pallet') {
+                        object.visible = palletsVisible;
+                    }
+                });
+            }
+            
+            // Function to toggle empty locations visibility
+            function toggleEmptyLocations() {
+                emptyLocationsVisible = !emptyLocationsVisible;
+                scene.traverse(function(object) {
+                    if (object.userData && object.userData.type === 'emptyLocation') {
+                        object.visible = emptyLocationsVisible;
+                    }
+                });
+            }
+
+            // Function to toggle legend visibility
+            function toggleLegend() {
+                legendVisible = !legendVisible;
+                const legend = document.getElementById('legend');
+                
+                if (legendVisible) {
+                    legend.classList.remove('hidden');
+                } else {
+                    legend.classList.add('hidden');
+                }
+            }
 
             // Handle window resize
             window.addEventListener('resize', onWindowResize, false);

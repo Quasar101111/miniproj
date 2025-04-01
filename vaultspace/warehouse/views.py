@@ -10,6 +10,7 @@ from .models import Warehouse, WarehousePhoto,Location,Lease,upload_signature_pa
 from users.models import Lessor, Profile,User,Tenant,Payment
 from users.views import lessor_index
 from map.models import Map
+# from warehouse_recommender.app.price_predictor import WarehousePricePredictor
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -39,6 +40,7 @@ from ai.service import GeminiService
 import uuid
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.conf import settings
 
 
 @login_required
@@ -266,13 +268,86 @@ def edit_warehouse(request, warehouse_id):
 
 ##########################leasing ##########################################
 
-
+import requests
 @login_required
 def lease_warehouse(request, warehouse_id):
     warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id, status=1)
     tenants = Tenant.objects.all()
-    lessor = warehouse.owner  # Access the owner (lessor) directly from the warehouse
+    lessor = warehouse.owner
     lessor_id = lessor.lessor_id
+    
+    # Initialize price_suggestions with default values
+    price_suggestions = {
+        'optimal_price': float(warehouse.rental_price),
+        'price_range': {
+            'low': float(warehouse.rental_price) * 0.8,
+            'high': float(warehouse.rental_price) * 1.2
+        },
+        'price_per_sqft': float(warehouse.rental_price) / float(warehouse.area),
+        'confidence': 0.0,
+        'current_price': float(warehouse.rental_price)
+    }
+    
+    try:
+        import requests
+        api_url = f"{settings.RECOMMENDER_API_URL}/predict/price"
+        
+        # Get location from Map model if location field is None
+        if warehouse.location is None:
+            map_location = Map.objects.filter(warehouse=warehouse).first()
+            if map_location:
+                latitude = map_location.latitude
+                longitude = map_location.longitude
+            else:
+                raise ValueError("Warehouse location not found")
+        else:
+            latitude = warehouse.location.latitude
+            longitude = warehouse.location.longitude
+        
+        # Convert Decimal to float for JSON serialization
+        area = float(warehouse.area)
+        
+        # Use actual warehouse data
+        payload = {
+            "area": area,
+            "latitude": float(latitude),
+            "longitude": float(longitude)
+        }
+        
+        print("Sending request to FastAPI service...")
+        print("Request data:", json.dumps(payload, indent=2))
+        print("API URL:", api_url)
+        
+        response = requests.post(api_url, json=payload)
+        response.raise_for_status()
+        price_data = response.json()
+        
+        print("Received response from FastAPI service:")
+        print(json.dumps(price_data, indent=2))
+        
+        # Update price_suggestions with actual data
+        price_suggestions.update({
+            'optimal_price': round(float(price_data['optimal_price']), 2),
+            'price_range': {
+                'low': round(float(price_data['price_range']['low']), 2),
+                'high': round(float(price_data['price_range']['high']), 2)
+            },
+            'price_per_sqft': round(float(price_data['price_per_sqft']), 2),
+            'confidence': round(float(price_data['confidence']), 1)
+        })
+        
+        print("\nPrice Prediction Results:")
+        print(f"Optimal Price: ₹{price_suggestions['optimal_price']:,.2f}")
+        print(f"Price Range: ₹{price_suggestions['price_range']['low']:,.2f} - ₹{price_suggestions['price_range']['high']:,.2f}")
+        print(f"Price per sqft: ₹{price_suggestions['price_per_sqft']:,.2f}")
+        print(f"Confidence Level: {price_suggestions['confidence']:.1f}%")
+        
+    except requests.exceptions.RequestException as e:
+        print(f"FastAPI request error: {str(e)}")
+        messages.warning(request, f'Could not fetch price suggestions: {str(e)}')
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        messages.warning(request, f'An unexpected error occurred: {str(e)}')
     
     if request.method == 'POST':
         print("POST data:", request.POST)
@@ -284,8 +359,6 @@ def lease_warehouse(request, warehouse_id):
         new_monthly_rate = request.POST.get('new_monthly_rate')
         total_amount = request.POST.get('total_amount')
         signature = request.FILES.get('signature')
-
-      
 
         try:
             tenant = Tenant.objects.get(tenant_id=tenant_id)
@@ -305,10 +378,9 @@ def lease_warehouse(request, warehouse_id):
             
             lease.save()
             print("Lease:", lease)
-         
 
             messages.success(request,'Lease request submitted successfully!')
-            return redirect('lessor_index')  # Adjust this to your actual URL name
+            return redirect('lessor_index')
         except Tenant.DoesNotExist:
             messages.error(request, 'Selected tenant does not exist.')
         except Exception as e:
@@ -319,7 +391,7 @@ def lease_warehouse(request, warehouse_id):
         'warehouse': warehouse,
         'tenants': tenants,
         'lessor': lessor,
-
+        'price_suggestions': price_suggestions
     }
     return render(request, 'warehouse/lease_warehouse.html', context)
 
@@ -870,4 +942,267 @@ def process_warehouse_files(request):
         return JsonResponse({
             'message': f"There was an error processing your files: {str(e)}",
             'files': []
+        }, status=500)
+
+@login_required
+def verify_warehouse_blockchain(request, warehouse_id):
+    """
+    View to compare warehouse details in the database with blockchain and display the results
+    """
+    warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+    
+    # Initialize dictionaries to store comparison data
+    blockchain_data = {}
+    database_data = {}
+    comparison_results = {}
+    verification_error = None
+    
+    if warehouse.blockchain_tx:
+        try:
+            # Fetch location from Map model if location field is None
+            if warehouse.location is None:
+                map_location = Map.objects.filter(warehouse=warehouse).first()
+                if map_location:
+                    local_location = f"{map_location.latitude},{map_location.longitude}"
+                else:
+                    raise ValueError("Warehouse location is not set in either Location or Map model")
+            else:
+                local_location = f"{warehouse.location.latitude},{warehouse.location.longitude}"
+            
+            service = BlockchainService()
+            # Fetch warehouse data from blockchain
+            bc_data = service.contract.functions.getWarehouse(warehouse.warehouse_id).call()
+            
+            # Prepare local data for comparison
+            local_area = int(float(warehouse.area))
+            local_rental_price = int(float(warehouse.rental_price))
+            
+            # Store blockchain data in dictionary
+            blockchain_data = {
+                'id': bc_data[0],
+                'name': bc_data[1],
+                'location': bc_data[2],
+                'area': bc_data[3],
+                'rental_price': bc_data[4],
+                'owner': bc_data[5]
+            }
+            
+            # Store database data in dictionary
+            database_data = {
+                'id': warehouse.warehouse_id,
+                'name': warehouse.name,
+                'location': local_location,
+                'area': local_area,
+                'rental_price': local_rental_price,
+                'owner': warehouse.owner.wallet_address if hasattr(warehouse.owner, 'wallet_address') else None
+            }
+            
+            # Compare fields and store results
+            all_match = True
+            for field in blockchain_data:
+                field_match = blockchain_data[field] == database_data[field]
+                comparison_results[field] = {
+                    'blockchain': blockchain_data[field],
+                    'database': database_data[field],
+                    'match': field_match
+                }
+                if not field_match:
+                    all_match = False
+                    
+        except Exception as e:
+            import traceback
+            verification_error = str(e)
+            print(f"Blockchain Verification Error: {str(e)}")
+            print(traceback.format_exc())
+    else:
+        verification_error = "This warehouse has not been stored on the blockchain"
+        
+    return render(request, 'warehouse/verify_blockchain.html', {
+        'warehouse': warehouse,
+        'blockchain_data': blockchain_data,
+        'database_data': database_data,
+        'comparison_results': comparison_results,
+        'all_fields_match': all_match if 'all_match' in locals() else False,
+        'verification_error': verification_error
+    })
+
+@login_required
+def sync_blockchain_data(request, warehouse_id):
+    """
+    View to sync warehouse data in the blockchain if it's out of sync with the database
+    """
+    warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+    sync_result = {'status': 'error', 'message': 'No action taken'}
+    
+    if request.method == 'POST':
+        try:
+            # Get the map location
+            if warehouse.location is None:
+                map_location = Map.objects.filter(warehouse=warehouse).first()
+                if map_location:
+                    location_string = f"{map_location.latitude},{map_location.longitude}"
+                else:
+                    raise ValueError("Warehouse location is not set in either Location or Map model")
+            else:
+                location_string = f"{warehouse.location.latitude},{warehouse.location.longitude}"
+                
+            service = BlockchainService()
+            
+            # Get current gas price and nonce
+            current_gas_price = service.w3.eth.gas_price
+            if current_gas_price == 0:
+                raise ValueError("Invalid gas price received from network")
+            
+            wallet_address = os.getenv('WALLET_ADDRESS')
+            nonce = service.w3.eth.get_transaction_count(wallet_address)
+            
+            # Prepare transaction to update warehouse data
+            tx = service.contract.functions.addWarehouse(
+                str(warehouse.warehouse_id),
+                location_string,
+                int(float(warehouse.area)),
+                int(float(warehouse.rental_price))
+            ).build_transaction({
+                'chainId': 11155111,  # Sepolia chain ID
+                'from': wallet_address,
+                'nonce': nonce,
+                'gas': 2000000,  # Fixed gas limit
+                'maxFeePerGas': int(current_gas_price * 2),
+                'maxPriorityFeePerGas': int(current_gas_price * 1.5),
+            })
+            
+            # Sign and send transaction
+            signed_tx = service.w3.eth.account.sign_transaction(
+                tx, 
+                private_key=os.getenv('PRIVATE_KEY')
+            )
+            tx_hash = service.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            
+            # Wait for receipt
+            receipt = service.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+            
+            # Update warehouse blockchain_tx field
+            warehouse.blockchain_tx = tx_hash.hex()
+            warehouse.save()
+            
+            if receipt.status == 1:
+                sync_result = {
+                    'status': 'success',
+                    'message': 'Warehouse data successfully synchronized with blockchain',
+                    'tx_hash': tx_hash.hex()
+                }
+                messages.success(request, 'Warehouse data successfully synchronized with blockchain')
+            else:
+                sync_result = {
+                    'status': 'error',
+                    'message': 'Transaction completed but may have failed. Please verify the data again.',
+                    'tx_hash': tx_hash.hex()
+                }
+                messages.warning(request, 'Transaction completed but may have failed. Please verify the data again.')
+                
+        except Exception as e:
+            sync_result = {'status': 'error', 'message': str(e)}
+            messages.error(request, f'Error synchronizing with blockchain: {str(e)}')
+    
+    # Redirect to the verification page
+    return redirect('verify_warehouse_blockchain', warehouse_id=warehouse_id)
+
+@login_required
+def get_blockchain_details(request, warehouse_id):
+    """
+    View to fetch and display the raw blockchain data for a warehouse
+    """
+    warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+    blockchain_data = {}
+    fetch_error = None
+    
+    if warehouse.blockchain_tx:
+        try:
+            service = BlockchainService()
+            # Fetch warehouse data from blockchain
+            bc_data = service.contract.functions.getWarehouse(warehouse.warehouse_id).call()
+            
+            # Store blockchain data in dictionary
+            blockchain_data = {
+                'id': bc_data[0],
+                'name': bc_data[1],
+                'location': bc_data[2],
+                'area': bc_data[3],
+                'rental_price': bc_data[4],
+                'owner': bc_data[5]
+            }
+            
+        except Exception as e:
+            import traceback
+            fetch_error = str(e)
+            print(f"Blockchain Fetch Error: {str(e)}")
+            print(traceback.format_exc())
+    else:
+        fetch_error = "This warehouse has not been stored on the blockchain"
+    
+    return render(request, 'warehouse/blockchain_details.html', {
+        'warehouse': warehouse,
+        'blockchain_data': blockchain_data,
+        'fetch_error': fetch_error
+    })
+
+@login_required
+def get_optimal_lease_price(request, warehouse_id):
+    """Get optimal lease price suggestions for a warehouse"""
+    try:
+        warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+        
+        # Get location from Map model if location field is None
+        if warehouse.location is None:
+            map_location = Map.objects.filter(warehouse=warehouse).first()
+            if map_location:
+                latitude = map_location.latitude
+                longitude = map_location.longitude
+            else:
+                return JsonResponse({
+                    'error': 'Warehouse location not found'
+                }, status=400)
+        else:
+            latitude = warehouse.location.latitude
+            longitude = warehouse.location.longitude
+        
+        # Make request to FastAPI service
+        import requests
+        api_url = "http://127.0.0.1:8001/predict/price"
+        payload = {
+            "area": float(warehouse.area),
+            "latitude": latitude,
+            "longitude": longitude
+        }
+        
+        response = requests.post(api_url, json=payload)
+        if response.status_code != 200:
+            return JsonResponse({
+                'error': f'Error from recommender service: {response.text}'
+            }, status=response.status_code)
+            
+        suggestions = response.json()
+        
+        # Format the response
+        response_data = {
+            'warehouse_id': warehouse.warehouse_id,
+            'area': warehouse.area,
+            'location': f"{warehouse.location.city}, {warehouse.location.state}" if warehouse.location else "Location not specified",
+            'suggestions': {
+                'optimal_price': round(suggestions['optimal_price'], 2),
+                'price_range': {
+                    'low': round(suggestions['price_range']['low'], 2),
+                    'high': round(suggestions['price_range']['high'], 2)
+                },
+                'price_per_sqft': round(suggestions['price_per_sqft'], 2),
+                'confidence': round(suggestions['confidence'], 1)
+            },
+            'current_price': float(warehouse.rental_price)
+        }
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
         }, status=500)
