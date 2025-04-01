@@ -1,6 +1,8 @@
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import time
 
 # Configure logging
@@ -10,9 +12,19 @@ logger = logging.getLogger()
 # Specify the path to ChromeDriver
 chrome_driver_path = "D:/S9/miniproject/edit 2/chromedriver-win64/chromedriver.exe"  # Update with the actual path
 
-# Set up the WebDriver (e.g., Chrome)
+# Initialize driver variable
+driver = None
+
 try:
-    driver = webdriver.Chrome(executable_path=chrome_driver_path)  # Ensure chromedriver is in PATH or specify executable_path
+    # Set up Chrome options
+    chrome_options = Options()
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--ignore-ssl-errors')
+    chrome_options.add_argument('--start-maximized')
+
+    # Initialize the WebDriver with the correct syntax
+    service = Service(chrome_driver_path)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     logger.info("WebDriver initialized successfully.")
 
     # Test 1: "second"
@@ -25,7 +37,7 @@ try:
 
         # Set window size
         driver.set_window_size(1024, 720)
-        logger.info("Set window size to 945x913")
+        logger.info("Set window size to 1024x720")
 
         # Find and click the username field
         username_field = driver.find_element(By.ID, "id_username")
@@ -51,22 +63,6 @@ try:
         logger.info("Clicked the submit button.")
         time.sleep(2)
 
-        # # Navigate to "LEASES" from the navbar
-        # leases_nav = driver.find_element(By.ID, "navbarDropdownMenuLink")
-        # leases_nav.click()
-        # logger.info("Clicked 'LEASES' in navbar.")
-
-        # # Click on "Rented Warehouses"
-        # rented_warehouses = driver.find_element(By.LINK_TEXT, "Rented Warehouses")
-        # rented_warehouses.click()
-        # logger.info("Navigated to 'Rented Warehouses'.")
-
-        # # Download a report
-        # download_report = driver.find_element(By.LINK_TEXT, "Download Report")
-        # download_report.click()
-        # logger.info("Clicked on 'Download Report'.")
-        # time.sleep(2)
-
     # Test 2: "third"
     def run_test_third():
         logger.info("Running test: third")
@@ -77,7 +73,7 @@ try:
         time.sleep(2)
         # Set window size
         driver.set_window_size(1024, 720)
-        logger.info("Set window size to 1936x1048")
+        logger.info("Set window size to 1024x720")
 
         # Click on the first card (warehouse selection)
         first_card = driver.find_element(By.CSS_SELECTOR, ".col-md-4:nth-child(1) .card-body")
@@ -100,9 +96,10 @@ except Exception as e:
     logger.error(f"An error occurred: {e}")
 
 finally:
-    # Close the browser
-    driver.quit()
-    logger.info("Browser closed.")
+    # Close the browser if it was initialized
+    if driver:
+        driver.quit()
+        logger.info("Browser closed.")
 
 
 

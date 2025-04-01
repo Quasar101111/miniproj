@@ -8,6 +8,8 @@ load_dotenv()
 
 class GeminiService:
     def __init__(self):
+        
+        
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
@@ -199,7 +201,9 @@ class GeminiService:
                 
                 # Extract rental price
                 rental_price = None
-                price_match = re.search(r'(?:₹|rs\.?|inr|price|rent|cost)[^\d]*(\d+(?:,\d+)*(?:\.\d+)?)', 
+                
+                # Main price regex with variations (Rs, ₹, price, rent, rental, cost, etc.)
+                price_match = re.search(r'(?:₹|rs\.?|inr|price|rent(?:al)?|cost)\s*(?:is|:|\=)?\s*(\d+(?:,\d+)*(?:\.\d+)?)', 
                                         user_input.lower(), re.IGNORECASE)
                 if price_match:
                     # Remove commas from the price
@@ -208,23 +212,36 @@ class GeminiService:
                 
                 # Handle shorthand price formats like "15k" (meaning 15,000)
                 if not rental_price:
-                    k_price_match = re.search(r'(\d+)k', user_input.lower())
+                    k_price_match = re.search(r'(?:₹|rs\.?|inr|price|rent(?:al)?|cost)\s*(?:is|:|\=)?\s*(\d+)\s*k', user_input.lower())
                     if k_price_match:
                         k_price = float(k_price_match.group(1))
                         rental_price = k_price * 1000
                 
                 # Try to find any number followed by "per month" or "monthly"
                 if not rental_price:
-                    monthly_price_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:per month|monthly)', user_input.lower())
+                    monthly_price_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)\s*(?:per month|monthly|a month|pm)', user_input.lower())
                     if monthly_price_match:
                         price_str = monthly_price_match.group(1).replace(',', '')
                         rental_price = float(price_str)
                 
-                # Try to find just plain numbers that might be prices
-                if not rental_price and "price" in user_input.lower():
+                # Look for direct "rental price is X" or "rental is X" patterns
+                if not rental_price:
+                    rental_direct_match = re.search(r'rent(?:al)?\s+(?:price\s+)?(?:is|=)\s+(\d+(?:,\d+)*(?:\.\d+)?)', user_input.lower())
+                    if rental_direct_match:
+                        price_str = rental_direct_match.group(1).replace(',', '')
+                        rental_price = float(price_str)
+                
+                # If someone just mentions a price or number with rental context
+                if not rental_price and any(term in user_input.lower() for term in ['rent', 'price', 'cost', 'charge', 'fee']):
                     plain_price_match = re.search(r'(\d+(?:,\d+)*(?:\.\d+)?)', user_input.lower())
                     if plain_price_match:
                         price_str = plain_price_match.group(1).replace(',', '')
+                        rental_price = float(price_str)
+                
+                # Last resort - check if the input is just a number (could be responding to a price question)
+                if not rental_price and re.match(r'^\s*\d+(?:,\d+)*(?:\.\d+)?\s*$', user_input):
+                    price_str = re.sub(r'[^\d.]', '', user_input)
+                    if price_str:
                         rental_price = float(price_str)
                 
                 # Calculate area if both dimensions are available

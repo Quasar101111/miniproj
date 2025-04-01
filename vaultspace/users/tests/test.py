@@ -1,6 +1,8 @@
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import time
 
 # Configure logging
@@ -12,7 +14,15 @@ chrome_driver_path = "D:/S9/miniproject/edit 2/chromedriver-win64/chromedriver.e
 
 # Set up the WebDriver (e.g., Chrome)
 try:
-    driver = webdriver.Chrome(executable_path=chrome_driver_path)  # Ensure chromedriver is in PATH or specify executable_path
+    # Set up Chrome options
+    chrome_options = Options()
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--ignore-ssl-errors')
+    chrome_options.add_argument('--start-maximized')
+
+    # Initialize the WebDriver with the correct syntax
+    service = Service(chrome_driver_path)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     logger.info("WebDriver initialized successfully.")
 
     # Open the login page
@@ -71,5 +81,6 @@ except Exception as e:
 
 finally:
     # Close the browser
-    driver.quit()
-    logger.info("Browser closed.")
+    if 'driver' in locals():
+        driver.quit()
+        logger.info("Browser closed.")

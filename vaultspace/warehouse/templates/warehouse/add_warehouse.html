@@ -284,6 +284,18 @@
             animation: pulse-fade 3s;
         }
         
+        .highlight-update {
+            animation: highlight-pulse 2s;
+            background-color: rgba(40, 167, 69, 0.2) !important;
+            border-color: #28a745 !important;
+        }
+        
+        .input-validated {
+            transition: all 0.3s;
+            background-color: rgba(40, 167, 69, 0.1);
+            border-color: rgba(40, 167, 69, 0.5);
+        }
+        
         @keyframes pulse-highlight {
             0% {
                 box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
@@ -302,6 +314,15 @@
             }
             100% {
                 background-color: transparent;
+            }
+        }
+        
+        @keyframes highlight-pulse {
+            0% {
+                background-color: rgba(40, 167, 69, 0.4) !important;
+            }
+            100% {
+                background-color: rgba(40, 167, 69, 0) !important;
             }
         }
     </style>
@@ -961,7 +982,7 @@ function debugLog(message, data) {
 function sendMessage() {
     const userInput = document.getElementById('user-input').value.trim();
     if (!userInput) return;
-    
+
     const chatMessages = document.getElementById('chat-messages');
     const chatContainer = document.getElementById('chat-container');
     
@@ -972,14 +993,14 @@ function sendMessage() {
         <div class="alert alert-secondary mb-2">
             <strong>You:</strong> ${userInput}
         </div>`;
-    
+
     // Check if user is asking for a summary
     if (userInput.toLowerCase() === 'summary') {
         generateWarehouseSummary();
         document.getElementById('user-input').value = '';
         return;
     }
-    
+
     // Check if user is asking for help
     if (userInput.toLowerCase() === 'help') {
         showHelpMessage();
@@ -987,8 +1008,128 @@ function sendMessage() {
         return;
     }
     
-    // Check if user is asking about specific fields that need interactive buttons
+    // Direct handling of common rental price formats
+    const rentalRegex = /^rent(?:al)?\s+(?:price|cost|fee)?\s*(?:is|=)?\s*(\d+(?:,\d+)*(?:\.\d+)?)$/i;
+    const rentalMatch = userInput.match(rentalRegex);
+    
+    if (rentalMatch) {
+        // Extract the price and directly update the rental price field
+        const price = parseFloat(rentalMatch[1].replace(/,/g, ''));
+        if (!isNaN(price)) {
+            const rentalPriceField = document.getElementById('rental_price');
+            if (rentalPriceField) {
+                rentalPriceField.value = price;
+                rentalPriceField.classList.add('highlight-update');
+                setTimeout(() => rentalPriceField.classList.remove('highlight-update'), 2000);
+                rentalPriceField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Show confirmation message
+                chatMessages.innerHTML += `
+                    <div class="alert alert-info mb-2">
+                        <strong>Assistant:</strong> I've set your rental price to ₹${price}. What else would you like to tell me about your warehouse?
+                    </div>`;
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                document.getElementById('user-input').value = '';
+                return;
+            }
+        }
+    }
+
+    // Check if user is just providing a number (likely as a rental price in response to a question)
+    const isJustNumber = /^\s*\d+\s*$/.test(userInput) || /^\s*\d{1,3}(,\d{3})*(\.\d+)?\s*$/.test(userInput);
+
+    // Get the last assistant message to check context
+    const assistantMessages = document.querySelectorAll('.alert-info strong, .alert-primary strong');
+    let lastAssistantMessageText = '';
+    if (assistantMessages.length > 0) {
+        // Get the most recent assistant message
+        const lastAssistantElement = assistantMessages[assistantMessages.length - 1].parentElement;
+        lastAssistantMessageText = lastAssistantElement.textContent.toLowerCase();
+    }
+
+    // Check if the context relates to price or if the user is responding with just a number
+    const isPriceRelatedContext = 
+        lastAssistantMessageText.includes('rent') || 
+        lastAssistantMessageText.includes('price') || 
+        lastAssistantMessageText.includes('cost') ||
+        lastAssistantMessageText.includes('how much') ||
+        lastAssistantMessageText.includes('monthly');
+
+    debugLog('Message context analysis:', { 
+        isJustNumber, 
+        isPriceRelatedContext, 
+        lastMessage: lastAssistantMessageText.substring(0, 50) + '...' 
+    });
+
+    // If it's just a number and the context is about price, directly update the rental price field
+    if (isJustNumber && isPriceRelatedContext) {
+        const price = parseFloat(userInput.replace(/,/g, ''));
+        if (!isNaN(price)) {
+            const rentalPriceField = document.getElementById('rental_price');
+            if (rentalPriceField) {
+                rentalPriceField.value = price;
+                rentalPriceField.classList.add('highlight-update');
+                setTimeout(() => rentalPriceField.classList.remove('highlight-update'), 2000);
+                rentalPriceField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Show confirmation message
+                chatMessages.innerHTML += `
+                    <div class="alert alert-info mb-2">
+                        <strong>Assistant:</strong> I've set your rental price to ₹${price}. What else would you like to tell me about your warehouse?
+                    </div>`;
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                document.getElementById('user-input').value = '';
+                return;
+            }
+        }
+        
+        // Fallback to server processing if direct update fails
+        const formattedInput = `rental price is ${userInput.replace(/,/g, '')}`;
+        debugLog('Formatting as rental price for server processing:', formattedInput);
+        processSpecialFieldRequests(formattedInput);
+    } else {
+        // Check for special field requests
+        processSpecialFieldRequests(userInput);
+    }
+    
+    // Clear input field
+    document.getElementById('user-input').value = '';
+}
+
+// Process special field requests and then send to server if needed
+function processSpecialFieldRequests(userInput) {
     const lowerCaseInput = userInput.toLowerCase();
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    
+    // Handle terms and conditions generation
+    if (lowerCaseInput.startsWith('create terms') || lowerCaseInput.startsWith('generate terms')) {
+        generateTermsAndConditions(userInput);
+        return;
+    }
+    
+    // Handle facilities listing and selection by number
+    if (lowerCaseInput === 'facilities' || lowerCaseInput.includes('list facilities')) {
+        listFacilitiesWithNumbers();
+        return;
+    }
+    
+    // Check for facility selection by number (e.g. "1, 3, 5" or "select 1 3 5")
+    const facilityNumbersPattern = /^(?:select\s+)?(\d+(?:\s*,\s*\d+)*|\d+(?:\s+\d+)*)$/i;
+    const facilityMatch = userInput.match(facilityNumbersPattern);
+    
+    if (facilityMatch) {
+        const numbersInput = facilityMatch[1];
+        // Extract all numbers from the input
+        const selectedNumbers = numbersInput.split(/[\s,]+/).map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+        
+        if (selectedNumbers.length > 0) {
+            selectFacilitiesByNumbers(selectedNumbers);
+            return;
+        }
+    }
     
     // Handle special field requests locally when possible
     if (lowerCaseInput.includes('location') && 
@@ -997,35 +1138,31 @@ function sendMessage() {
          lowerCaseInput.includes('where'))) {
         
         addInteractiveMessage('location', 'To set your warehouse location, click the button below to open our map selection tool:');
-        document.getElementById('user-input').value = '';
         return;
     }
-    
+
     if (lowerCaseInput.includes('date') || 
         (lowerCaseInput.includes('construction') && 
          (lowerCaseInput.includes('date') || lowerCaseInput.includes('built') || lowerCaseInput.includes('when')))) {
         
         addInteractiveMessage('date', 'To set your warehouse construction date, click the button below:');
-        document.getElementById('user-input').value = '';
         return;
     }
-    
+
     if ((lowerCaseInput.includes('facilities') || lowerCaseInput.includes('amenities')) && 
         (lowerCaseInput.includes('select') || lowerCaseInput.includes('choose') || 
          lowerCaseInput.includes('add') || lowerCaseInput.includes('what') || 
          lowerCaseInput.includes('how'))) {
         
         addInteractiveMessage('facilities', 'To select the facilities your warehouse offers, click the button below:');
-        document.getElementById('user-input').value = '';
         return;
     }
-    
+
     if ((lowerCaseInput.includes('photo') || lowerCaseInput.includes('image') || lowerCaseInput.includes('picture')) && 
         (lowerCaseInput.includes('upload') || lowerCaseInput.includes('add') || 
          lowerCaseInput.includes('how') || lowerCaseInput.includes('where'))) {
         
         addInteractiveMessage('photos', 'To upload photos of your warehouse, click the button below:');
-        document.getElementById('user-input').value = '';
         return;
     }
     
@@ -1034,7 +1171,6 @@ function sendMessage() {
          lowerCaseInput.includes('how') || lowerCaseInput.includes('where'))) {
         
         addInteractiveMessage('document', 'To upload your ownership document, click the button below:');
-        document.getElementById('user-input').value = '';
         return;
     }
     
@@ -1049,7 +1185,7 @@ function sendMessage() {
     
     // Scroll to bottom
     chatContainer.scrollTop = chatContainer.scrollHeight;
-    
+
     // Send request to backend
     fetch("{% url 'process_warehouse_chat' %}", {
         method: 'POST',
@@ -1072,7 +1208,7 @@ function sendMessage() {
         if (loadingIndicator) {
             loadingIndicator.remove();
         }
-        
+
         debugLog('Received response', data);
         
         // Add AI response to chat
@@ -1124,7 +1260,7 @@ function sendMessage() {
                 setTimeout(() => formCard.classList.remove('highlight-section'), 3000);
             }
         }
-        
+
         // Scroll to bottom
         chatContainer.scrollTop = chatContainer.scrollHeight;
     })
@@ -1146,9 +1282,91 @@ function sendMessage() {
         // Scroll to bottom
         chatContainer.scrollTop = chatContainer.scrollHeight;
     });
+}
+
+// Function to list all available facilities with numbers
+function listFacilitiesWithNumbers() {
+    const facilityCheckboxes = document.querySelectorAll('input[name="facilities"]');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
     
-    // Clear input field
-    document.getElementById('user-input').value = '';
+    let facilitiesHtml = `
+        <div class="alert alert-info mb-2">
+            <strong>Assistant:</strong> Here are the available facilities. You can select them by typing the corresponding numbers (e.g., "1, 3, 5" or "select 1 3 5"):<br><br>
+            <ol class="facilities-list">`;
+    
+    facilityCheckboxes.forEach((checkbox, index) => {
+        const label = checkbox.nextElementSibling.textContent.trim();
+        const checked = checkbox.checked ? '✓ ' : '';
+        facilitiesHtml += `<li>${checked}${label}</li>`;
+    });
+    
+    facilitiesHtml += `
+            </ol>
+            <p>Which facilities would you like to select?</p>
+        </div>`;
+    
+    chatMessages.innerHTML += facilitiesHtml;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Function to select facilities by their numbers
+function selectFacilitiesByNumbers(numbers) {
+    const facilityCheckboxes = Array.from(document.querySelectorAll('input[name="facilities"]'));
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    
+    if (facilityCheckboxes.length === 0) {
+        chatMessages.innerHTML += `
+            <div class="alert alert-danger mb-2">
+                <strong>Assistant:</strong> I couldn't find the facilities selection area on this form.
+            </div>`;
+        return;
+    }
+    
+    // Track which facilities were selected
+    const selectedFacilities = [];
+    
+    // Process each number
+    numbers.forEach(num => {
+        // Adjust for zero-based indexing
+        const index = num - 1;
+        
+        if (index >= 0 && index < facilityCheckboxes.length) {
+            const checkbox = facilityCheckboxes[index];
+            const label = checkbox.nextElementSibling.textContent.trim();
+            
+            // Set checkbox to checked
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            // Highlight the checkbox container
+            const container = checkbox.closest('.form-check');
+            if (container) {
+                container.classList.add('highlight-update');
+                setTimeout(() => container.classList.remove('highlight-update'), 2000);
+            }
+            
+            selectedFacilities.push(label);
+        }
+    });
+    
+    // Show confirmation message
+    if (selectedFacilities.length > 0) {
+        let message = `I've selected the following facilities: ${selectedFacilities.join(', ')}.`;
+        
+        chatMessages.innerHTML += `
+            <div class="alert alert-info mb-2">
+                <strong>Assistant:</strong> ${message} What other details would you like to provide about your warehouse?
+            </div>`;
+    } else {
+        chatMessages.innerHTML += `
+            <div class="alert alert-warning mb-2">
+                <strong>Assistant:</strong> I couldn't find any facilities with those numbers. Please try again or type "facilities" to see the list with correct numbers.
+            </div>`;
+    }
+    
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 // Function to show a comprehensive help message
@@ -1156,53 +1374,59 @@ function showHelpMessage() {
     const chatMessages = document.getElementById('chat-messages');
     const chatContainer = document.getElementById('chat-container');
     
-    const helpHtml = `
-        <div class="alert alert-primary mb-2">
-            <strong>Assistant:</strong> <h5>Warehouse Assistant Help</h5>
+    // Build the help message with sections
+    let helpHtml = `
+        <div class="alert alert-info mb-2">
+            <strong>Assistant:</strong>
+            <h5>📋 Quick Commands</h5>
+            <ul>
+                <li><strong>help</strong> - Show this help message</li>
+                <li><strong>summary</strong> - Show your warehouse details and missing information</li>
+                <li><strong>facilities</strong> - List all available facilities with numbers for easy selection</li>
+                <li><strong>create terms</strong> - Generate standard terms and conditions</li>
+            </ul>
             
-            <div class="mb-2">
-                <strong>Quick Commands:</strong>
-                <ul class="mb-1">
-                    <li><code>help</code> - Show this help message</li>
-                    <li><code>summary</code> - View a summary of your warehouse details</li>
-                </ul>
-            </div>
+            <h5>🏢 Describing Your Warehouse</h5>
+            <ul>
+                <li><strong>Dimensions</strong>: "My warehouse is 30 feet long, 20 feet wide, and 15 feet high"</li>
+                <li><strong>Location</strong>: "It's located near City Mall in Bangalore"</li>
+                <li><strong>Rental Price</strong>: "I'm renting it for ₹15,000 per month" or simply "rental is 15000"</li>
+                <li><strong>Facilities</strong>: "It has loading docks, security cameras, and office spaces"<br>
+                   <em>Tip: Type "facilities" to see a numbered list, then select by numbers (e.g., "1, 3, 5")</em></li>
+                <li><strong>Terms</strong>: "Minimum lease period is 6 months" or use "create terms specifying [your requirements]"</li>
+            </ul>
             
-            <div class="mb-2">
-                <strong>Describing Your Warehouse:</strong>
-                <ul class="mb-1">
-                    <li><strong>Dimensions:</strong> "My warehouse is 30 feet long, 20 feet wide, and 15 feet high"</li>
-                    <li><strong>Location:</strong> "It's located near City Mall" or "landmark: Central Park"</li>
-                    <li><strong>Rental Price:</strong> "I'm renting it for ₹15,000 per month"</li>
-                    <li><strong>Facilities:</strong> "It has loading docks, security cameras, and office spaces"</li>
-                    <li><strong>Terms:</strong> "Terms and conditions: minimum lease period of 6 months"</li>
-                </ul>
-            </div>
+            <h5>🔄 Interactive Features</h5>
+            <ul>
+                <li>Type "<strong>set location</strong>" to open the map selector</li>
+                <li>Type "<strong>select facilities</strong>" to choose amenities</li> 
+                <li>Type "<strong>set construction date</strong>" to open the date picker</li>
+                <li>Type "<strong>upload photos</strong>" to add warehouse images</li>
+                <li>Type "<strong>upload document</strong>" to add ownership proof</li>
+            </ul>
             
-            <div class="mb-2">
-                <strong>Interactive Features - Type These to Access:</strong>
-                <ul class="mb-1">
-                    <li>"Set location" - Open the map selector</li>
-                    <li>"Upload photos" - Access the image uploader</li>
-                    <li>"Upload document" - Upload ownership document</li>
-                    <li>"Select facilities" - Choose warehouse amenities</li>
-                    <li>"Set construction date" - Select when the warehouse was built</li>
-                </ul>
-            </div>
+            <h5>📝 Terms & Conditions Generator</h5>
+            <ul>
+                <li>Type "<strong>create terms</strong>" for standard warehouse lease terms</li>
+                <li>Type "<strong>create terms specifying 6 month minimum</strong>" to set a specific lease duration</li>
+                <li>Type "<strong>create terms specifying tenant maintenance and 3 month deposit</strong>" to customize responsibilities</li>
+                <li>Type "<strong>create terms specifying lessor pays utilities and 1 year minimum</strong>" for advanced customization</li>
+                <li>You can specify lease duration, deposit amount, maintenance responsibilities, utilities, and more!</li>
+            </ul>
             
-            <div>
-                <strong>💡 Pro Tips:</strong>
-                <ul class="mb-0">
-                    <li>You can include multiple details in one message: "30×20×15 feet warehouse near City Mall for ₹15k monthly"</li>
-                    <li>After describing your warehouse, type "summary" to see what information is still needed</li>
-                    <li>When you're ready, click the "Add" button to submit your warehouse listing</li>
-                </ul>
-            </div>
-        </div>`;
+            <h5>💡 Pro Tips</h5>
+            <ul>
+                <li>You can combine multiple details in one message</li>
+                <li>Type "<strong>summary</strong>" anytime to see what information is still needed</li>
+                <li>Click "Submit Warehouse" when all required fields are filled</li>
+            </ul>
+        </div>
+    `;
     
+    // Add the help message to the chat
     chatMessages.innerHTML += helpHtml;
     
-    // Scroll to bottom
+    // Scroll to the bottom
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
@@ -1302,17 +1526,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = `
         <div class="alert alert-primary mb-2">
-            <strong>Warehouse Assistant:</strong> 👋 Welcome! I'll help you add your warehouse details quickly and easily.
+            <strong>Warehouse Assistant:</strong> 👋 Hi there! I'm your warehouse assistant. I can help you fill out this form using natural language.
         </div>
         <div class="alert alert-info mb-2">
-            <strong>Warehouse Assistant:</strong> Try telling me about:
+            <strong>Warehouse Assistant:</strong> You can describe your warehouse to me in everyday language. For example:
             <ul>
-                <li>Dimensions (e.g., "30 feet long, 20 feet wide, 15 feet high")</li>
-                <li>Location (e.g., "near City Mall")</li>
-                <li>Rental price (e.g., "₹15,000 per month")</li>
-                <li>Facilities (e.g., "with loading docks and security cameras")</li>
+                <li>"My warehouse is 30×20×15 feet located near City Mall"</li>
+                <li>"I'm renting it for ₹15,000 per month"</li>
+                <li>"It has loading docks, security cameras, and office spaces"</li>
+                <li>"The construction was completed in 2020"</li>
             </ul>
-            <p>You can also ask for help with special fields:</p>
+            <p>Type <strong>help</strong> anytime to see all available commands or <strong>summary</strong> to review your progress.</p>
         </div>`;
     
     // Add interactive buttons for special fields
@@ -1737,6 +1961,278 @@ function focusOnTermsAndConditions() {
         console.warn('Terms & Conditions field not found');
     }
 }
+
+// Add event listeners to form fields
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for changes to length and breadth to calculate area
+    const lengthField = document.getElementById('length');
+    const breadthField = document.getElementById('breadth');
+    const areaField = document.getElementById('area');
+    const rentalPriceField = document.getElementById('rental_price');
+    
+    // Length and breadth change handlers
+    if (lengthField && breadthField && areaField) {
+        const updateArea = function() {
+            const length = parseFloat(lengthField.value);
+            const breadth = parseFloat(breadthField.value);
+            
+            if (!isNaN(length) && !isNaN(breadth) && length > 0 && breadth > 0) {
+                const area = (length * breadth).toFixed(2);
+                areaField.value = area;
+            }
+        };
+        
+        lengthField.addEventListener('input', updateArea);
+        breadthField.addEventListener('input', updateArea);
+    }
+    
+    // Rental price validation and formatting
+    if (rentalPriceField) {
+        rentalPriceField.addEventListener('input', function() {
+            // Remove non-numeric characters except decimal point
+            let value = this.value.replace(/[^\d.]/g, '');
+            
+            // Ensure only one decimal point
+            const decimalPoints = value.match(/\./g);
+            if (decimalPoints && decimalPoints.length > 1) {
+                value = value.replace(/\./g, function(match, index) {
+                    return index === value.indexOf('.') ? '.' : '';
+                });
+            }
+            
+            // Update the field with cleaned value
+            this.value = value;
+            
+            // Visual feedback - slight flicker to confirm value acceptance
+            this.classList.add('input-validated');
+            setTimeout(() => this.classList.remove('input-validated'), 300);
+        });
+        
+        // Trigger change event to ensure change is propagated to form data
+        rentalPriceField.addEventListener('change', function() {
+            const event = new Event('change', { bubbles: true });
+            this.dispatchEvent(event);
+        });
+    }
+});
+
+// Function to generate terms and conditions based on user input
+function generateTermsAndConditions(userInput) {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatContainer = document.getElementById('chat-container');
+    const termsField = document.getElementById('comment');
+    
+    if (!termsField) {
+        chatMessages.innerHTML += `
+            <div class="alert alert-danger mb-2">
+                <strong>Assistant:</strong> I couldn't find the terms and conditions field on this form.
+            </div>`;
+        return;
+    }
+    
+    // Show loading indicator
+    chatMessages.innerHTML += `
+        <div id="terms-loading-indicator" class="text-center mb-2">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Generating terms...</span>
+            </div>
+            <p>Generating terms and conditions...</p>
+        </div>`;
+    
+    // Scroll to bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    // Extract specific requirements from user input
+    const requirements = userInput.replace(/^create\s+terms\s+(?:and\s+conditions)?(?:\s+specifying)?/i, '').trim();
+    
+    // Generate terms based on specified requirements or use default templates
+    let generatedTerms = '';
+    
+    if (requirements) {
+        // Generate custom terms based on user requirements
+        generatedTerms = generateCustomTerms(requirements);
+    } else {
+        // Use standard template if no specific requirements
+        generatedTerms = generateStandardTerms();
+    }
+    
+    // Update the terms field
+    setTimeout(() => {
+        // Remove loading indicator
+        const loadingIndicator = document.getElementById('terms-loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+        
+        // Update form field with generated terms
+        termsField.value = generatedTerms;
+        termsField.classList.add('highlight-update');
+        setTimeout(() => termsField.classList.remove('highlight-update'), 2000);
+        termsField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Show confirmation message
+        chatMessages.innerHTML += `
+            <div class="alert alert-info mb-2">
+                <strong>Assistant:</strong> I've generated terms and conditions for your warehouse. Please review and make any necessary adjustments.
+            </div>`;
+        
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }, 1500); // Simulated delay for generation
+}
+
+// Function to generate custom terms based on user requirements
+function generateCustomTerms(requirements) {
+    // Base template
+    let terms = "WAREHOUSE LEASE AGREEMENT TERMS & CONDITIONS\n\n";
+    
+    // Add standard sections
+    terms += "1. LEASE TERM\n";
+    terms += "   The lease shall commence on the date specified in the agreement and continue for the period outlined therein.\n\n";
+    
+    terms += "2. RENTAL PAYMENTS\n";
+    terms += "   Rent shall be paid monthly in advance by the due date specified in the lease agreement. Late payments may incur additional charges.\n\n";
+    
+    // Process requirements to add customized sections
+    const lowerReq = requirements.toLowerCase();
+    
+    // Look for lease duration mentions
+    if (lowerReq.includes("month") || lowerReq.includes("year") || lowerReq.includes("week")) {
+        const durationMatch = requirements.match(/(\d+)\s*(month|year|week)s?/i);
+        if (durationMatch) {
+            const duration = durationMatch[1];
+            const unit = durationMatch[2].toLowerCase();
+            terms = terms.replace("continue for the period outlined therein", 
+                `continue for a minimum period of ${duration} ${unit}${duration > 1 ? 's' : ''}`);
+            
+            // Add early termination clause
+            terms += "3. EARLY TERMINATION\n";
+            terms += `   Early termination before the ${duration} ${unit}${duration > 1 ? 's' : ''} lease period requires written notice of at least 30 days and payment of a termination fee equivalent to one month's rent.\n\n`;
+        }
+    } else {
+        // Default early termination clause
+        terms += "3. EARLY TERMINATION\n";
+        terms += "   Early termination requires written notice of at least 30 days and may be subject to penalties as specified in the lease agreement.\n\n";
+    }
+    
+    // Look for security deposit mentions
+    if (lowerReq.includes("deposit") || lowerReq.includes("security")) {
+        const depositMatch = requirements.match(/(\d+)\s*(?:month|percent|%)/i);
+        let depositAmount = "two months'";
+        
+        if (depositMatch) {
+            depositAmount = depositMatch[1];
+            if (lowerReq.includes("percent") || lowerReq.includes("%")) {
+                depositAmount += "% of the annual";
+            } else {
+                depositAmount += " months'";
+            }
+        }
+        
+        terms += "4. SECURITY DEPOSIT\n";
+        terms += `   A security deposit equivalent to ${depositAmount} rent is required at the commencement of the lease. It shall be refundable subject to deductions for damages beyond normal wear and tear.\n\n`;
+    } else {
+        // Default security deposit clause
+        terms += "4. SECURITY DEPOSIT\n";
+        terms += "   A security deposit equivalent to two months' rent is required at the commencement of the lease. It shall be refundable subject to deductions for damages beyond normal wear and tear.\n\n";
+    }
+    
+    // Look for maintenance mentions
+    if (lowerReq.includes("maintenance") || lowerReq.includes("repair")) {
+        terms += "5. MAINTENANCE AND REPAIRS\n";
+        
+        if (lowerReq.includes("tenant") && (lowerReq.includes("maintenance") || lowerReq.includes("repair"))) {
+            terms += "   The tenant shall be responsible for all routine maintenance and repairs of the warehouse premises, including electrical, plumbing, and structural components.\n\n";
+        } else {
+            terms += "   The lessor shall be responsible for major structural repairs, while the tenant shall maintain the interior of the premises in good working order.\n\n";
+        }
+    } else {
+        // Default maintenance clause
+        terms += "5. MAINTENANCE AND REPAIRS\n";
+        terms += "   The lessor shall be responsible for major structural repairs, while the tenant shall maintain the interior of the premises in good working order.\n\n";
+    }
+    
+    // Look for insurance mentions
+    if (lowerReq.includes("insurance")) {
+        terms += "6. INSURANCE\n";
+        terms += "   The tenant must maintain comprehensive general liability insurance and property insurance to cover the contents stored in the warehouse. The lessor shall maintain insurance for the structure itself.\n\n";
+    } else {
+        // Default insurance clause
+        terms += "6. INSURANCE\n";
+        terms += "   Both parties shall maintain appropriate insurance coverage as required by law and outlined in the lease agreement.\n\n";
+    }
+    
+    // Look for utility mentions
+    if (lowerReq.includes("utilit") || lowerReq.includes("electric") || lowerReq.includes("water")) {
+        terms += "7. UTILITIES\n";
+        
+        if (lowerReq.includes("tenant") && 
+            (lowerReq.includes("utilit") || lowerReq.includes("electric") || lowerReq.includes("water"))) {
+            terms += "   The tenant shall be responsible for payment of all utilities including electricity, water, gas, and internet services.\n\n";
+        } else if (lowerReq.includes("lessor") && 
+                  (lowerReq.includes("utilit") || lowerReq.includes("electric") || lowerReq.includes("water"))) {
+            terms += "   The lessor shall be responsible for payment of all utilities. These costs are included in the monthly rental amount.\n\n";
+        } else {
+            terms += "   Utility responsibilities are allocated as follows: electricity and water by the tenant; structural maintenance by the lessor.\n\n";
+        }
+    } else {
+        // Default utilities clause
+        terms += "7. UTILITIES\n";
+        terms += "   The tenant shall be responsible for payment of all utilities unless otherwise specified in the lease agreement.\n\n";
+    }
+    
+    // Add standard final clauses
+    terms += "8. COMPLIANCE WITH LAWS\n";
+    terms += "   The tenant shall comply with all applicable laws, regulations, and ordinances related to the use of the warehouse.\n\n";
+    
+    terms += "9. GOVERNING LAW\n";
+    terms += "   This agreement shall be governed by the laws of the state/jurisdiction where the warehouse is located.\n\n";
+    
+    terms += "10. DISPUTE RESOLUTION\n";
+    terms += "    Any disputes arising from this agreement shall first be addressed through mediation before pursuing legal action.\n\n";
+    
+    return terms;
+}
+
+// Function to generate standard terms template
+function generateStandardTerms() {
+    return `WAREHOUSE LEASE AGREEMENT TERMS & CONDITIONS
+
+1. LEASE TERM
+   The lease shall commence on the date specified in the agreement and continue for a minimum period of 12 months.
+
+2. RENTAL PAYMENTS
+   Rent shall be paid monthly in advance by the 5th day of each month. Late payments will incur a penalty of 2% per day.
+
+3. SECURITY DEPOSIT
+   A security deposit equivalent to two months' rent is required at lease commencement. The deposit shall be refundable subject to deductions for damages beyond normal wear and tear.
+
+4. EARLY TERMINATION
+   Early termination requires written notice of at least 60 days and payment of a penalty equivalent to two months' rent.
+
+5. MAINTENANCE AND REPAIRS
+   The lessor shall be responsible for major structural repairs, while the tenant shall maintain the interior of the premises in good condition.
+
+6. USE OF PREMISES
+   The warehouse shall be used solely for storage and distribution of legal goods. Hazardous materials are strictly prohibited.
+
+7. UTILITIES
+   The tenant shall be responsible for payment of all utilities including electricity, water, and waste disposal.
+
+8. INSURANCE
+   The tenant must maintain comprehensive general liability insurance with minimum coverage of ₹20,00,000 and property insurance to cover the contents stored in the warehouse.
+
+9. COMPLIANCE WITH LAWS
+   The tenant shall comply with all applicable laws, regulations, and ordinances related to the use of the warehouse.
+
+10. GOVERNING LAW
+    This agreement shall be governed by the laws of India and subject to the jurisdiction of local courts.
+
+11. DISPUTE RESOLUTION
+    Any disputes arising from this agreement shall first be addressed through mediation before pursuing legal action.
+
+12. MODIFICATIONS
+    Any modifications to these terms must be made in writing and signed by both parties.`;
+}
 </script>
 
 <style>
@@ -1746,17 +2242,17 @@ function focusOnTermsAndConditions() {
 }
 
 .highlight-update {
-    animation: highlightFade 2s ease-out;
+    animation: highlight-pulse 2s;
+    background-color: rgba(40, 167, 69, 0.2) !important;
+    border-color: #28a745 !important;
 }
 
-@keyframes highlightFade {
+@keyframes highlight-pulse {
     0% {
-        background-color: rgba(77, 189, 116, 0.2);
-        border-color: #4dbd74;
+        background-color: rgba(40, 167, 69, 0.4) !important;
     }
     100% {
-        background-color: transparent;
-        border-color: #ced4da;
+        background-color: rgba(40, 167, 69, 0) !important;
     }
 }
 </style>
