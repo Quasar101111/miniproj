@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'users.middleware.NoCacheMiddleware', #custom middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     # 'vaultspace.middleware.RecommendationMiddleware'
 ]
 
