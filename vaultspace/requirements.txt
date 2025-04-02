@@ -56,3 +56,4 @@ google-generativeai==0.8.4
 httpx==0.28.1
 psycopg2-binary==2.9.9
 whitenoise
+gunicorn
