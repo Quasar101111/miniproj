@@ -37,7 +37,7 @@ SECRET_KEY = 'django-insecure-e@h$#_w%ql2s_%m58@gf-h3a#q#mul(sfr#edcfl+cl^m@rb8c
 DEBUG=True
 
 # Allow connections from localhost
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0','competent-jerrie-vaultspace-05c51baa.koyeb.app']
 
 # Application definition
 
