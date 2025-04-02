@@ -152,14 +152,11 @@ WSGI_APPLICATION = 'vaultspace.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vaultspace',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'host.docker.internal',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'disable',
-        },
+        'NAME': 'koyebdb',
+        'USER': 'koyeb-adm',
+        'PASSWORD': 'npg_m6kp0GVvLnDy',
+        'HOST': 'ep-autumn-bird-a1o0aek9.ap-southeast-1.pg.koyeb.app',
+        'OPTIONS': {'sslmode': 'require'},
     }
 }
 
