@@ -37,7 +37,7 @@ SECRET_KEY = 'django-insecure-e@h$#_w%ql2s_%m58@gf-h3a#q#mul(sfr#edcfl+cl^m@rb8c
 DEBUG=True
 
 # Allow connections from localhost
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0','competent-jerrie-vaultspace-05c51baa.koyeb.app']
 
 # Application definition
 
@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'users.middleware.NoCacheMiddleware', #custom middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     # 'vaultspace.middleware.RecommendationMiddleware'
 ]
 
@@ -152,14 +153,11 @@ WSGI_APPLICATION = 'vaultspace.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vaultspace',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'host.docker.internal',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'disable',
-        },
+        'NAME': 'koyebdb',
+        'USER': 'koyeb-adm',
+        'PASSWORD': 'npg_m6kp0GVvLnDy',
+        'HOST': 'ep-autumn-bird-a1o0aek9.ap-southeast-1.pg.koyeb.app',
+        'OPTIONS': {'sslmode': 'require'},
     }
 }
 
