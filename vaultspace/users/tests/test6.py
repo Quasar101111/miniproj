@@ -40,6 +40,9 @@ class TestManageUsers(unittest.TestCase):
         submit_button.click()
         time.sleep(2)
 
+        if "login" in self.driver.current_url:
+            raise Exception(f"Login failed or user was redirected back to login. Current URL: {self.driver.current_url}")
+
     def test_admin_navigation(self):
         driver = self.driver
         test_passed = False
@@ -52,8 +55,8 @@ class TestManageUsers(unittest.TestCase):
             self.login("admin1@gmail.com", "gDSN:,pb,4u45F2")
             self.logger.info("Logged in successfully.")
 
-            # Step 1: Open admin dashboard
-            driver.get("http://127.0.0.1:8000/admin_dashboard/")
+            # Step 1: Open admin dashboard (use localhost to match login domain)
+            driver.get("http://localhost:8000/admin_dashboard/")
             self.logger.info("Opened admin dashboard URL.")
 
             # Step 2: Set window size

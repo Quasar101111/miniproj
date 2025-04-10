@@ -33,7 +33,7 @@ urlpatterns = [
     path('api/tenant_availability/',  views.tenant_availability_api, name='tenant_availability_api'),
     path('process-warehouse-chat/', views.process_warehouse_chat, name='process_warehouse_chat'),
     path('process_warehouse_files/', views.process_warehouse_files, name='process_warehouse_files'),
-
- 
+    path('reports/warehouse/<int:warehouse_id>/', views.generate_warehouse_report, name='generate_warehouse_report'),
+    path('reports/export-csv/', views.export_warehouses_csv, name='export_warehouses_csv'),
 ]
 urlpatterns=urlpatterns+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

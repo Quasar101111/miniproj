@@ -1,0 +1,17 @@
+README.md
+setup.py
+app/__init__.py
+app/advanced_recommender.py
+app/main.py
+app/models.py
+app/price_predictor.py
+app/recommender.py
+app/schemas.py
+tests/__init__.py
+tests/test_advanced_recommender.py
+tests/test_api.py
+warehouse_recommender.egg-info/PKG-INFO
+warehouse_recommender.egg-info/SOURCES.txt
+warehouse_recommender.egg-info/dependency_links.txt
+warehouse_recommender.egg-info/requires.txt
+warehouse_recommender.egg-info/top_level.txt

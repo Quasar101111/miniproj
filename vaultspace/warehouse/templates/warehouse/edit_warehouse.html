@@ -4,6 +4,7 @@
 <html lang="en">
 
 {% load static %}
+{% load warehouse_filters %}
 
 
 
@@ -60,18 +61,62 @@
                 const length = parseFloat($('#length').val()) || 0;
                 const breadth = parseFloat($('#breadth').val()) || 0;
     
-                // Check if both length and breadth are provided
                 if (length > 0 && breadth > 0) {
-                    // Calculate area in square feet 
-                    const areaInSquareFeet = (length * breadth ).toFixed(2);
-                    $('#area').val(areaInSquareFeet); // Display area
+                    const areaInSquareFeet = (length * breadth).toFixed(2);
+                    $('#area').val(areaInSquareFeet);
                 } else {
-                    $('#area').val(''); // Clear area if inputs are not valid
+                    $('#area').val('');
                 }
             }
-    
+
             // Attach input event listeners
             $('#length, #breadth').on('input', calculateArea);
+
+            // Form validation
+            const form = document.getElementById('editWarehouseForm');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    let isValid = true;
+                    let errorMessage = '';
+
+                    // Get input values and convert to float
+                    const length = parseFloat($('#length').val());
+                    const breadth = parseFloat($('#breadth').val());
+                    const height = parseFloat($('#height').val());
+
+                    // Validate length
+                    if (isNaN(length) || length <= 0) {
+                        isValid = false;
+                        errorMessage += 'Length must be a positive number.\n';
+                    }
+
+                    // Validate breadth
+                    if (isNaN(breadth) || breadth <= 0) {
+                        isValid = false;
+                        errorMessage += 'Breadth must be a positive number.\n';
+                    }
+
+                    // Validate height
+                    if (isNaN(height) || height <= 0) {
+                        isValid = false;
+                        errorMessage += 'Height must be a positive number.\n';
+                    }
+
+                    // If any validation fails, prevent form submission and show error
+                    if (!isValid) {
+                        event.preventDefault();
+                        alert(errorMessage);
+                        return false;
+                    }
+                });
+            }
+
+            // Initialize datepicker
+            $('#datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                endDate: new Date()  // Set max date to today
+            });
         });
     </script>
 </head>
@@ -198,42 +243,44 @@
                             </div>
                             <div class="card-body">
                                 <div class="basic-form">
-                                    <form method="POST" enctype="multipart/form-data">
+                                    <form id="editWarehouseForm" method="POST" enctype="multipart/form-data">
                                         {% csrf_token %}
                                         <div class="card-body">
                                             <div class="mb-4 col-lg-6">
-                                                <label class="col-sm-3 col-form-label form-label">Location of Warehouse</label>
-                                                <select id="single-select" name="location" style="width:60%;">
-                                                    <option value="" disabled>Select location</option>
-                                                    {% for location in locations %}
-                                                    <option value="{{ location.location_id }}" {% if location.location_id == warehouse.location.location_id %}selected{% endif %}>{{ location.state }}, {{ location.city }}</option>
-                                                    {% endfor %}
-                                                </select>
+                                                <label class="form-label">Location of warehouse</label>
+                                                <div class="d-flex">
+                                                    <input type="text" class="form-control" id="selectedLocation" readonly placeholder="Select location on map" value="{% if warehouse.location %}{{ warehouse.location.city }}, {{ warehouse.location.state }}{% endif %}">
+                                                    <input type="hidden" id="latitude" name="latitude" value="{% if warehouse.map_location.first %}{{ warehouse.map_location.first.latitude }}{% endif %}">
+                                                    <input type="hidden" id="longitude" name="longitude" value="{% if warehouse.map_location.first %}{{ warehouse.map_location.first.longitude }}{% endif %}">
+                                                    <button type="button" class="btn btn-primary ms-2" onclick="openLocationSelector()">
+                                                        <i class="fas fa-map-marker-alt"></i> Select on Map
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Length (in Feet)</label>
-                                                <input type="number" value="{{ warehouse.length}}"class="form-control" name="length" id="length" placeholder="Length" min="1" required>
+                                                <input type="number" value="{{ warehouse.length|multiply:3.28084|floatformat:2 }}" class="form-control" name="length" id="length" placeholder="Length" min="0.01" step="0.01" required>
                                             </div>
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Breadth (in Feet)</label>
-                                                <input type="number" value="{{ warehouse.breadth}}" class="form-control" name="breadth" id="breadth" placeholder="Breadth" min="1" required>
+                                                <input type="number" value="{{ warehouse.breadth|multiply:3.28084|floatformat:2 }}" class="form-control" name="breadth" id="breadth" placeholder="Breadth" min="0.01" step="0.01" required>
                                             </div>
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Height (in Feet)</label>
-                                                <input type="number" value="{{ warehouse.height}}" step="0.01" class="form-control" name="height" placeholder="Height" required>
+                                                <input type="number" value="{{ warehouse.height|multiply:3.28084|floatformat:2 }}" step="0.01" class="form-control" name="height" id="height" placeholder="Height" min="0.01" required>
                                             </div>
 
                                             
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label class="form-label">Area (in square feet)</label>
-                                                <input type="text" value="{{ warehouse.area}}" class="form-control" name="area" id="area" placeholder="Area" readonly>
+                                                <input type="text" value="{{ warehouse.area }}" class="form-control" name="area" id="area" placeholder="Area" readonly>
                                             </div>
 
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label for="formFileSm" class="form-label">Ownership Document</label>
-                                                <input class="form-control form-control-sm" id="formFileSm" type="file" name="ownership_document" accept=".pdf" required>
+                                                <input class="form-control form-control-sm" id="formFileSm" type="file" name="ownership_document" accept=".pdf">
                                                 <div class="invalid-feedback">
                                                     Please upload a valid PDF file for the ownership document.
                                                 </div>
@@ -284,7 +331,7 @@
 
                                             <div class="mb-3 col-lg-6 col-md-6">
                                                 <label for="id_image">Photos of warehouse</label>
-                                                <input type="file" class="form-control form-control-sm" id="id_image" name="images" multiple accept=".jpeg,.jpg,.png" required>
+                                                <input type="file" class="form-control form-control-sm" id="id_image" name="images" multiple accept=".jpeg,.jpg,.png">
                                                 {% if warehouse.photos.exists %}
                                                 <div class="mt-2">
                                                     {% for photo in warehouse.photos.all %}
@@ -388,6 +435,119 @@
             <script src="{% static 'js/custom.min.js' %}"></script>
             <script src="{% static 'js/deznav-init.js' %}"></script>
 
+    <script>
+        function openLocationSelector() {
+            // Open the location selector in a new window
+            const locationWindow = window.open("{% url 'map:select_location' %}", "Select Location", 
+                "width=800,height=600,scrollbars=yes");
+        
+            // Listen for messages from the location selector window
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'location_selected') {
+                    document.getElementById('selectedLocation').value = event.data.address;
+                    document.getElementById('latitude').value = event.data.latitude;
+                    document.getElementById('longitude').value = event.data.longitude;
+                    locationWindow.close();
+                }
+            }, false);
+        }
+    </script>
+
+    <script src="{% static 'vendor/jquery-validation/jquery.validate.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize datepicker
+            $('#datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                endDate: new Date()  // Set max date to today
+            });
+        
+            var validator = $("#editWarehouseForm").validate({
+                ignore: [],
+                rules: {
+                    selectedLocation: {
+                        required: true
+                    },
+                    area: {
+                        required: true,
+                        number: true,
+                        min: 1
+                    },
+                    landmark: {
+                        required: true,
+                        minlength: 3
+                    },
+                    date: {
+                        required: true,
+                        date: true
+                    },
+                    rental_price: {
+                        required: true,
+                        number: true,
+                        min: 0
+                    },
+                    terms_cond: {
+                        required: true,
+                        minlength: 10
+                    },
+                    "facilities[]": {
+                        required: true,
+                        minlength: 1
+                    }
+                },
+                messages: {
+                    selectedLocation: "Please select a location",
+                    area: {
+                        required: "Please enter the area",
+                        number: "Please enter a valid number",
+                        min: "Area must be greater than 0"
+                    },
+                    landmark: {
+                        required: "Please enter a landmark",
+                        minlength: "Landmark should be at least 3 characters long"
+                    },
+                    date: {
+                        required: "Please select a date",
+                        date: "Please enter a valid date"
+                    },
+                    rental_price: {
+                        required: "Please enter the rental price",
+                        number: "Please enter a valid number",
+                        min: "Rental price must be 0 or greater"
+                    },
+                    terms_cond: {
+                        required: "Please enter the terms and conditions",
+                        minlength: "Terms and conditions should be at least 10 characters long"
+                    },
+                    "facilities[]": "Please select at least one facility"
+                },
+                errorElement: "span",
+                errorPlacement: function(error, element) {
+                    error.addClass("invalid-feedback");
+                    if (element.prop("type") === "checkbox") {
+                        error.insertAfter(element.parent("label"));
+                    } else {
+                        error.insertAfter(element);
+                    }
+                },
+                highlight: function(element, errorClass, validClass) {
+                    $(element).addClass("is-invalid").removeClass("is-valid");
+                },
+                unhighlight: function(element, errorClass, validClass) {
+                    $(element).removeClass("is-invalid").addClass("is-valid");
+                },
+                submitHandler: function(form) {
+                    form.submit();
+                }
+            });
+        
+            // Trigger validation on keyup, change, and blur for all inputs
+            $("#editWarehouseForm input, #editWarehouseForm textarea, #editWarehouseForm select").on('keyup change blur', function() {
+                validator.element(this);
+            });
+        });
+    </script>
 </body>
 
 

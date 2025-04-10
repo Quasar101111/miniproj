@@ -1,7 +1,7 @@
-
+{% load static %}
+{% load warehouse_filters %}
 
 {% block content %}
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,7 +145,10 @@
                                                 <div class="col-md-6">
                                                     <p><strong>Warehouse Id:</strong> {{ warehouse.warehouse_id }}</p>
                                                     <p><strong>Location:</strong> {{ warehouse.location.city }}, {{ warehouse.location.state }}</p>
-                                                    <p><strong>Area:</strong> {{ warehouse.area }}</p>
+                                                    <p><strong>Area:</strong> {{ warehouse.area }} sq ft</p>
+                                                    {% if warehouse.length and warehouse.breadth and warehouse.height %}
+                                                    <p><strong>Dimensions:</strong> {{ warehouse.length|floatformat:2|multiply:3.28084 }} × {{ warehouse.breadth|floatformat:2|multiply:3.28084 }} × {{ warehouse.height|floatformat:2|multiply:3.28084 }} feet</p>
+                                                    {% endif %}
                                                 </div>
                                                 <div class="col-md-6">
                                                     <p><strong>Facilities:</strong> {{ warehouse.facilities }}</p>
@@ -153,6 +156,25 @@
                                                     <p><strong>Provided Monthly Rental Rate:</strong> ₹{{ warehouse.rental_price }}</p>
                                                 </div>
                                             </div>
+
+                                            {% if price_prediction %}
+                                            <div class="card mb-4">
+                                                <div class="card-header">
+                                                    <h4 class="card-title"> Price Prediction</h4>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <p><strong>Optimal Price:</strong> ₹{{ price_prediction.optimal_price|floatformat:2 }}
+                                                            <button type="button" class="btn btn-sm btn-primary ms-2" onclick="useOptimalPrice()">Use This Price</button></p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <p><strong>Price per sqft:</strong> ₹{{ price_prediction.price_per_sqft|floatformat:2 }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
 
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
@@ -304,6 +326,48 @@
         });
 
     });
+    </script>
+    <script>
+    function updateEndDateAndTotal() {
+        var leaseStartDateInput = document.getElementById('lease_start_date');
+        var leaseMonthsInput = document.getElementById('lease_months');
+        var leaseEndDateInput = document.getElementById('lease_end_date');
+        var newMonthlyRateInput = document.getElementById('new_monthly_rate');
+        var totalAmountInput = document.getElementById('total_amount');
+
+        var startDate = new Date(leaseStartDateInput.value);
+        var months = parseInt(leaseMonthsInput.value) || 0;
+        var newMonthlyRate = parseFloat(newMonthlyRateInput.value) || 0;
+
+        if (!isNaN(startDate.getTime()) && months > 0) {
+            var endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + months);
+            leaseEndDateInput.value = endDate.toISOString().split('T')[0];
+        } else {
+            leaseEndDateInput.value = '';
+        }
+
+        var totalAmount = newMonthlyRate * months;
+        totalAmountInput.value = totalAmount.toFixed(2);
+    }
+
+    function useOptimalPrice() {
+        const optimalPrice = Math.round({{ price_prediction.optimal_price }});
+        document.getElementById('new_monthly_rate').value = optimalPrice;
+        updateEndDateAndTotal();
+    }
+
+    // Set minimum date for lease start date to today
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('lease_start_date').min = today;
+
+    // Add event listeners
+    document.getElementById('lease_start_date').addEventListener('input', updateEndDateAndTotal);
+    document.getElementById('lease_months').addEventListener('input', updateEndDateAndTotal);
+    document.getElementById('new_monthly_rate').addEventListener('input', updateEndDateAndTotal);
+
+    // Initial calculation
+    updateEndDateAndTotal();
     </script>
     <script src="{% static 'vendor/global/global.min.js' %}"></script>
     <script src="{% static 'vendor/bootstrap-select/dist/js/bootstrap-select.min.js' %}"></script>

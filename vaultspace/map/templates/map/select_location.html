@@ -264,7 +264,7 @@
                 const warehouseId = document.getElementById('warehouseId').value;
                 
                 try {
-                    const response = await fetch('/map/select/', {
+                    const response = await fetch("{% url 'map:select_location' %}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -272,6 +272,10 @@
                         },
                         body: `warehouse_id=${warehouseId}&latitude=${selectedLat}&longitude=${selectedLon}`
                     });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
                     const data = await response.json();
                     

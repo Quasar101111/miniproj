@@ -186,6 +186,16 @@ def select_location(request):
                     'message': 'Missing required fields'
                 }, status=400)
 
+            try:
+                # Convert to float to validate numbers
+                float(latitude)
+                float(longitude)
+            except ValueError:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid latitude or longitude values'
+                }, status=400)
+
             # Get or create warehouse
             try:
                 warehouse = Warehouse.objects.get(warehouse_id=warehouse_id)

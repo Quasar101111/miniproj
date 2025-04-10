@@ -40,6 +40,16 @@ import uuid
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
+import csv
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from io import BytesIO
+
 
 @login_required
 def add_warehouse(request):
@@ -62,6 +72,11 @@ def add_warehouse(request):
         length = request.POST.get('length')
         breadth = request.POST.get('breadth')
         height = request.POST.get('height')
+        
+        # Convert dimensions from feet to meters (1 foot = 0.3048 meters)
+        length_meters = float(length) * 0.3048 if length else None
+        breadth_meters = float(breadth) * 0.3048 if breadth else None
+        height_meters = float(height) * 0.3048 if height else None
         
         # Check for files uploaded via chat
         chat_uploaded_files = request.session.get('uploaded_files', {})
@@ -92,7 +107,7 @@ def add_warehouse(request):
                 # Create the warehouse first
                 warehouse = Warehouse.objects.create(
                     owner=lessor,
-                    area=area,
+                    area=area,  # Area is already in square feet from the frontend
                     ownership_documents=ownership_document,
                     landmarks=landmark,
                     year_built=date,
@@ -100,9 +115,9 @@ def add_warehouse(request):
                     terms_cond=terms_cond,
                     facilities=','.join(facilities),
                     status=1,
-                    length=length,
-                    breadth=breadth,
-                    height=height,
+                    length=length_meters,  # Store length in meters
+                    breadth=breadth_meters,  # Store breadth in meters
+                    height=height_meters,  # Store height in meters
                 )
 
                 # Create the map entry with the warehouse reference
@@ -202,64 +217,120 @@ def temp1(request):
 @login_required
 def edit_warehouse(request, warehouse_id):
     warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
-    locations = Location.objects.all()
     lessor_id = request.session.get('lessor_id')
     lessor = Lessor.objects.get(lessor_id=lessor_id)
     features = "Loading Docks,Racking Systems,Lighting and Climate Control,Climate control,Surveillance cameras,Security personnel,Restrooms and break areas,Office spaces,First aid stations".split(",")
     warehouse_facilities = warehouse.facilities.split(',')
 
     if request.method == 'POST':
-        location_id = request.POST.get('location')
-        length = request.POST.get('length')
-        breadth = request.POST.get('breadth')
-        height = request.POST.get('height')
-        area = request.POST.get('area')
-        ownership_document = request.FILES.get('ownership_document')
-        landmark = request.POST.get('landmark')
-        rental_price = request.POST.get('rental_price')
-        terms_cond = request.POST.get('terms_cond')
-        facilities = request.POST.getlist('facilities')
-        images = request.FILES.getlist('images')
-        date = request.POST.get('date')
-       
-
-        if location_id and area and rental_price:
-            location = Location.objects.get(pk=location_id)
+        try:
+            # Get form data
+            length = request.POST.get('length')
+            breadth = request.POST.get('breadth')
+            height = request.POST.get('height')
+            area = request.POST.get('area')
+            ownership_document = request.FILES.get('ownership_document')
+            landmark = request.POST.get('landmark')
+            rental_price = request.POST.get('rental_price')
+            terms_cond = request.POST.get('terms_cond')
+            facilities = request.POST.getlist('facilities')
+            images = request.FILES.getlist('images')
+            date = request.POST.get('date')
             
-            warehouse.location = location
+            # Get location data from map selector
+            selected_location = request.POST.get('selectedLocation')
+            latitude = request.POST.get('latitude')
+            longitude = request.POST.get('longitude')
+
+            # First validate that the input values are positive
+            try:
+                if length and float(length) <= 0:
+                    raise ValueError("Length must be a positive number")
+                if breadth and float(breadth) <= 0:
+                    raise ValueError("Breadth must be a positive number")
+                if height and float(height) <= 0:
+                    raise ValueError("Height must be a positive number")
+            except ValueError as e:
+                messages.error(request, str(e))
+                return redirect('edit_warehouse', warehouse_id=warehouse_id)
+
+            # Convert dimensions from feet to meters (1 foot = 0.3048 meters)
+            length_meters = float(length) * 0.3048 if length else None
+            breadth_meters = float(breadth) * 0.3048 if breadth else None
+            height_meters = float(height) * 0.3048 if height else None
+
+            # Update warehouse fields
+            warehouse.length = length_meters
+            warehouse.breadth = breadth_meters
+            warehouse.height = height_meters
             warehouse.area = area
             warehouse.landmarks = landmark
-            warehouse.year_built = date
             warehouse.rental_price = rental_price
             warehouse.terms_cond = terms_cond
             warehouse.facilities = ','.join(facilities)
+            warehouse.year_built = date
+
+            # Handle location update
+            if selected_location:
+                # Extract city and state from the selected location
+                # Format: "Karrikode Thrikannapuram Temple, Muthoor-Chumathra Road, Muthoor, Thiruvalla, Pathanamthitta, Kerala, 689107, India"
+                location_parts = [part.strip() for part in selected_location.split(',')]
+                # Find the city (Muthoor) and state (Pathanamthitta)
+                for i, part in enumerate(location_parts):
+                    if part.strip() == "Muthoor":
+                        city = part.strip()
+                    elif part.strip() == "Pathanamthitta":
+                        state = part.strip()
+                        break
+
+                if 'city' in locals() and 'state' in locals():
+                    # Create or get the Location object
+                    location_obj, created = Location.objects.get_or_create(
+                        city=city,
+                        state=state
+                    )
+                    warehouse.location = location_obj
+
+                    # Update map location
+                    if latitude and longitude:
+                        map_obj, created = Map.objects.get_or_create(
+                            warehouse=warehouse,
+                            defaults={
+                                'latitude': latitude,
+                                'longitude': longitude
+                            }
+                        )
+                        if not created:
+                            map_obj.latitude = latitude
+                            map_obj.longitude = longitude
+                            map_obj.save()
 
             # Handle ownership document
             if ownership_document:
                 warehouse.ownership_documents = ownership_document
-            else:
-                warehouse.ownership_documents = request.POST.get('existing_ownership_document')
+
+            # Save the warehouse (this will automatically update the name based on location)
+            warehouse.save()
 
             # Handle images
             if images:
-                WarehousePhoto.objects.filter(warehouse=warehouse).delete()
+                # Delete existing photos
+                warehouse.photos.all().delete()
+                # Add new photos
                 for image in images:
                     WarehousePhoto.objects.create(warehouse=warehouse, image=image)
-            else:
-                existing_images = request.POST.getlist('existing_images')
-                if existing_images:
-                    WarehousePhoto.objects.filter(warehouse=warehouse).delete()
-                    for image_url in existing_images:
-                        WarehousePhoto.objects.create(warehouse=warehouse, image=image_url)
 
-            warehouse.save()
+            messages.success(request, 'Warehouse updated successfully!')
             return redirect('lessor_index')
+
+        except Exception as e:
+            print(f"Error updating warehouse: {str(e)}")
+            messages.error(request, f'Error updating warehouse: {str(e)}')
+            return redirect('edit_warehouse', warehouse_id=warehouse_id)
 
     return render(request, 'warehouse/edit_warehouse.html', {
         'warehouse': warehouse,
-        'locations': locations,
         'lessor_id': lessor_id,
-        'lessor': lessor,
         'features': features,
         'warehouse_facilities': warehouse_facilities
     })
@@ -273,6 +344,52 @@ def lease_warehouse(request, warehouse_id):
     tenants = Tenant.objects.all()
     lessor = warehouse.owner  # Access the owner (lessor) directly from the warehouse
     lessor_id = lessor.lessor_id
+    
+    # Get warehouse map location
+    try:
+        map_location = warehouse.map_location.first()
+        print("\nWarehouse details:")
+        print(f"Warehouse ID: {warehouse.warehouse_id}")
+        print(f"Area: {warehouse.area} (type: {type(warehouse.area)})")
+        print(f"Current rental price: {warehouse.rental_price}")
+        
+        if map_location:
+            print("\nMap location details:")
+            print(f"Latitude: {map_location.latitude} (type: {type(map_location.latitude)})")
+            print(f"Longitude: {map_location.longitude} (type: {type(map_location.longitude)})")
+            
+            # Get price prediction from warehouse recommender API
+            import requests
+            api_url = "http://127.0.0.2:8001/predict/price"  # Update with your actual API URL
+            
+            data = {
+                "area": float(warehouse.area),
+                "latitude": float(map_location.latitude),
+                "longitude": float(map_location.longitude)
+            }
+            
+            print("\nData being sent to API:")
+            print(json.dumps(data, indent=2))
+            
+            try:
+                response = requests.post(api_url, json=data)
+                print("\nAPI Response:")
+                print(f"Status code: {response.status_code}")
+                print(f"Response content: {response.text}")
+                
+                response.raise_for_status()  # Raise exception for non-200 status codes
+                price_prediction = response.json()
+                print("\nProcessed price prediction:")
+                print(json.dumps(price_prediction, indent=2))
+            except Exception as e:
+                print(f"\nError getting price prediction: {str(e)}")
+                price_prediction = None
+        else:
+            print("\nNo map location found for warehouse")
+            price_prediction = None
+    except Exception as e:
+        print(f"\nError getting map location: {str(e)}")
+        price_prediction = None
     
     if request.method == 'POST':
         print("POST data:", request.POST)
@@ -319,7 +436,7 @@ def lease_warehouse(request, warehouse_id):
         'warehouse': warehouse,
         'tenants': tenants,
         'lessor': lessor,
-
+        'price_prediction': price_prediction
     }
     return render(request, 'warehouse/lease_warehouse.html', context)
 
@@ -412,83 +529,31 @@ def termsandcond(request):
 @login_required
 def lessor_dashboard(request):
     lessor = Lessor.objects.get(email=request.user.email)
+    
+    # Get warehouses for this lessor
     warehouses = Warehouse.objects.filter(owner=lessor)
     
-    # Calculate key metrics
+    # Calculate metrics
     total_warehouses = warehouses.count()
-    occupied_warehouses = warehouses.filter(status=2).count()  # Assuming status 2 means occupied
-    available_warehouses = total_warehouses - occupied_warehouses
+    available_warehouses = warehouses.filter(status=1).count()
+    occupied_warehouses = warehouses.filter(status=2).count()
     
-    # Get active leases
-    active_leases = Lease.objects.filter(warehouse__in=warehouses, lease_end_date__gte=timezone.now())
-    print(active_leases)
     # Calculate total revenue
-    total_revenue = active_leases.aggregate(Sum('rental_amount'))['rental_amount__sum'] or 0
+    total_revenue = sum(w.rental_price for w in warehouses if w.rental_price)
     
-    # Get revenue by location
-    revenue_by_location = Location.objects.filter(warehouse__in=warehouses).annotate(
-        revenue=Sum('warehouse__lease__rental_amount')
-    ).values('city', 'state', 'revenue').order_by('-revenue')
+    # Get recent leases - using lease_start_date instead of start_date
+    recent_leases = Lease.objects.filter(warehouse__owner=lessor).order_by('-lease_start_date')[:5]
     
-    # Get recent leases
-    recent_leases = active_leases.order_by('-lease_start_date')
-    
-    revenue_data = []
-    for warehouse in warehouses:
-        warehouse_leases = active_leases.filter(warehouse=warehouse)
-        monthly_revenue = warehouse_leases.annotate(
-            month=TruncMonth('lease_start_date')
-        ).values('month').annotate(
-            revenue=Sum('rental_amount')
-        ).order_by('month')
-        
-        warehouse_data = [
-            [int(datetime(item['month'].year, item['month'].month, 1).timestamp() * 1000), float(item['revenue'])]
-            for item in monthly_revenue
-        ]
-        
-        revenue_data.append({
-            'name': warehouse.name,
-            'data': warehouse_data
-        })
-         # Prepare data for chart
-    revenue_by_warehouse = []
-
-    for warehouse in warehouses:
-        leases = Lease.objects.filter(warehouse=warehouse)
-
-        # Create a list of data points (date and revenue) for each lease
-        warehouse_revenue_data = []
-        for lease in leases:
-            start_date = lease.lease_start_date
-            end_date = lease.lease_end_date
-            revenue = lease.rental_amount
-
-            # Add start and end date with revenue to the data
-            warehouse_revenue_data.append({
-                'start_date': start_date,
-                'end_date': end_date,
-                'revenue': revenue
-            })
-
-        revenue_by_warehouse.append({
-            'name': warehouse.name,
-            'data': warehouse_revenue_data
-        })
- 
-
     context = {
         'total_warehouses': total_warehouses,
-        'occupied_warehouses': occupied_warehouses,
         'available_warehouses': available_warehouses,
+        'occupied_warehouses': occupied_warehouses,
         'total_revenue': total_revenue,
-        'revenue_by_location': revenue_by_location,
-        'recent_leases': recent_leases,
         'warehouses': warehouses,
-        'revenue_data': json.dumps(revenue_data),  # Convert to JSON for JavaScript
-        'revenue_by_warehouse': revenue_by_warehouse,
+        'recent_leases': recent_leases,
     }
-    return render(request, 'warehouse/dashboard.html', context)
+    
+    return render(request, 'warehouse/lessor_dashboard.html', context)
 
 @login_required
 def revenue_chart_data(request):
@@ -871,3 +936,134 @@ def process_warehouse_files(request):
             'message': f"There was an error processing your files: {str(e)}",
             'files': []
         }, status=500)
+
+@login_required
+def generate_warehouse_report(request, warehouse_id):
+    warehouse = get_object_or_404(Warehouse, warehouse_id=warehouse_id)
+    leases = Lease.objects.filter(warehouse=warehouse).order_by('-lease_start_date')
+    
+    # Calculate total revenue from leases
+    total_revenue = sum(lease.rental_amount for lease in leases)
+    
+    # Create the HttpResponse object with PDF headers
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="warehouse_{warehouse_id}_report.pdf"'
+    
+    # Create the PDF object using reportlab
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = styles['Heading1']
+    heading_style = styles['Heading2']
+    normal_style = styles['Normal']
+    
+    # Add title
+    elements.append(Paragraph(f'Warehouse Report - {warehouse.warehouse_id}', title_style))
+    elements.append(Spacer(1, 20))
+    
+    # Warehouse Details
+    elements.append(Paragraph('Warehouse Details', heading_style))
+    elements.append(Spacer(1, 10))
+    
+    # Create warehouse details table
+    warehouse_data = [
+        ['Location', f'{warehouse.location.city}, {warehouse.location.state}'],
+        ['Dimensions', f'{warehouse.length} x {warehouse.breadth} x {warehouse.height} meters'],
+        ['Area', f'{warehouse.area} sq ft'],
+        ['Status', 'Available' if warehouse.status == 1 else 'Occupied' if warehouse.status == 2 else 'Maintenance'],
+        ['Total Revenue', f'₹{total_revenue}'],
+    ]
+    
+    warehouse_table = Table(warehouse_data, colWidths=[150, 300])
+    warehouse_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('BACKGROUND', (1, 0), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (1, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    elements.append(warehouse_table)
+    elements.append(Spacer(1, 20))
+    
+    # Lease History
+    if leases:
+        elements.append(Paragraph('Lease History', heading_style))
+        elements.append(Spacer(1, 10))
+        
+        # Create lease history table
+        lease_data = [['Tenant', 'Start Date', 'End Date', 'Rental Price']]
+        for lease in leases:
+            lease_data.append([
+                lease.tenant.tenant_name,
+                lease.lease_start_date.strftime('%Y-%m-%d'),
+                lease.lease_end_date.strftime('%Y-%m-%d'),
+                f'₹{lease.rental_amount}'
+            ])
+        
+        lease_table = Table(lease_data, colWidths=[120, 100, 100, 100])
+        lease_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(lease_table)
+    
+    # Build PDF document
+    doc.build(elements)
+    
+    # Get the value of the BytesIO buffer and write it to the response
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    
+    return response
+
+@login_required
+def export_warehouses_csv(request):
+    lessor = Lessor.objects.get(email=request.user.email)
+    warehouses = Warehouse.objects.filter(owner=lessor)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="warehouses.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Warehouse ID', 'Location', 'Area (sq ft)', 'Rental Price', 'Status', 
+                    'Facilities', 'Year Built', 'Length', 'Breadth', 'Height'])
+    
+    for warehouse in warehouses:
+        status_map = {1: 'Available', 2: 'Occupied', 3: 'Maintenance'}
+        
+        # Handle location safely
+        location_str = f"{warehouse.location.city}, {warehouse.location.state}" if warehouse.location else "Not specified"
+        
+        writer.writerow([
+            warehouse.warehouse_id,
+            location_str,
+            warehouse.area,
+            warehouse.rental_price,
+            status_map.get(warehouse.status, 'Unknown'),
+            warehouse.facilities,
+            warehouse.year_built,
+            warehouse.length,
+            warehouse.breadth,
+            warehouse.height
+        ])
+    
+    return response

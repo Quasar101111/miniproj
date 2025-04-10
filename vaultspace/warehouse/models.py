@@ -42,6 +42,28 @@ class Warehouse(models.Model):
     def __str__(self):
         return f"Warehouse {self.warehouse_id}"
 
+    def save(self, *args, **kwargs):
+        if self.location:
+            # Extract city and state from the location string
+            location_parts = self.location.split(',')
+            if len(location_parts) >= 2:
+                city = location_parts[0].strip()
+                state = location_parts[1].strip()
+                
+                # Create or get the Location object
+                location_obj, created = Location.objects.get_or_create(
+                    city=city,
+                    state=state
+                )
+                
+                # Set the location and name
+                self.location = location_obj
+                self.name = f"{city}, {state}"
+            else:
+                # If we can't parse the location, use the raw string
+                self.name = self.location
+        super().save(*args, **kwargs)
+
     # def save(self, *args, **kwargs):
     #     # First save to get the ID
     #     super().save(*args, **kwargs)
